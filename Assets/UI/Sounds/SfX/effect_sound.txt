@@ -1,0 +1,13 @@
+cannon_shot : 대포 쏘는 소리
+ch_falling : 캐릭터 낙하 소리
+ch_hit (1),(2) : 캐릭터 타격 소리 및 넉백 소리
+feather,shoes_item : 깃털, 신발 사용 효과음
+lamp_item : 램프 사용 효과음
+flag_item : 깃발 사용 효과음
+goal_in : 골인지점 폭죽 터지는 소리
+ch_goal_in : 캐릭터 골인 지점 도착시 함성소리
+rock_crash : 돌이 바닥에 부딪혀 깨지는 소리
+rock_falling : 공중에서 돌 떨어지는 소리
+
+낙석 장애물 : rock_falling + rock_crash
+캐릭터 골인 지점 도착 : goal_in + ch_goal_in

@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 5e72ca7c3af0f364ab596774d1e0c395
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Gatsby
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 4d7a01b6708014f4d84879a9885de906, type: 3}
+  - {fileID: 12800000, guid: fcb268ab8b229b64cb3249c801f5b468, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

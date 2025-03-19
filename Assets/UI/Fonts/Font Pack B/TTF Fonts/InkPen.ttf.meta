@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 5d59bf20f92e77941af316f5f87e8d9f
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Ink Pen
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 01737922c7e14a0498e3296f88946967, type: 3}
+  - {fileID: 12800000, guid: 94a6a2d29eecbd14bbdb7a546d9fd0bc, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

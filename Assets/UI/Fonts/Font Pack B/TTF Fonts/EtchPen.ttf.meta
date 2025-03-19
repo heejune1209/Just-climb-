@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 4f361ff649d31064281689b143aabfbe
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Etch Pen
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 762b0b5c80dd5034b9eedc98b30bd7d8, type: 3}
+  - {fileID: 12800000, guid: 9a0605eed5f9fa5418f3a7f81c1acbd1, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

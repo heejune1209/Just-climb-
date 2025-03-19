@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 411edf98b03019c40a068a659db18d00
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Fighter
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 12644444ec489f54aaf9660710894636, type: 3}
+  - {fileID: 12800000, guid: 3779f6aad4a50624a9255e83fccda856, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

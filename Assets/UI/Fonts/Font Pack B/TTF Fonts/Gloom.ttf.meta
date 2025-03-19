@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: ca5606f7572945b4ca3c5a96c5d1faaf
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Gloom
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 3aa7ed12c99a1c443b4f7bd6c4d0ad61, type: 3}
+  - {fileID: 12800000, guid: 655c48642c04985478c3239ed0838e28, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: 170be79678e2f12459843759f5063713
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Grease
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 19c6fab83e437b04e96ab5c1ed5dbab6, type: 3}
+  - {fileID: 12800000, guid: 79809d3ef490dac47ac3012f3006366b, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

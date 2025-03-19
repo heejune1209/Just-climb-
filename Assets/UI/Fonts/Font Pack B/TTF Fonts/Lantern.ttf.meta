@@ -1,0 +1,23 @@
+fileFormatVersion: 2
+guid: d06abbadb6ad358489bb1b9afd9fb8e5
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 16
+  forceTextureCase: -2
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontNames:
+  - Lantern
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: f74077b5df1fb614eb823c9064b105f0, type: 3}
+  - {fileID: 12800000, guid: 6ca4a3cfe51248845bdbb994b1f19d1f, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
