@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="02_crack_line_1.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   id="svg14674"
+   version="1.1"
+   viewBox="0 0 142.89249 11.066167"
+   height="11.066167mm"
+   width="142.89249mm">
+  <defs
+     id="defs14668">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter2887"
+       x="-0.0015227528"
+       width="1.0030456"
+       y="-0.10038883"
+       height="1.2007776">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.090365841"
+         id="feGaussianBlur2889" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter3809"
+       x="-0.0083717741"
+       width="1.0167435"
+       y="-0.021178514"
+       height="1.042357">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="0.0662238"
+         id="feGaussianBlur3811" />
+    </filter>
+  </defs>
+  <sodipodi:namedview
+     inkscape:window-maximized="1"
+     inkscape:window-y="-8"
+     inkscape:window-x="-8"
+     inkscape:window-height="705"
+     inkscape:window-width="1366"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="64.393168"
+     inkscape:cx="323.52345"
+     inkscape:zoom="1.3422939"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata14671">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-3.4566244,-171.86845)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <path
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-variant-east-asian:normal;font-feature-settings:normal;font-variation-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;shape-margin:0;inline-size:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#abadb4;fill-opacity:0.647059;fill-rule:nonzero;stroke:none;stroke-width:0.396875;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter2887);color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate;stop-color:#000000;stop-opacity:1"
+       d="m 80.700535,178.72695 -18.82813,1.3945 -17.615231,-0.2793 -0.83399,0.5567 -15.90233,-0.625 -14.0762,0.6269 -9.7441003,-0.6465 -0.027,0.3965 9.7676003,0.6465 14.0801,-0.6269 16.01561,0.6289 0.83789,-0.5586 17.509771,0.2773 18.80469,-1.3926 10.63086,1.4239 1.91601,0.9433 2.23438,-0.057 2.4707,1.1152 0.16406,-0.3613 -2.55469,-1.1523 -2.22656,0.055 -1.88867,-0.9277 z m 35.542965,0.6289 -23.996095,0.07 -0.43945,0.459 0.28711,0.2734 0.32226,-0.3359 23.810555,-0.07 17.36133,1.5332 12.54297,-1.2441 -0.041,-0.3965 -12.50391,1.2422 z"
+       id="path14641" />
+    <path
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-variant-east-asian:normal;font-feature-settings:normal;font-variation-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;shape-margin:0;inline-size:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#abadb4;fill-opacity:0.647059;fill-rule:nonzero;stroke:none;stroke-width:0.396875;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter3809);color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate;stop-color:#000000;stop-opacity:1"
+       d="m 24.862654,172.31675 -0.1289,0.375 7.7226,2.6895 8.81253,1.4668 2.35352,3.2754 0.32227,-0.2305 -2.44922,-3.4082 -8.9395,-1.4902 z"
+       id="path14645" />
+    <path
+       style="color:#000000;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:medium;line-height:normal;font-family:sans-serif;font-variant-ligatures:normal;font-variant-position:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-alternates:normal;font-variant-east-asian:normal;font-feature-settings:normal;font-variation-settings:normal;text-indent:0;text-align:start;text-decoration:none;text-decoration-line:none;text-decoration-style:solid;text-decoration-color:#000000;letter-spacing:normal;word-spacing:normal;text-transform:none;writing-mode:lr-tb;direction:ltr;text-orientation:mixed;dominant-baseline:auto;baseline-shift:baseline;text-anchor:start;white-space:normal;shape-padding:0;shape-margin:0;inline-size:0;clip-rule:nonzero;display:inline;overflow:visible;visibility:visible;opacity:1;isolation:auto;mix-blend-mode:normal;color-interpolation:sRGB;color-interpolation-filters:linearRGB;solid-color:#000000;solid-opacity:1;vector-effect:none;fill:#24262b;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.529167;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;color-rendering:auto;image-rendering:auto;shape-rendering:auto;text-rendering:auto;enable-background:accumulate;stop-color:#000000;stop-opacity:1"
+       d="m 80.53452,178.33245 -18.830079,1.3945 -17.632812,-0.2793 -0.833988,0.5547 -15.882781,-0.625 -14.0742,0.6269 -9.7422005,-0.6445 -0.035,0.5274 9.7715005,0.6484 14.0801,-0.627 16.035129,0.629 0.837891,-0.5586 17.492191,0.2773 18.800779,-1.3926 11.04492,1.4063 0.710941,-0.711 23.781249,-0.07 17.36718,1.5352 12.54688,-1.2461 -0.0527,-0.5274 -12.49804,1.2422 -17.33985,-1.5332 -24.02539,0.07 -0.681638,0.6836 z"
+       id="path14649" />
+    <path
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
+       inkscape:export-filename="D:\Calcatz\Icon Pack\Adventure Narrative Inspired by Jumanji\Assets\PNG\Dividing Line\05_crack_line_1.png"
+       style="fill:#24262b;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 15.94876,171.87105 c 0,0 3.7966,0.2351 8.9119,0.5519 2.3527,0.8131 5.0268,1.7373 7.700001,2.6612 h 0.01299 0.01701 c 3.078001,0.5064 6.1551,1.0127 8.868881,1.4591 1.376709,1.9345 2.39023,3.3586 2.39023,3.3586 v 0 c 0,0 0.30103,-0.1964 0.30103,-0.1964 0,0 0.27465,-0.2319 0.27465,-0.2319 v 0 c 0,0 -1.10499,-1.4215 -2.595372,-3.3387 l -0.0702,-0.09 -0.104838,-0.015 c -2.745783,-0.3962 -5.870361,-0.8472 -8.996382,-1.2983 -2.691601,-0.8644 -5.3833,-1.7289 -7.7512,-2.4893 h -0.013 l -0.011,-5e-4 c -5.1273,-0.2142 -8.9343,-0.3733 -8.9343,-0.3733 z"
+       id="path14073"
+       sodipodi:nodetypes="ccccc" />
+    <path
+       inkscape:export-ydpi="96"
+       inkscape:export-xdpi="96"
+       inkscape:export-filename="D:\Calcatz\Icon Pack\Adventure Narrative Inspired by Jumanji\Assets\PNG\Dividing Line\05_crack_line_1.png"
+       style="fill:#24262b;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="m 91.469651,179.99135 c 0,0 -0.11471,0.2239 -0.11471,0.2239 v 0 c 0,0 0.822841,0.3914 1.93145,0.9188 l 0.0447,0.021 0.0385,-5e-4 c 0.65894,-0.01 1.407168,-0.019 2.156479,-0.03 0.861721,0.4351 1.72226,0.8696 2.48005,1.2522 l 0.01339,0.01 0.0113,5e-4 c 0.97096,0.04 1.69164,0.07 1.69164,0.07 0,0 -0.709099,-0.082 -1.666849,-0.1933 -0.746165,-0.4196 -1.593654,-0.8963 -2.441144,-1.3729 l -0.02371,-0.013 h -0.0336 c -0.739069,-0.033 -1.478148,-0.065 -2.13242,-0.094 -1.058598,-0.5822 -1.84036,-1.0121 -1.84036,-1.0121 v 0 c 0,0 -0.11471,0.2239 -0.11471,0.2239 z"
+       id="path14077" />
+  </g>
+</svg>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="15_stone_mask.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   id="svg14331"
+   version="1.1"
+   viewBox="0 0 141.99391 203.2"
+   height="203.2mm"
+   width="141.99391mm">
+  <defs
+     id="defs14325" />
+  <sodipodi:namedview
+     inkscape:window-maximized="1"
+     inkscape:window-y="-8"
+     inkscape:window-x="-8"
+     inkscape:window-height="705"
+     inkscape:window-width="1366"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="691.72334"
+     inkscape:cx="272.30074"
+     inkscape:zoom="0.47457256"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata14328">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-31.501705,-18.244593)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <path
+       sodipodi:nodetypes="cccccccccccccccccccccc"
+       mask="none"
+       d="M 31.501705,18.244593 V 221.44459 H 172.21663 l 0.78651,-3.6711 -0.68988,-10.9399 -0.68988,-2.3652 1.57665,-2.2671 -0.68988,-15.4734 0.49299,-6.8001 -1.08417,-12.8127 1.18236,-19.3166 -1.08418,-19.5146 0.68988,-4.5336 -0.88676,-1.0841 1.67535,-13.8964 -1.28106,-19.513996 0.19689,-17.937401 -1.87224,-13.6994 0.98547,-22.4705 0.68988,-2.267 -1.34617,-14.6369 z"
+       style="fill:#545663;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path13095"
+       inkscape:export-filename="D:\Calcatz\Icon Pack\Adventure Narrative Inspired by Jumanji\Assets\PNG\Stone\15_stone_mask.png"
+       inkscape:export-xdpi="96"
+       inkscape:export-ydpi="96" />
+  </g>
+</svg>

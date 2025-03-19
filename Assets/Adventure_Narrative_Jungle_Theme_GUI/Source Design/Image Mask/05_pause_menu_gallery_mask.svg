@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   sodipodi:docname="05_pause_menu_gallery_mask.svg"
+   inkscape:version="1.0 (4035a4fb49, 2020-05-01)"
+   id="svg10283"
+   version="1.1"
+   viewBox="0 0 79.512413 45.664589"
+   height="45.664589mm"
+   width="79.512413mm">
+  <defs
+     id="defs10277" />
+  <sodipodi:namedview
+     inkscape:window-maximized="1"
+     inkscape:window-y="-8"
+     inkscape:window-x="-8"
+     inkscape:window-height="705"
+     inkscape:window-width="1366"
+     fit-margin-bottom="0"
+     fit-margin-right="0"
+     fit-margin-left="0"
+     fit-margin-top="0"
+     showgrid="false"
+     inkscape:document-rotation="0"
+     inkscape:current-layer="layer1"
+     inkscape:document-units="mm"
+     inkscape:cy="11.929901"
+     inkscape:cx="138.10212"
+     inkscape:zoom="0.94914512"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base" />
+  <metadata
+     id="metadata10280">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     transform="translate(-12.28158,-135.64641)"
+     id="layer1"
+     inkscape:groupmode="layer"
+     inkscape:label="Layer 1">
+    <path
+       d="m 16.641518,135.64641 -3.04773,2.262 0.16302,4.48334 c 0.55092,0.51167 1.3033,1.27015 2.13705,2.12891 l 0.18154,0.18672 -0.0143,0.18154 c -0.0878,1.10402 -0.1902,2.29657 -0.27863,3.4049 0.6741,0.61366 1.27926,1.14761 1.66651,1.42422 -0.40477,-0.28915 -1.15206,-0.71322 -1.99624,-1.17525 l -0.0756,-0.0414 -0.01,-0.12518 c -0.083,-1.04532 -0.179478,-2.17035 -0.264538,-3.2278 -0.73387,-0.54499 -1.39575,-1.04498 -1.91772,-1.45976 l -0.9033,1.24192 1.48723,11.16095 -1.22711,21.03284 4.02213,3.38562 18.79182,0.80102 24.525652,-1.79618 c 0.704339,-0.55264 1.779997,-1.32905 2.998837,-2.19189 l 0.141531,-0.1008 0.110411,-0.006 c 1.475949,-0.084 3.073,-0.16723 4.55123,-0.25119 1.267899,-0.83793 2.390929,-1.59593 3.017359,-2.08 -0.63609,0.49154 -1.674569,1.40746 -2.826179,2.44235 l -0.0318,0.029 -0.069,0.0129 c -1.412219,0.25313 -2.93552,0.53312 -4.356348,0.7884 -0.784321,0.73403 -1.502731,1.39626 -2.100012,1.92736 l 1.389409,0.74766 h 26.278843 l 2.26531,-2.8877 -0.761741,-11.01743 1.30484,-10.64522 -1.503449,-2.46015 c -0.539801,0.48811 -1.167551,1.04191 -1.925122,1.69394 -0.11271,0.90591 -0.240379,1.88749 -0.368279,2.86917 l -0.0208,0.15708 -0.0852,0.0718 c -0.88828,0.75197 -1.776481,1.50428 -2.580179,2.19336 -0.153922,0.90995 -0.273392,1.6966 -0.31569,2.20444 0.0433,-0.51908 0.0551,-1.33851 0.0533,-2.28747 v -0.043 l 0.0422,-0.0445 c 0.695122,-0.74892 1.452621,-1.5758 2.21338,-2.40604 -0.009,-1.04339 -0.01709,-2.08329 -0.0186,-3.02995 v -0.18673 l 0.171191,-0.1823 c 0.92489,-0.98314 1.710679,-1.79805 2.30678,-2.38304 l 1.799126,-12.15911 -4.84542,-3.30412 -21.51715,-1.32789 -26.421209,0.43423 -1.905851,0.71875 c 0.52865,0.56296 1.11674,1.19759 1.80435,1.95403 1.530891,-0.17216 3.20827,-0.35487 4.93507,-0.54166 l 0.208971,-0.0229 0.126039,0.11629 c 0.671039,0.61943 1.359591,1.257 2.031831,1.8777 1.3071,-0.1021 2.572589,-0.20256 3.7176,-0.29936 l 0.0311,-0.003 0.01939,0.01 c 0.830638,0.4133 1.545838,0.75578 2.040718,0.9633 -0.48927,-0.20516 -1.223349,-0.47124 -2.08742,-0.76991 -1.164971,0.18815 -2.45414,0.40281 -3.782809,0.62615 l -0.0956,0.0163 -0.100798,-0.0734 c -0.710221,-0.51348 -1.440251,-1.03926 -2.153362,-1.5546 -1.772068,0.30852 -3.48878,0.60603 -5.043269,0.86919 l -0.27711,0.0467 -0.2312,-0.22081 c -1.087601,-1.03827 -1.989261,-1.91532 -2.658691,-2.59203 l -10.45849,-1.2686 z"
+       style="fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.51757;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path10848"
+       sodipodi:nodetypes="ccccccccsccccccccccccccccccccccccccccccccccccccccccccccccsccccccccccccsccc"
+       inkscape:export-filename="D:\Calcatz\Icon Pack\Adventure Narrative Inspired by Jumanji\Assets\PNG\Image Mask\05_pause_menu_gallery_mask.png"
+       inkscape:export-xdpi="95"
+       inkscape:export-ydpi="95" />
+  </g>
+</svg>
