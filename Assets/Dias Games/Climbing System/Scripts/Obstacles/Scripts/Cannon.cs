@@ -5,11 +5,11 @@ using UnityEngine;
 public class Cannon : MonoBehaviour
 {
     
-    public GameObject projectilePrefab; // ¹ß»çÃ¼ ÇÁ¸®ÆÕ
+    public GameObject projectilePrefab; // ï¿½ß»ï¿½Ã¼ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public GameObject ExplosionPre;
-    public Vector3 fireDirection = Vector3.forward; // ¹ß»ç ¹æÇâ
-    public float fireRate = 2f; // ¹ß»ç ½Ã°£ 1ÃÊ¿¡ fireRate°ª¸¸Å­ ¹ß»ç
-    public float projectileSpeed = 10f; // ¹ß»ç ÆÄ¿ö (¼Óµµ)
+    public Vector3 fireDirection = Vector3.forward; // ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½
+    public float fireRate = 2f; // ï¿½ß»ï¿½ ï¿½Ã°ï¿½ 1ï¿½Ê¿ï¿½ fireRateï¿½ï¿½ï¿½ï¿½Å­ ï¿½ß»ï¿½
+    public float projectileSpeed = 10f; // ï¿½ß»ï¿½ ï¿½Ä¿ï¿½ (ï¿½Óµï¿½)
 
     private float fireCountdown = 0f;
     private bool isShooting = false;
@@ -38,26 +38,26 @@ public class Cannon : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
-        Vector3 endPoint = gameObject.transform.position + fireDirection * projectileSpeed; // ¹ß»ç ¹æÇâ°ú ¹ß»ç ÆÄ¿ö¸¦ °öÇÑ ÁöÁ¡ °è»ê
-        Gizmos.DrawLine(gameObject.transform.position, endPoint); // ¹ß»ç ¹æÇâ°ú ¹ß»ç ÆÄ¿ö¸¦ ³ªÅ¸³»´Â ¼± ±×¸®±â
+        Vector3 endPoint = gameObject.transform.position + fireDirection * projectileSpeed; // ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ ï¿½Ä¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+        Gizmos.DrawLine(gameObject.transform.position, endPoint); // ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ ï¿½Ä¿ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½×¸ï¿½ï¿½ï¿½
     }
     void Shoot()
     {
         GameObject projectile = Instantiate(projectilePrefab, gameObject.transform.position, Quaternion.LookRotation(fireDirection));
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
         AudioManager.instance.PlaySFX(6);
-        // ÆÄÆ¼Å¬ ÄÄÆ÷³ÍÆ® °¡Á®¿À±â
+        // ï¿½ï¿½Æ¼Å¬ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         ParticleSystem particleSystem = ExplosionPre.GetComponent<ParticleSystem>();
 
         if (particleSystem != null)
         {
-            // ÆÄÆ¼Å¬ ½ÃÀÛ
+            // ï¿½ï¿½Æ¼Å¬ ï¿½ï¿½ï¿½ï¿½
             ExplosionPre.SetActive(true);
             particleSystem.Play();
         }
         if (rb != null)
         {
-            rb.velocity = fireDirection * projectileSpeed; // ¹ß»ç ÆÄ¿ö¸¦ »ç¿ëÇÏ¿© ¼Óµµ ºÎ¿©
+            rb.velocity = fireDirection * projectileSpeed; // ï¿½ß»ï¿½ ï¿½Ä¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½Óµï¿½ ï¿½Î¿ï¿½
         }
     }
 }

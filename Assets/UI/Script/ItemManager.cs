@@ -25,7 +25,7 @@ public class ItemManager : MonoBehaviour
     public Button gemToGoldButton1;
     public Button gemToGoldButton10;
 
-    public GameObject EmptyGoldPanel; // rh ¾øÀ»¶§ ÆÐ³Î
+    public GameObject EmptyGoldPanel; // rh ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½
     public GameObject EmptyGemsPanel;
 
     private Keyboard keyboard;
@@ -73,7 +73,7 @@ public class ItemManager : MonoBehaviour
         {
             if (gems >= 1)
             {
-                ExchangeGemsToGold(1); // 1Áª -> 100°ñµå
+                ExchangeGemsToGold(1); // 1ï¿½ï¿½ -> 100ï¿½ï¿½ï¿½
                 AudioManager.instance.PlaySFX(0);
             }
             else
@@ -86,7 +86,7 @@ public class ItemManager : MonoBehaviour
         {
             if (gems >= 10)
             {
-                ExchangeGemsToGold(10); // 10Áª -> 1000°ñµå
+                ExchangeGemsToGold(10); // 10ï¿½ï¿½ -> 1000ï¿½ï¿½ï¿½
                 AudioManager.instance.PlaySFX(0);
             }
             else
@@ -132,7 +132,7 @@ public class ItemManager : MonoBehaviour
         }
         else
         {
-            EmptyGoldPanel.SetActive(true); // °ñµå°¡ ºÎÁ·ÇÏ¸é ÆÐ³ÎÀ» È°¼ºÈ­
+            EmptyGoldPanel.SetActive(true); // ï¿½ï¿½å°¡ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ È°ï¿½ï¿½È­
         }
     }
 
@@ -146,7 +146,7 @@ public class ItemManager : MonoBehaviour
         {
             for (int i = 0; i < itemCountTexts.Length; i++)
             {
-                //  °¹¼ö Ç¥½Ã
+                //  ï¿½ï¿½ï¿½ï¿½ Ç¥ï¿½ï¿½
                 if (itemCountTexts[i].name == item.Key)
                 {
                     itemCountTexts[i].text = (itemCounts.ContainsKey(item.Key) ? itemCounts[item.Key].ToString() : "0");
@@ -158,14 +158,14 @@ public class ItemManager : MonoBehaviour
 
     public void ExchangeGemsToGold(int gemAmount)
     {
-        // Áª °³¼ö°¡ ÃæºÐÇÑÁö È®ÀÎ
+        // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È®ï¿½ï¿½
         if (gems >= gemAmount)
         {
             gems -= gemAmount;
-            gold += gemAmount * gemToGoldRatio; // ÁªÀ» °ñµå·Î È¯Àü
+            gold += gemAmount * gemToGoldRatio; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È¯ï¿½ï¿½
 
             PlayerPrefs.SetInt("Gem", gems);
-            PlayerPrefs.SetInt("Gold", gold); // °ñµå °ª ÀúÀå
+            PlayerPrefs.SetInt("Gold", gold); // ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             PlayerPrefs.Save();
 
             UpdateUI();

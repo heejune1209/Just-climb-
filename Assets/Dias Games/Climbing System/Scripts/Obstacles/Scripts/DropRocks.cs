@@ -6,7 +6,7 @@ public class DropRocks : MonoBehaviour
 {
     [SerializeField]
     private float deleteTime = 2.0f;
-    public float rotationSpeed = 50f; // µ¹ÀÌ È¸ÀüÇÒ °¢¼Óµµ
+    public float rotationSpeed = 50f; // ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Óµï¿½
     // Start is called before the first frame update
     void Start()
     {

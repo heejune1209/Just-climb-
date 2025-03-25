@@ -13,7 +13,7 @@ public class DeadByContacts : MonoBehaviour
             Health playerHealth = other.gameObject.GetComponent<Health>();
             if (playerHealth != null)
             {
-                playerHealth.Damage(playerHealth.CurrentHP); // ÇÃ·¹ÀÌ¾î Ã¼·ÂÀ» 0À¸·Î ¼³Á¤ÇÏ¿© »ç¸Á Ã³¸®
+                playerHealth.Damage(playerHealth.CurrentHP); // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Ã¼ï¿½ï¿½ï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
             }
         }
     }
@@ -25,7 +25,7 @@ public class DeadByContacts : MonoBehaviour
             Health playerHealth = collision.gameObject.GetComponent<Health>();
             if (playerHealth != null)
             {
-                playerHealth.Damage(playerHealth.CurrentHP); // ÇÃ·¹ÀÌ¾î Ã¼·ÂÀ» 0À¸·Î ¼³Á¤ÇÏ¿© »ç¸Á Ã³¸®
+                playerHealth.Damage(playerHealth.CurrentHP); // ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ Ã¼ï¿½ï¿½ï¿½ï¿½ 0ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¿ï¿½ ï¿½ï¿½ï¿½ Ã³ï¿½ï¿½
             }
         }
     }

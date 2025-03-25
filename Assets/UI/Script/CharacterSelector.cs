@@ -9,13 +9,13 @@ using UnityEngine.SceneManagement;
 
 public class CharacterSelector : MonoBehaviour
 {
-    public GameObject[] characters; // Ä³¸¯ÅÍ ¹è¿­
+    public GameObject[] characters; // Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½è¿­
     public GameObject[] characterImages;
     public Button[] selectButtons;
     public Light[] characterLights;
-    public GameObject cameraParent; // Ä«¸Þ¶óÀÇ ºÎ¸ð ¿ÀºêÁ§Æ®
-    private int selectedIndex = 0; // ÇöÀç ¼±ÅÃµÈ Ä³¸¯ÅÍÀÇ ÀÎµ¦½º
-    public float speed = 1.0f; // Ä«¸Þ¶ó È¸Àü ¼Óµµ
+    public GameObject cameraParent; // Ä«ï¿½Þ¶ï¿½ï¿½ï¿½ ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
+    private int selectedIndex = 0; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½
+    public float speed = 1.0f; // Ä«ï¿½Þ¶ï¿½ È¸ï¿½ï¿½ ï¿½Óµï¿½
     private float t = 0.0f;
     public Button selectedButton;
     public Button initialButton;
@@ -34,7 +34,7 @@ public class CharacterSelector : MonoBehaviour
             button.GetComponent<Image>().color = Color.white;
         }
 
-        // ÃÊ±â ¹öÆ°À» 'SELECT'·Î ¼³Á¤ÇÏ°í ºñÈ°¼ºÈ­
+        // ï¿½Ê±ï¿½ ï¿½ï¿½Æ°ï¿½ï¿½ 'SELECT'ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­
         if (initialButton != null)
         {
             initialButton.GetComponentInChildren<TMP_Text>().text = "SELECT";
@@ -58,21 +58,21 @@ public class CharacterSelector : MonoBehaviour
             SceneManager.LoadScene("LoadingScene");
         }
 
-        //¿ÞÂÊ È­»ìÇ¥ Å°°¡ ´­¸®¸é ¼±ÅÃµÈ Ä³¸¯ÅÍ¸¦ ¿ÞÂÊÀ¸·Î ÀÌµ¿
+        //ï¿½ï¿½ï¿½ï¿½ È­ï¿½ï¿½Ç¥ Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ Ä³ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
         if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
         {
             characterLights[selectedIndex].enabled = false;
             selectedIndex--;
             if (selectedIndex < 0) selectedIndex = characters.Length - 1;
-            t = 0; // t °ªÀ» ÃÊ±âÈ­
+            t = 0; // t ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         }
-        //¿À¸¥ÂÊ È­»ìÇ¥ Å°°¡ ´­¸®¸é ¼±ÅÃµÈ Ä³¸¯ÅÍ¸¦ ¿À¸¥ÂÊÀ¸·Î ÀÌµ¿
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È­ï¿½ï¿½Ç¥ Å°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ Ä³ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ìµï¿½
         else if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
         {
             characterLights[selectedIndex].enabled = false;
             selectedIndex++;
             if (selectedIndex >= characters.Length) selectedIndex = 0;
-            t = 0; // t °ªÀ» ÃÊ±âÈ­
+            t = 0; // t ï¿½ï¿½ï¿½ï¿½ ï¿½Ê±ï¿½È­
         }
         characterLights[selectedIndex].enabled = true;
         RotateCamera();
@@ -81,10 +81,10 @@ public class CharacterSelector : MonoBehaviour
 
     void RotateCamera()
     {
-        // Ä«¸Þ¶ó¸¦ ¼±ÅÃµÈ Ä³¸¯ÅÍ¸¦ ÇâÇÏµµ·Ï È¸Àü
+        // Ä«ï¿½Þ¶ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ Ä³ï¿½ï¿½ï¿½Í¸ï¿½ ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ È¸ï¿½ï¿½
         Vector3 direction = characters[selectedIndex].transform.position - cameraParent.transform.position;
         Quaternion toRotation = Quaternion.LookRotation(direction, Vector3.up);
-        t += Time.deltaTime * speed; // t °ªÀ» ´©Àû
+        t += Time.deltaTime * speed; // t ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         cameraParent.transform.rotation = Quaternion.Slerp(cameraParent.transform.rotation, toRotation, t);
     }
 
@@ -110,25 +110,25 @@ public class CharacterSelector : MonoBehaviour
     {
         for (int i = 0; i < characterImages.Length; i++)
         {
-            //¼±ÅÃµÈ Ä³¸¯ÅÍÀÇ ÀÌ¹ÌÁö¸¸ È°¼ºÈ­ÇÏ°í, ³ª¸ÓÁö´Â ºñÈ°¼ºÈ­
+            //ï¿½ï¿½ï¿½Ãµï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ È°ï¿½ï¿½È­ï¿½Ï°ï¿½, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­
             characterImages[i].SetActive(i == selectedIndex);
         }
     }
     /*
     public void OnSelectButtonClick(int index)
     {
-        //¸ðµç ¹öÆ°À» "select"·Î º¯°æÇÏ°í È°¼ºÈ­
+        //ï¿½ï¿½ï¿½ ï¿½ï¿½Æ°ï¿½ï¿½ "select"ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ È°ï¿½ï¿½È­
         for (int i = 0; i < selectButtons.Length; i++)
         {
             selectButtons[i].GetComponentInChildren<TMP_Text>().text = "select";
             selectButtons[i].interactable = true;
-            selectButtons[i].GetComponent<Image>().color = Color.white; // ¹öÆ°À» Èò»öÀ¸·Î º¯°æ
+            selectButtons[i].GetComponent<Image>().color = Color.white; // ï¿½ï¿½Æ°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
 
-        // ´©¸¥ ¹öÆ°À» "SELECT"·Î º¯°æÇÏ°í ºñÈ°¼ºÈ­
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Æ°ï¿½ï¿½ "SELECT"ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½È°ï¿½ï¿½È­
         selectButtons[index].GetComponentInChildren<TMP_Text>().text = "SELECT";
         selectButtons[index].interactable = false;
-        selectButtons[index].GetComponent<Image>().color = Color.gray; // ¹öÆ°À» È¸»öÀ¸·Î º¯°æ
+        selectButtons[index].GetComponent<Image>().color = Color.gray; // ï¿½ï¿½Æ°ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
     */
 }

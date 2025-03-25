@@ -14,14 +14,14 @@ public class RockGenerator : MonoBehaviour
         public GameObject dropArea;
         public float dropTime;
         public float turnonLight;
-        //public float rockDropInterval = 2f; // µ¹ »ý¼º °£°Ý(ÅÂ±×°¡ ½ºÅæ»þ¿öÀÏ°æ¿ì)
+        //public float rockDropInterval = 2f; // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½(ï¿½Â±×°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ï¿½)
     }
 
     public List<DropAreaInfo> dropAreaTimes = new List<DropAreaInfo>();
-    //private bool isPlayerInside = false; // ÇÃ·¹ÀÌ¾î°¡ ¿µ¿ª ¾È¿¡ ÀÖ´ÂÁö ¿©ºÎ¸¦ ÃßÀûÇÕ´Ï´Ù.
+    //private bool isPlayerInside = false; // ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½Ö´ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Î¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
 
 
-    //private Coroutine rockDropCoroutine; // µ¹ »ý¼º ÄÚ·çÆ¾À» ÀúÀåÇÒ º¯¼ö
+    //private Coroutine rockDropCoroutine; // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú·ï¿½Æ¾ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
 
     private void OnTriggerEnter(Collider other)
@@ -37,8 +37,8 @@ public class RockGenerator : MonoBehaviour
         isPlayerInside = true;
         if (other.CompareTag("Player") && isPlayerInside && gameObject.CompareTag("Stone Shower"))
         {
-            StartDroppingRocks(); // ÇÃ·¹ÀÌ¾î°¡ ¿µ¿ª¿¡ ÀÖÀ¸¸é µ¹ »ý¼º ½ÃÀÛ
-            rockDropCoroutine = StartCoroutine(DropRocksWithInterval()); // µ¹ »ý¼º ÄÚ·çÆ¾ ½ÃÀÛ
+            StartDroppingRocks(); // ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+            rockDropCoroutine = StartCoroutine(DropRocksWithInterval()); // ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú·ï¿½Æ¾ ï¿½ï¿½ï¿½ï¿½
         }
     }
     
@@ -50,7 +50,7 @@ public class RockGenerator : MonoBehaviour
             isPlayerInside = false;
             if (rockDropCoroutine != null && (isPlayerInside = false))
             {
-                StopCoroutine(rockDropCoroutine); // ÇÃ·¹ÀÌ¾î°¡ ¿µ¿ªÀ» ºüÁ®³ª°¡¸é ÄÚ·çÆ¾À» ¸ØÃä´Ï´Ù.
+                StopCoroutine(rockDropCoroutine); // ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ú·ï¿½Æ¾ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.
                 rockDropCoroutine = null;
             }
         }
@@ -59,13 +59,13 @@ public class RockGenerator : MonoBehaviour
     
     private IEnumerator DropRocksWithInterval()
     {
-        while (isPlayerInside) // ÇÃ·¹ÀÌ¾î°¡ ¿µ¿ª ¾È¿¡ ÀÖÀ» ¶§
+        while (isPlayerInside) // ï¿½Ã·ï¿½ï¿½Ì¾î°¡ ï¿½ï¿½ï¿½ï¿½ ï¿½È¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
         {
             foreach (DropAreaInfo dropAreaInfo in dropAreaTimes)
             {
                 GameObject dropAreaCenter = dropAreaInfo.dropArea;
-                SpawnRocks(dropAreaCenter); // ÇØ´ç dropArea¿¡ µû¸¥ À§Ä¡¿¡ µ¹ »ý¼º
-                yield return new WaitForSeconds(dropAreaInfo.rockDropInterval); // °¢ DropAreaInfo¿¡ ¼³Á¤µÈ dropTime¸¸Å­ ´ë±â
+                SpawnRocks(dropAreaCenter); // ï¿½Ø´ï¿½ dropAreaï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+                yield return new WaitForSeconds(dropAreaInfo.rockDropInterval); // ï¿½ï¿½ DropAreaInfoï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ dropTimeï¿½ï¿½Å­ ï¿½ï¿½ï¿½
             }
         }
     }
@@ -86,11 +86,11 @@ public class RockGenerator : MonoBehaviour
 
         await Task.WhenAll(tasks);
     }
-    // ÀÌ ½ºÅ©¸³Æ®¿¡¼­ ¾²´Â ¹æ¹ýÀº ÀÏÃ³¸®¸¦ º´·ÄÀûÀ¸·Î ÇÔ. Áï ÀÎµ¦½º°¡ ¼ø¼­´ë·Î(Ã¹¹øÂ°²¨ ³¡³ª°í µÎ¹øÂ°°ÍÀÌ ÁøÇà)ÁøÇàÀÌ ¾Æ´Ï¶ó °¢°¢ °³º°ÀûÀ¸·Î °¡´É.
+    // ï¿½ï¿½ ï¿½ï¿½Å©ï¿½ï¿½Æ®ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½. ï¿½ï¿½ ï¿½Îµï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½(Ã¹ï¿½ï¿½Â°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Î¹ï¿½Â°ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Æ´Ï¶ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.
     async Task DropRockWithDelay(GameObject dropArea, float dropTime, float turnonLight)
     {
         DisplayLight(dropArea);
-        await Task.Delay((int)(turnonLight * 1000)); // Milliseconds, 1ÃÊ´Â 1000¹Ð¸®ÃÊÀÔ´Ï´Ù. dropTimeÀÌ 1.5ÃÊ¶ó¸é (int)(dropTime * 1000)Àº 1500ÀÓ
+        await Task.Delay((int)(turnonLight * 1000)); // Milliseconds, 1ï¿½Ê´ï¿½ 1000ï¿½Ð¸ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½. dropTimeï¿½ï¿½ 1.5ï¿½Ê¶ï¿½ï¿½ (int)(dropTime * 1000)ï¿½ï¿½ 1500ï¿½ï¿½
         OffLight(dropArea);
         await Task.Delay((int)(dropTime * 1000)); // Milliseconds
         SpawnRocks(dropArea);
@@ -112,7 +112,7 @@ public class RockGenerator : MonoBehaviour
 
     void SpawnRocks(GameObject dropAreaCenter)
     {
-        Quaternion rotation = Quaternion.Euler(30f, 45f, 60f); // È¸Àü°ª ¼³Á¤
+        Quaternion rotation = Quaternion.Euler(30f, 45f, 60f); // È¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         Instantiate(rocks, dropAreaCenter.transform.position, rotation);
     }
 }

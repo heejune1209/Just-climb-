@@ -61,6 +61,6 @@ public class Option : MonoBehaviour
         keyButton.GetComponent<Image>().sprite = defaultButtonImage;
         keyButton.GetComponentInChildren<Text>().color = defaultTextColor;
         itemButton.GetComponent<Image>().sprite = itemButtonSelectedImage;
-        itemButton.GetComponentInChildren<Text>().color = selectedTextColor; // ¼±ÅÃµÈ ¹öÆ°ÀÇ ±Û¾¾ »ö º¯°æ
+        itemButton.GetComponentInChildren<Text>().color = selectedTextColor; // ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½Æ°ï¿½ï¿½ ï¿½Û¾ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     }
 }

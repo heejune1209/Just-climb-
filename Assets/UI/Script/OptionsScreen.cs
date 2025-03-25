@@ -9,7 +9,7 @@ public class OptionsScreen : MonoBehaviour
     public Slider volumeSlider;
     public Button prevResolutionButton;
     public Button nextResolutionButton;
-    public TMP_Text resolutionText;  // ÇöÀç ÇØ»óµµ¸¦ º¸¿©ÁÖ´Â ÅØ½ºÆ®
+    public TMP_Text resolutionText;  // ï¿½ï¿½ï¿½ï¿½ ï¿½Ø»óµµ¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ö´ï¿½ ï¿½Ø½ï¿½Æ®
     public Toggle fullscreenToggle;
 
     private Resolution[] resolutions = new Resolution[5]
@@ -25,12 +25,12 @@ public class OptionsScreen : MonoBehaviour
 
     void Start()
     {
-        // ÇöÀç È­¸éÀÇ ÇØ»óµµ¿Í °¡Àå °¡±î¿î ¼³Á¤°ªÀ» Ã£½À´Ï´Ù.
+        // ï¿½ï¿½ï¿½ï¿½ È­ï¿½ï¿½ï¿½ï¿½ ï¿½Ø»óµµ¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ï¿½Ï´ï¿½.
         currentResolutionIndex = 3;
 
         UpdateUI();
 
-        // °¢ UI ¿ä¼Ò°¡ º¯°æµÉ ¶§¸¶´Ù ÇØ´ç ÇÔ¼ö¸¦ È£ÃâÇÏµµ·Ï ¼³Á¤ÇÕ´Ï´Ù.
+        // ï¿½ï¿½ UI ï¿½ï¿½Ò°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ø´ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ È£ï¿½ï¿½ï¿½Ïµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
         volumeSlider.onValueChanged.AddListener(SetVolume);
         prevResolutionButton.onClick.AddListener(PrevResolution);
         nextResolutionButton.onClick.AddListener(NextResoluton);

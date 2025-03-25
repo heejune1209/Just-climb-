@@ -178,10 +178,10 @@ namespace DiasGames.Abilities
         {
             if (_mover.IsGrounded())
             {
-                // ¾ÆÀÌÅÛ »ç¿ë ½Ã Á¡ÇÁ·Â °­È­
+                // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È­
                 jumpHeight *= boostMultiplier;
 
-                // ÀÏÁ¤ ½Ã°£ÀÌ Áö³ª¸é Á¡ÇÁ·ÂÀ» ¿ø·¡´ë·Î º¹¿ø
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 StartCoroutine(ResetJumpHeight(boostMultiplier, duration));
             }
         }
@@ -190,7 +190,7 @@ namespace DiasGames.Abilities
         {
             yield return new WaitForSeconds(duration);
 
-            // ¿ø·¡ÀÇ Á¡ÇÁ·ÂÀ¸·Î º¹¿ø
+            // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             jumpHeight /= originalMultiplier;
         }
 

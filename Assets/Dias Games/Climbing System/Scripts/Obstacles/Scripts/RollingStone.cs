@@ -9,7 +9,7 @@ public class RollingStone : MonoBehaviour
     private bool isrolling = false;
     public float force;
     public Vector3 direction;
-    public float RollRate = 2f; // ¹ß»ç ½Ã°£ 1ÃÊ¿¡ fireRate°ª¸¸Å­ ¹ß»ç
+    public float RollRate = 2f; // ï¿½ß»ï¿½ ï¿½Ã°ï¿½ 1ï¿½Ê¿ï¿½ fireRateï¿½ï¿½ï¿½ï¿½Å­ ï¿½ß»ï¿½
     private float RollCountdown = 0f;
     private void OnTriggerStay(Collider other)
     {
@@ -46,8 +46,8 @@ public class RollingStone : MonoBehaviour
     void OnDrawGizmos()
     {
         Gizmos.color = Color.magenta;
-        Vector3 endPoint = gameObject.transform.position + direction.normalized * force; // ¹ß»ç ¹æÇâ°ú ¹ß»ç ÆÄ¿ö¸¦ °öÇÑ ÁöÁ¡ °è»ê
-        Gizmos.DrawLine(gameObject.transform.position, endPoint); // ¹ß»ç ¹æÇâ°ú ¹ß»ç ÆÄ¿ö¸¦ ³ªÅ¸³»´Â ¼± ±×¸®±â
+        Vector3 endPoint = gameObject.transform.position + direction.normalized * force; // ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ ï¿½Ä¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
+        Gizmos.DrawLine(gameObject.transform.position, endPoint); // ï¿½ß»ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ß»ï¿½ ï¿½Ä¿ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½×¸ï¿½ï¿½ï¿½
     }
     void StartRoll()
     {
@@ -56,7 +56,7 @@ public class RollingStone : MonoBehaviour
 
         if (rockRb != null)
         {
-            // µ¹À» Æ¯Á¤ ¹æÇâÀ¸·Î ÈûÀ» °¡ÇØ ¹Ð¾î³À´Ï´Ù.
+            // ï¿½ï¿½ï¿½ï¿½ Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ð¾ï¿½ï¿½ï¿½Ï´ï¿½.
             rockRb.AddForce(direction.normalized * force, ForceMode.Impulse);
         }
 

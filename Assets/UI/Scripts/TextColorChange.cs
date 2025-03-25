@@ -15,10 +15,10 @@ public class TextColorChange : MonoBehaviour
 
     void Start()
     {
-        // ¹öÆ°ÀÇ Text ÄÄÆ÷³ÍÆ® Ã£±â
+        // ï¿½ï¿½Æ°ï¿½ï¿½ Text ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ® Ã£ï¿½ï¿½
         buttonText = GetComponentInChildren<TextMeshProUGUI>();
 
-        // ÇöÀç »ö»ó ÀúÀå
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         originalColor = buttonText.color;
 
         
@@ -26,10 +26,10 @@ public class TextColorChange : MonoBehaviour
 
     public void OnClickChangeColor()
     {
-        // Å¬¸¯ ½Ã »ö»ó º¯°æ
+        // Å¬ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         buttonText.color = changeColor;
 
-        // ÀÏÁ¤ ½Ã°£ ÈÄ¿¡ ¿ø·¡ »ö»óÀ¸·Î µ¹¸®±â
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½ ï¿½Ä¿ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         Invoke("RestoreOriginalColor", colorChangeDuration);
 
     }
@@ -37,7 +37,7 @@ public class TextColorChange : MonoBehaviour
 
     void RestoreOriginalColor()
     {
-        // ¿ø·¡ »ö»óÀ¸·Î µ¹¸®±â
+        // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         buttonText.color = originalColor;        
     }
 }

@@ -14,7 +14,7 @@ public class Loading : MonoBehaviour
         string nextScene = PlayerPrefs.GetString("nextScene");
         StartCoroutine(LoadSceneAsync(nextScene));
 
-        /*PlayerPrefs.SetString("nextScene", "ÀÌµ¿ÇÒ ¾À ÀÌ¸§");
+        /*PlayerPrefs.SetString("nextScene", "ï¿½Ìµï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½Ì¸ï¿½");
         SceneManager.LoadScene("LoadingScene");*/
     }
 
@@ -27,10 +27,10 @@ public class Loading : MonoBehaviour
 
         while (!operation.isDone)
         {
-            // ·ÎµùÀÌ °ÅÀÇ ¿Ï·áµÈ °æ¿ì
+            // ï¿½Îµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ï·ï¿½ï¿½ ï¿½ï¿½ï¿½
             if (operation.progress >= 0.9f)
             {
-                yield return new WaitForSeconds(3f);  // 5ÃÊ µ¿¾È ±â´Ù¸²
+                yield return new WaitForSeconds(3f);  // 5ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ù¸ï¿½
 
                 operation.allowSceneActivation = true;
             }

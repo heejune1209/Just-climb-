@@ -61,14 +61,14 @@ public class GameManager : MonoBehaviour
         GameManager.Instance.PlayerDeathCount = 0;
     }
 
-    // ÃÊ±âÈ­
+    // ï¿½Ê±ï¿½È­
     public void GoToMain()
     {
         GameManager.Instance.StartTime = DateTime.UtcNow;
     }
 
 
-    public void PlayerDie() // Á×¾úÀ»‹š
+    public void PlayerDie() // ï¿½×¾ï¿½ï¿½ï¿½ï¿½ï¿½
     {
         GameManager.Instance.PlayerDeathCount++;
         string sceneName = SceneManager.GetActiveScene().name;

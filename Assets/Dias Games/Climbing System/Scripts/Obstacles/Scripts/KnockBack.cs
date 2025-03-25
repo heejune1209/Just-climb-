@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class KnockBack : MonoBehaviour
 {
-    public float knockbackDuration = 0.5f; // ³Ë¹é Áö¼Ó ½Ã°£
-    public float knockbackDistance = 3f; // ³Ë¹é °Å¸®
-    public Vector3 knockbackDirection = Vector3.right; // ³Ë¹é ¹æÇâ, ¿©±â¼­´Â ÃÊ±â°ªÀ¸·Î ¿À¸¥ÂÊ ¹æÇâÀ» »ç¿ëÇÕ´Ï´Ù.
-                                                       // (°ªÀ» 1À» ±âÁØÀ¸·Î ºÎÈ£(+,-)¸¦ ³Ö¾îº¸¸é¼­ ¹æÇâ ¼³Á¤.)
+    public float knockbackDuration = 0.5f; // ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ã°ï¿½
+    public float knockbackDistance = 3f; // ï¿½Ë¹ï¿½ ï¿½Å¸ï¿½
+    public Vector3 knockbackDirection = Vector3.right; // ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½, ï¿½ï¿½ï¿½â¼­ï¿½ï¿½ ï¿½Ê±â°ªï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.
+                                                       // (ï¿½ï¿½ï¿½ï¿½ 1ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È£(+,-)ï¿½ï¿½ ï¿½Ö¾îº¸ï¿½é¼­ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½.)
     void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.CompareTag("Player"))
@@ -18,13 +18,13 @@ public class KnockBack : MonoBehaviour
                 //ContactPoint contact = other.GetContact(0);
                 Vector3 targetPosition = playerRigidbody.position + knockbackDirection.normalized * knockbackDistance;
                 AudioManager.instance.PlaySFX(8);
-                // Á¢ÃË ÁöÁ¡ÀÌ ¾îµðµç ¹æÇâ ¼³Á¤ÇÏ¸é ±× ¹æÇâÀ¸·Î ¹«Á¶°Ç ³Ë¹é.
+                // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¹ï¿½.
 
 
-                //Vector3 knockbackDirection = -contact.normal; // ¹Ý´ë ¹æÇâ º¤ÅÍ
+                //Vector3 knockbackDirection = -contact.normal; // ï¿½Ý´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 //Vector3 targetPosition = playerRigidbody.position + knockbackDirection * knockbackDistance;
                 /*
-                Vector3 randomKnockbackDirection = Random.insideUnitSphere.normalized; // ·£´ý ¹æÇâ º¤ÅÍ »ý¼º
+                Vector3 randomKnockbackDirection = Random.insideUnitSphere.normalized; // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
                 Vector3 targetPosition = playerRigidbody.position + randomKnockbackDirection * knockbackDistance;
                 */
                 StartCoroutine(KnockbackPlayer(playerRigidbody, targetPosition, knockbackDuration));
@@ -32,7 +32,7 @@ public class KnockBack : MonoBehaviour
         }
     }
 
-    // ºÎµå·¯¿î ³Ë¹éÀ» À§ÇÑ ÄÚ·çÆ¾
+    // ï¿½Îµå·¯ï¿½ï¿½ ï¿½Ë¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ú·ï¿½Æ¾
     IEnumerator KnockbackPlayer(Rigidbody playerRigidbody, Vector3 targetPosition, float duration)
     {
         //Quaternion startRotation = playerRigidbody.rotation;
@@ -45,7 +45,7 @@ public class KnockBack : MonoBehaviour
         {
             elapsedTime += Time.deltaTime;
 
-            float t = Mathf.Clamp01(elapsedTime / duration); // º¸°£ °è¼ö (0~1 »çÀÌ °ª)
+            float t = Mathf.Clamp01(elapsedTime / duration); // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ (0~1 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½)
             playerRigidbody.MovePosition(Vector3.Lerp(initialPosition, targetPosition, t));
 
             yield return null;
@@ -53,28 +53,28 @@ public class KnockBack : MonoBehaviour
     }
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.red; // ±âÁî¸ð »ö»ó ¼³Á¤
+        Gizmos.color = Color.red; // ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         Vector3 arrowStart = transform.position;
         Vector3 arrowEnd = transform.position + knockbackDirection.normalized * knockbackDistance;
 
-        // È­»ìÇ¥ ²À´ë±â ºÎºÐ
+        // È­ï¿½ï¿½Ç¥ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Îºï¿½
         Gizmos.DrawWireSphere(arrowEnd, 0.1f);
 
-        // È­»ìÇ¥ ¼±
+        // È­ï¿½ï¿½Ç¥ ï¿½ï¿½
         Gizmos.DrawLine(arrowStart, arrowEnd);
 
-        // È­»ìÇ¥ »ï°¢Çü ºÎºÐ
+        // È­ï¿½ï¿½Ç¥ ï¿½ï°¢ï¿½ï¿½ ï¿½Îºï¿½
         Vector3 arrowHeadRight = Quaternion.Euler(0, 180 + 30, 0) * knockbackDirection.normalized * 0.3f;
         Vector3 arrowHeadLeft = Quaternion.Euler(0, 180 - 30, 0) * knockbackDirection.normalized * 0.3f;
         Gizmos.DrawLine(arrowEnd, arrowEnd + arrowHeadRight);
         Gizmos.DrawLine(arrowEnd, arrowEnd + arrowHeadLeft);
         Gizmos.DrawLine(arrowEnd + arrowHeadRight, arrowEnd + arrowHeadLeft);
-        // ³Ë¹é ¹æÇâÀ» ±âÁî¸ð·Î ±×¸®±â (±âÁî¸ð´Â ¿¡µðÅÍ¿¡¼­ ¼±ÅÃµÈ »óÅÂÀÏ ¶§¸¸ º¸ÀÓ)
+        // ï¿½Ë¹ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½×¸ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Í¿ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ãµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
     }
 
-    // ¼±Çüº¸°£ »ç¿ë ¾ÈÇÑ ÄÚµå
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Úµï¿½
     /*
-    public float knockbackForce = 10f; // ³Ë¹é¿¡ »ç¿ëµÉ Èû
+    public float knockbackForce = 10f; // ï¿½Ë¹é¿¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½
     
     private void OnCollisionEnter(Collision collision)
     {
@@ -83,12 +83,12 @@ public class KnockBack : MonoBehaviour
             Rigidbody playerRigidbody = collision.gameObject.GetComponent<Rigidbody>();
             if (playerRigidbody != null)
             {
-                ContactPoint contact = collision.GetContact(0); // Ãæµ¹ ÁöÁ¡ °¡Á®¿À±â
+                ContactPoint contact = collision.GetContact(0); // ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-                // Ãæµ¹ ÁöÁ¡¿¡¼­ ÇÃ·¹ÀÌ¾î·Î ÇâÇÏ´Â ¹æÇâ °è»ê
+                // ï¿½æµ¹ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾ï¿½ï¿½ ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½
                 Vector3 knockbackDirection = - contact.normal;
 
-                // ¹Ý´ë ¹æÇâÀ¸·Î ³Ë¹éÀ» ÁÖ°í ÇÃ·¹ÀÌ¾î¸¦ Æ¯Á¤ ÈûÀ¸·Î ¹Ð¾î³¿
+                // ï¿½Ý´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ë¹ï¿½ï¿½ï¿½ ï¿½Ö°ï¿½ ï¿½Ã·ï¿½ï¿½Ì¾î¸¦ Æ¯ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ð¾î³¿
                 playerRigidbody.AddForce(knockbackDirection * knockbackForce, ForceMode.Impulse);
             }
         }
