@@ -24,6 +24,10 @@ TagManager:
   - InvisbleObstacle
   - Rolling
   - Rocks
+  - ShopTrigger
+  - StageTrigger
+  - WorldTrigger
+  - RankingTrigger
   layers:
   - Default
   - TransparentFX

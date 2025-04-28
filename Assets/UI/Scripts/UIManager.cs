@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
 
+/*
 public class UIManager : MonoBehaviour
 {
     bool Closebtndown;
@@ -24,10 +25,10 @@ public class UIManager : MonoBehaviour
     }
 
 
-    void OncloseSettings()     // ESC ¹öÆ° ´­·¶À»¶§ ¼³Á¤Ã¢ÀÌ ²¨Áö´Â ±â´É 
+    void OncloseSettings()     // ESC ï¿½ï¿½Æ° ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Ã¢ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ 
     {
         Closebtndown = keyboard.escapeKey.wasPressedThisFrame; 
-        if (Closebtndown == true && SettingsUI.activeInHierarchy == true)  // esc¹öÆ°À» ´­·¶À»¶§¿Í ÀÌ ui°¡ È°¼ºÈ­ µÇ¾îÀÖÀ»¶§¸¸ ½ÇÇà
+        if (Closebtndown == true && SettingsUI.activeInHierarchy == true)  // escï¿½ï¿½Æ°ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ uiï¿½ï¿½ È°ï¿½ï¿½È­ ï¿½Ç¾ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         {
             SettingsUI settingsUI = FindObjectOfType<SettingsUI>();
             settingsUI.CloseSettingsUI();
@@ -35,3 +36,4 @@ public class UIManager : MonoBehaviour
 
     }
 }
+*/

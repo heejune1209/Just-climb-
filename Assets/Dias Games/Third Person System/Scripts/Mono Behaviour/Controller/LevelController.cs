@@ -27,19 +27,19 @@ namespace DiasGames.Controller
         }
         private void Start()
         {
-            InGameItem inGameItem = GameItem.GetComponent<InGameItem>();
-            if (PlayerPrefs.HasKey("PlayerRespawnX") && PlayerPrefs.HasKey("PlayerRespawnY") && PlayerPrefs.HasKey("PlayerRespawnZ"))
-            {
-                float posX = PlayerPrefs.GetFloat("PlayerRespawnX");
-                float posY = PlayerPrefs.GetFloat("PlayerRespawnY");
-                float posZ = PlayerPrefs.GetFloat("PlayerRespawnZ");
+            //InGameItem inGameItem = GameItem.GetComponent<InGameItem>();
+            //if (PlayerPrefs.HasKey("PlayerRespawnX") && PlayerPrefs.HasKey("PlayerRespawnY") && PlayerPrefs.HasKey("PlayerRespawnZ"))
+            //{
+            //    float posX = PlayerPrefs.GetFloat("PlayerRespawnX");
+            //    float posY = PlayerPrefs.GetFloat("PlayerRespawnY");
+            //    float posZ = PlayerPrefs.GetFloat("PlayerRespawnZ");
 
-                inGameItem.playerPos.transform.position = new Vector3(posX, posY, posZ);
-            }
-            else
-            {
-                player.transform.position = new Vector3(player.transform.position.x, player.transform.position.y, player.transform.position.z);
-            }
+            //    inGameItem.playerPos.transform.position = new Vector3(posX, posY, posZ);
+            //}
+            //else
+            //{
+            //    player.transform.position = new Vector3(player.transform.position.x, player.transform.position.y, player.transform.position.z);
+            //}
 
         }
 
@@ -69,7 +69,7 @@ namespace DiasGames.Controller
             yield return new WaitForSeconds(delayToRestartLevel);
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
             _isRestartingLevel = false;
-            GameManager.Instance.PlayerDie();
+            Managers.Game.PlayerDie();
         }
         
 

@@ -322,12 +322,12 @@ namespace DiasGames.Controller
         }
         private void OnEnter(InputValue value)
         {
-            Tutori tutori = tutorial.GetComponent<Tutori>();
-            if(tutori != null && tutori.TutorialPanel.activeSelf == true && SceneManager.GetActiveScene().name == "Stage1")
-            {
-                Time.timeScale = 1f;
-                tutori.TutorialPanel.SetActive(false);
-            }
+            //TutorialTrigger tutori = tutorial.GetComponent<TutorialTrigger>();
+            //if(tutori != null && tutori.TutorialPanel.activeSelf == true && SceneManager.GetActiveScene().name == "Stage1")
+            //{
+            //    Time.timeScale = 1f;
+            //    tutori.TutorialPanel.SetActive(false);
+            //}
         }
         
 

@@ -22,7 +22,7 @@ namespace DiasGames.Components
             visible = Cursor.visible;
             lockMode = Cursor.lockState;
 
-            cS = GetComponent<CSPlayerController>(); // CSPlayerController Å¬·¡½ºÀÇ °´Ã¼¸¦ »ý¼ºÈÄ ÇÊµå ÂüÁ¶¸¦ À§ÇØ ¼±¾ð
+            cS = GetComponent<CSPlayerController>(); // CSPlayerController Å¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ã¼ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Êµï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
         }
 
         private void OnPause(InputValue value)
@@ -35,7 +35,7 @@ namespace DiasGames.Components
             
         }
 
-        public void OnPause(bool paused)  // esc´©¸£¸é Ä¿¼­ º¸ÀÌ°í ½Ã°£ ¸ØÃß°ÔÇÏ°í pausemenu settrue ±â´É
+        public void OnPause(bool paused)  // escï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä¿ï¿½ï¿½ ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½Ã°ï¿½ ï¿½ï¿½ï¿½ß°ï¿½ï¿½Ï°ï¿½ pausemenu settrue ï¿½ï¿½ï¿½
         {           
             SelectPanelTrigger selectPanel = ResultPanel.GetComponent<SelectPanelTrigger>(); 
             if (pauseMenu && cS.HowtoPlayTrigger.activeSelf == false && selectPanel.targetTrigger.activeSelf == false)
@@ -58,7 +58,7 @@ namespace DiasGames.Components
         
         
         
-        public void OnTapGetHTPPanel(bool paused) // HTPPanel ¶ß¸é Ä¿¼­µµ º¸ÀÌ°í ½Ã°£ÀÌ ¸ØÃß°Ô ÇÏ´Â ±â´É
+        public void OnTapGetHTPPanel(bool paused) // HTPPanel ï¿½ß¸ï¿½ Ä¿ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Ì°ï¿½ ï¿½Ã°ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ß°ï¿½ ï¿½Ï´ï¿½ ï¿½ï¿½ï¿½
         {
             SelectPanelTrigger selectPanel = ResultPanel.GetComponent<SelectPanelTrigger>();
             if (cS.HowtoPlayTrigger && pauseMenu.activeSelf == false && selectPanel.targetTrigger.activeSelf == false)

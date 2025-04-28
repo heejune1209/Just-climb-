@@ -21,8 +21,9 @@ namespace DiasGames.Components
 
         private void FixedUpdate()
         {
-            if (updateMode == UpdateMode.FixedUpdate)
-                transform.position = _follow.position + _offset;
+            if (updateMode != UpdateMode.FixedUpdate) return;
+            if (_follow == null) return;            // ← 이 줄 추가
+            transform.position = _follow.position + _offset;
         }
 
         private void LateUpdate()

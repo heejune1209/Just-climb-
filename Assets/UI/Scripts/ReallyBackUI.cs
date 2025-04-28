@@ -13,17 +13,17 @@ public class ReallyBackUI : MonoBehaviour
     {
         BackUIanimator = GetComponent<Animator>();
     }
-    public void ActiveWarningPanel() // °æ°í ÆÐ³ÎÀÌ ¾×Æ¼ºêµÇ´Â ±â´É
+    public void ActiveWarningPanel() // ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½Æ¼ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½
     {        
         gameObject.SetActive(true);
     }
-    public void ActiveoptionPanel() // °æ°í ÆÐ³ÎÀÌ ¾×Æ¼ºêµÇ´Â ±â´É
+    public void ActiveoptionPanel() // ï¿½ï¿½ï¿½ ï¿½Ð³ï¿½ï¿½ï¿½ ï¿½ï¿½Æ¼ï¿½ï¿½Ç´ï¿½ ï¿½ï¿½ï¿½
     {
         optionPanel.SetActive(true);
     }
 
 
-    public void CloseBackUI()  // ¹öÆ°À¸·Î ·ÎÁ÷ ¿¬°á
+    public void CloseBackUI()  // ï¿½ï¿½Æ°ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     {
         StartCoroutine("CloseAfterDelay3");
 
@@ -31,28 +31,28 @@ public class ReallyBackUI : MonoBehaviour
     public void GoToMainScene()
     {
         Time.timeScale = 1f;
-        GameManager.Instance.GoToLobby();
+        //Managers.Game.GoToLobby();
         PlayerPrefs.DeleteKey("PlayerRespawnX");
         PlayerPrefs.DeleteKey("PlayerRespawnY");
         PlayerPrefs.DeleteKey("PlayerRespawnZ");
 
         PlayerPrefs.SetString("nextScene", "MainMenu");
         SceneManager.LoadScene("LoadingScene");
-        AudioManager.instance.PlayBGM(0);
+        Managers.Sound.PlayBGM(0);
     }
     public void GoToLobbyScene()
     {
         Time.timeScale = 1f;
-        GameManager.Instance.GoToLobby();
+        //Managers.Game.GoToLobby();
         PlayerPrefs.DeleteKey("PlayerRespawnX");
         PlayerPrefs.DeleteKey("PlayerRespawnY");
         PlayerPrefs.DeleteKey("PlayerRespawnZ");
 
         PlayerPrefs.SetString("nextScene", "LobbyScene");
         SceneManager.LoadScene("LoadingScene");
-        AudioManager.instance.PlayBGM(1);
+        Managers.Sound.PlayBGM(1);
     }
-    private IEnumerator CloseAfterDelay3()  // UIÃ¢ ´Ý´Â ¾Ö´Ï¸ÞÀÌ¼Ç ½ÇÇà°ú 0.5ÃÊ ÅÒ Ãß°¡
+    private IEnumerator CloseAfterDelay3()  // UIÃ¢ ï¿½Ý´ï¿½ ï¿½Ö´Ï¸ï¿½ï¿½Ì¼ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ 0.5ï¿½ï¿½ ï¿½ï¿½ ï¿½ß°ï¿½
     {
         BackUIanimator.SetTrigger("Close");
         yield return new WaitForSeconds(0.5f);
