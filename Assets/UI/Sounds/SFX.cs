@@ -6,6 +6,6 @@ public class SFX : MonoBehaviour
 {
     public void SFX1(int sfxIndex)
     {
-        AudioManager.instance.PlaySFX(sfxIndex);
+        Managers.Sound.PlaySFX(sfxIndex);
     }
 }

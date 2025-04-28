@@ -16,17 +16,8 @@ namespace DiasGames.Controller
         private Health _health = null;
         private IMover _mover;
         private ICapsule _capsule;
-
-        public GameObject SelectTrigger;
-        public GameObject WorldViewTrigger;
-        public GameObject ShopTrigger;
-
-        public GameObject SelectTextTrigger;
-        public GameObject ShopTextTrigger;
-        public GameObject WorldViewTextTrigger;
-        public GameObject RankingTrigger;
+       
         private const float _threshold = 0.01f;
-        LobbyPauseCom _LobbyPause;
         [SerializeField] private bool hideCursor = true;
 
         [Header("Cinemachine")]
@@ -73,11 +64,7 @@ namespace DiasGames.Controller
             // set right angle on start for camera
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.eulerAngles.y;
 
-        }
-        private void Start()
-        {
-            _LobbyPause = GetComponent<LobbyPauseCom>();
-        }
+        }       
 
         private void OnEnable()
         {
@@ -274,44 +261,17 @@ namespace DiasGames.Controller
             OnZoom(value.isPressed);
         }
 
-
-        private void OnInteract(InputValue value)
-        {
-            if (SceneManager.GetActiveScene().name == "LobbyScene")
-            {
-                if (SelectTrigger != null && SelectTextTrigger.activeSelf == true && value.isPressed)
-                {
-
-                    _LobbyPause.OnInteractGetSelectPanel(!_LobbyPause._isPaused);
-                    // TextTrigger.SetActive(!TextTrigger.activeSelf);
-                }
-                if (ShopTrigger != null && ShopTextTrigger.activeSelf == true && value.isPressed)
-                {
-                    _LobbyPause.OnInteractGetShopPanel(!_LobbyPause._isPaused);
-                }
-                if (WorldViewTrigger != null && WorldViewTextTrigger.activeSelf == true && value.isPressed)
-                {
-
-                    _LobbyPause.OnInteractGetWorldViewPanel(!_LobbyPause._isPaused);
-                    // TextTrigger.SetActive(!TextTrigger.activeSelf);
-                }
-                if (RankingTrigger.activeSelf == true && value.isPressed)
-                {
-                    Cursor.visible = true;
-                    Cursor.lockState = CursorLockMode.None;
-                    PlayerPrefs.SetString("nextScene", "RankingScene");
-                    SceneManager.LoadScene("LoadingScene");
-                }
-            }
-
-
-        }
         private void OnDrop(InputValue value)
         {
             OnDrop(value.isPressed);
         }
-        
-        
+
+        private void OnInteract(InputValue value)
+        {
+            OnInteract(value.isPressed);
+        }
+
+
 
 
 #endif

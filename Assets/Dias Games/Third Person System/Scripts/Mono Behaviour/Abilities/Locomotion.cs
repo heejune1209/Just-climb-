@@ -10,25 +10,45 @@ namespace DiasGames.Abilities
 
     public class Locomotion : AbstractAbility
     {
-        [SerializeField] private float walkSpeed;
-        [SerializeField] private float sprintSpeed;
+        [SerializeField]
+        private float _walkSpeed;         // ì¸ìŠ¤í™í„°ì— ë…¸ì¶œë˜ëŠ” ë°±í‚¹ í•„ë“œ
+        [SerializeField]
+        private float _sprintSpeed;       // ì¸ìŠ¤í™í„°ì— ë…¸ì¶œë˜ëŠ” ë°±í‚¹ í•„ë“œ
+
+        /// <summary>ê±·ê¸° ì†ë„ (í”„ë¡œí¼í‹°)</summary>
+        public float WalkSpeed
+        {
+            get { return _walkSpeed; }
+            set { _walkSpeed = value; }
+        }
+
+        /// <summary>ì „ë ¥ ì§ˆì£¼ ì†ë„ (í”„ë¡œí¼í‹°)</summary>
+        public float SprintSpeed
+        {
+            get { return _sprintSpeed; }
+            set { _sprintSpeed = value; }
+        }
+
         [Tooltip("Determine how to use extra key button to handle movement. If shift is hold, tells system if it should walk, run, or do nothing")]
-        [SerializeField] private MovementStyle movementByKey = MovementStyle.HoldToWalk;
-        [SerializeField] private string groundedAnimBlendState = "Grounded";
-        private bool isFeatherActive = false; // ±êÅĞ ¾ÆÀÌÅÛ È°¼ºÈ­ ¿©ºÎ
-        private float featherDuration = 10f; // ±êÅĞ ¾ÆÀÌÅÛ Áö¼Ó ½Ã°£
-        private float featherTimer = 0f; // ±êÅĞ ¾ÆÀÌÅÛ Áö¼Ó ½Ã°£ Å¸ÀÌ¸Ó
+        [SerializeField]
+        private MovementStyle movementByKey = MovementStyle.HoldToWalk;
 
         [SerializeField]
-        private float Speedchange = 1.5f;
+        private string groundedAnimBlendState = "Grounded";
 
-        private IMover _mover = null;
+        private bool isFeatherActive = false;
+        private float featherDuration = 10f;
+        private float featherTimer = 0f;
+
+        [SerializeField]
+        private float speedChangeMultiplier = 1.5f;
+
+        private IMover _mover;
         private int _animIDSpeed;
 
         private void Awake()
         {
             _mover = GetComponent<IMover>();
-
             _animIDSpeed = Animator.StringToHash("Speed");
         }
 
@@ -42,60 +62,61 @@ namespace DiasGames.Abilities
             SetAnimationState(groundedAnimBlendState, 0.25f);
 
             if (_action.move.magnitude < 0.1f)
-            {
-                // reset movement parameters
                 _animator.SetFloat(_animIDSpeed, 0, 0, Time.deltaTime);
-            }
         }
 
         public override void UpdateAbility()
         {
-            float targetSpeed = 0;
+            float targetSpeed = 0f;
 
             if (isFeatherActive)
             {
                 featherTimer += Time.deltaTime;
                 if (featherTimer >= featherDuration)
                 {
-                    walkSpeed /= Speedchange; // walkSpeed ÃÊ±â°ªÀ¸·Î Àç¼³Á¤
-                    sprintSpeed /= Speedchange; // sprintSpeed ÃÊ±â°ªÀ¸·Î Àç¼³Á¤
-
+                    // ì§€ì†ì‹œê°„ ëë‚˜ë©´ ì›ë˜ ì†ë„ë¡œ ë³µì›
+                    WalkSpeed /= speedChangeMultiplier;
+                    SprintSpeed /= speedChangeMultiplier;
                     isFeatherActive = false;
                     featherTimer = 0f;
                 }
                 else
                 {
-                    targetSpeed = _action.walk ? walkSpeed * Speedchange : sprintSpeed * Speedchange;
+                    // ê¹ƒí„¸ í™œì„±í™” ì¤‘ì—ëŠ” ì†ë„ ì¦ê°€ ì ìš©
+                    targetSpeed = _action.walk
+                        ? WalkSpeed * speedChangeMultiplier
+                        : SprintSpeed * speedChangeMultiplier;
                     _mover.Move(_action.move, targetSpeed);
+                    return;
                 }
             }
-            else
-            {
-                switch (movementByKey)
-                {
-                    case MovementStyle.HoldToWalk:
-                        targetSpeed = _action.walk ? walkSpeed : sprintSpeed;
-                        break;
-                    case MovementStyle.HoldToRun:
-                        targetSpeed = _action.walk ? sprintSpeed : walkSpeed;
-                        break;
-                    case MovementStyle.DoNothing:
-                        targetSpeed = sprintSpeed;
-                        break;
-                }
 
-                _mover.Move(_action.move, targetSpeed);
+            // ê¹ƒí„¸ ë¹„í™œì„±í™”ëœ ì¼ë°˜ ì´ë™ ë¡œì§
+            switch (movementByKey)
+            {
+                case MovementStyle.HoldToWalk:
+                    targetSpeed = _action.walk ? WalkSpeed : SprintSpeed;
+                    break;
+                case MovementStyle.HoldToRun:
+                    targetSpeed = _action.walk ? SprintSpeed : WalkSpeed;
+                    break;
+                case MovementStyle.DoNothing:
+                    targetSpeed = SprintSpeed;
+                    break;
             }
+            _mover.Move(_action.move, targetSpeed);
         }
 
-        // ±êÅĞ ¾ÆÀÌÅÛ È°¼ºÈ­ ÇÔ¼ö
+        /// <summary>
+        /// ê¹ƒí„¸ ì•„ì´í…œ ì‚¬ìš© ì‹œ í˜¸ì¶œ: ì†ë„ ì¦ê°€ ì‹œì‘
+        /// </summary>
         public void ActivateFeatherItem()
         {
             if (!isFeatherActive)
             {
                 isFeatherActive = true;
-                walkSpeed *= Speedchange; // walkSpeed °ªÀ» º¯°æ
-                sprintSpeed *= Speedchange; // sprintSpeed °ªÀ» º¯°æ
+                WalkSpeed *= speedChangeMultiplier;
+                SprintSpeed *= speedChangeMultiplier;
                 featherTimer = 0f;
             }
         }
