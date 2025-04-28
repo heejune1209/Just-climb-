@@ -10126,6 +10126,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Gameplay - Climbing System (Rigidbody)
       objectReference: {fileID: 0}
+    - target: {fileID: 7783807133931464672, guid: 03ebc97584d5b764aac1ada1c3beb647, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -4
+      objectReference: {fileID: 0}
     - target: {fileID: 8102995908798439841, guid: 03ebc97584d5b764aac1ada1c3beb647, type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
@@ -10380,7 +10384,7 @@ TerrainCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_TerrainData: {fileID: 15600000, guid: 891e5670a82391f40868e19050150722, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 3495d909f63b63d4baada2260eb73f47, type: 2}
   m_EnableTreeColliders: 1
 --- !u!218 &1809053437
 Terrain:
@@ -10391,7 +10395,7 @@ Terrain:
   m_GameObject: {fileID: 1809053435}
   m_Enabled: 1
   serializedVersion: 6
-  m_TerrainData: {fileID: 15600000, guid: 891e5670a82391f40868e19050150722, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 90c6e83437753bc4ab68327bfbdfd586, type: 2}
   m_TreeDistance: 5000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
