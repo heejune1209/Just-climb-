@@ -431,7 +431,7 @@ GameObject:
   - component: {fileID: 8182113554206453879}
   - component: {fileID: 8972352563644954955}
   m_Layer: 5
-  m_Name: Exchange10
+  m_Name: Exchange2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -777,7 +777,7 @@ GameObject:
   - component: {fileID: 4336179798922688628}
   - component: {fileID: 4324038889553761220}
   m_Layer: 5
-  m_Name: Conv100
+  m_Name: AmountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1903,7 +1903,7 @@ GameObject:
   - component: {fileID: 5723652675225327842}
   - component: {fileID: 2132276268371821261}
   m_Layer: 5
-  m_Name: Conv10000
+  m_Name: AmountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2840,7 +2840,7 @@ GameObject:
   - component: {fileID: 2493829444451109282}
   - component: {fileID: 4707239207116074108}
   m_Layer: 5
-  m_Name: Exchange10000
+  m_Name: Exchange5
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3950,7 +3950,7 @@ GameObject:
   - component: {fileID: 6998403736448656879}
   - component: {fileID: 3734870638176355797}
   m_Layer: 5
-  m_Name: Exchange1000
+  m_Name: Exchange4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4951,7 +4951,7 @@ GameObject:
   - component: {fileID: 2121306097252421694}
   - component: {fileID: 5220428082425504447}
   m_Layer: 5
-  m_Name: Conv1000
+  m_Name: AmountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5820,7 +5820,7 @@ GameObject:
   - component: {fileID: 8725510746733768322}
   - component: {fileID: 1831122690297643897}
   m_Layer: 5
-  m_Name: Conv1
+  m_Name: AmountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -6239,7 +6239,7 @@ GameObject:
   - component: {fileID: 7598166899341624673}
   - component: {fileID: 1251921374567976253}
   m_Layer: 5
-  m_Name: Exchange100
+  m_Name: Exchange3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7731,7 +7731,7 @@ GameObject:
   - component: {fileID: 883823099255120530}
   - component: {fileID: 6851609690138776292}
   m_Layer: 5
-  m_Name: Conv10
+  m_Name: AmountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -7753,8 +7753,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: -45}
-  m_SizeDelta: {x: 300, y: 66}
+  m_AnchoredPosition: {x: 6.7897, y: -45}
+  m_SizeDelta: {x: 313.5795, y: 66}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &883823099255120530
 CanvasRenderer:
@@ -8487,7 +8487,7 @@ GameObject:
   - component: {fileID: 2787430033192181968}
   - component: {fileID: 9051520300659254816}
   m_Layer: 5
-  m_Name: Exchange100000
+  m_Name: Exchange6
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8757,7 +8757,7 @@ GameObject:
   - component: {fileID: 6619441470837697944}
   - component: {fileID: 7486161799926391630}
   m_Layer: 5
-  m_Name: Conv100000
+  m_Name: AmountText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

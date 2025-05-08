@@ -266,11 +266,11 @@ namespace DiasGames.Controller
         private void OnInteract(InputValue value)
         {
             OnInteract(value.isPressed);
-            Debug.Log("EÅ° ´­¸²");
+            Debug.Log("EÅ° ï¿½ï¿½ï¿½ï¿½");
             
             if (PanelTrigger != null && TextTrigger.activeSelf == true)
             {
-                PanelTrigger.SetActive(!PanelTrigger.activeSelf); // ÆÐ³ÎÀÇ È°¼ºÈ­ »óÅÂ¸¦ ¹ÝÀü½ÃÅµ´Ï´Ù.
+                PanelTrigger.SetActive(!PanelTrigger.activeSelf); // ï¿½Ð³ï¿½ï¿½ï¿½ È°ï¿½ï¿½È­ ï¿½ï¿½ï¿½Â¸ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Åµï¿½Ï´ï¿½.
             }
         }
 

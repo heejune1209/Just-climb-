@@ -114,6 +114,26 @@ namespace DiasGames
             OnAbilityStopped?.Invoke(LastAbility);
         }
 
+        /// <summary>
+        /// 죽음 리스폰 후에 능력 상태를
+        /// 완전히 초기화하고 다시 켭니다.
+        /// </summary>
+        public void ResetAll()
+        {
+            // ① 혹시 실행 중인 능력 정지
+            CurrentAbility?.StopAbility();
+            CurrentCombat?.StopCombat();
+
+            // ② 내부 상태 초기화
+            CurrentAbility = null;
+            LastAbility = null;
+            CurrentCombat = null;
+            characterActions = new CharacterActions();
+
+            // ③ 다시 켜기
+            enabled = true;
+        }
+
         // update state to check if any combat wants to play
         private void UpdateCombats()
         {

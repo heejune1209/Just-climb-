@@ -79,6 +79,14 @@ public class UIManager
         // 오브젝트가 생성되면서 오브젝트의 UI_Inven.Start()를 호출
         _sceneUI = sceneUI;
 
+        string scene = SceneManager.GetActiveScene().name;
+        bool isStageScene = scene.Contains("Stage");
+        if (scene == "Main")
+        {
+            Cursor.visible = true;
+            Cursor.lockState = CursorLockMode.None;
+        }
+
         // Root 밑에 부모 설정(SetParent(@UI_Root))
         go.transform.SetParent(Root.transform);
 

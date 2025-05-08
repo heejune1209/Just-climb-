@@ -2969,6 +2969,7 @@ GameObject:
   m_Component:
   - component: {fileID: 200857074}
   - component: {fileID: 200857073}
+  - component: {fileID: 200857075}
   m_Layer: 0
   m_Name: Directional Light
   m_TagString: Untagged
@@ -3053,6 +3054,29 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 84.372, y: -30, z: 0}
+--- !u!114 &200857075
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 200857072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 474bcb49853aa07438625e644c072ee6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0
 --- !u!1001 &201112206
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4947,6 +4971,10 @@ PrefabInstance:
     - target: {fileID: 7546005447329315063, guid: 03ebc97584d5b764aac1ada1c3beb647, type: 3}
       propertyPath: m_Name
       value: Gameplay - Climbing System (Rigidbody)
+      objectReference: {fileID: 0}
+    - target: {fileID: 7783807133931464672, guid: 03ebc97584d5b764aac1ada1c3beb647, type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -4
       objectReference: {fileID: 0}
     - target: {fileID: 8102995908798439841, guid: 03ebc97584d5b764aac1ada1c3beb647, type: 3}
       propertyPath: m_AnchorMax.y
@@ -14986,7 +15014,7 @@ TerrainCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_TerrainData: {fileID: 15600000, guid: 900aaad643c4cd84faf160afc83cb78a, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 715de01397bff4b4e95e384247af901b, type: 2}
   m_EnableTreeColliders: 1
 --- !u!218 &1023277984
 Terrain:
@@ -14997,7 +15025,7 @@ Terrain:
   m_GameObject: {fileID: 1023277982}
   m_Enabled: 1
   serializedVersion: 6
-  m_TerrainData: {fileID: 15600000, guid: 900aaad643c4cd84faf160afc83cb78a, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 715de01397bff4b4e95e384247af901b, type: 2}
   m_TreeDistance: 5000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
@@ -16812,7 +16840,7 @@ TerrainCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_TerrainData: {fileID: 15600000, guid: 8bed33444792d6f429bb7fd5b302efa1, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 655f815e1ebc64448b7a287a030d99fa, type: 2}
   m_EnableTreeColliders: 1
 --- !u!218 &1151579827
 Terrain:
@@ -16823,7 +16851,7 @@ Terrain:
   m_GameObject: {fileID: 1151579825}
   m_Enabled: 1
   serializedVersion: 6
-  m_TerrainData: {fileID: 15600000, guid: 8bed33444792d6f429bb7fd5b302efa1, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 655f815e1ebc64448b7a287a030d99fa, type: 2}
   m_TreeDistance: 5000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
@@ -25270,7 +25298,7 @@ TerrainCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 2
-  m_TerrainData: {fileID: 15600000, guid: 18144e1a487a84346a605bdba247d6fb, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 715de01397bff4b4e95e384247af901b, type: 2}
   m_EnableTreeColliders: 1
 --- !u!218 &1800848173
 Terrain:
@@ -25281,7 +25309,7 @@ Terrain:
   m_GameObject: {fileID: 1800848171}
   m_Enabled: 1
   serializedVersion: 6
-  m_TerrainData: {fileID: 15600000, guid: 18144e1a487a84346a605bdba247d6fb, type: 2}
+  m_TerrainData: {fileID: 15600000, guid: 715de01397bff4b4e95e384247af901b, type: 2}
   m_TreeDistance: 5000
   m_TreeBillboardDistance: 50
   m_TreeCrossFadeLength: 5
@@ -25320,7 +25348,7 @@ Transform:
   m_GameObject: {fileID: 1800848171}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -265.91, y: -238.70999, z: -163.64}
+  m_LocalPosition: {x: -237.58, y: -187.87, z: -96.9}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

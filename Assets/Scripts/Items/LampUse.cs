@@ -22,46 +22,54 @@ namespace JustClimb.Items
         [Tooltip("detectTags 순서에 대응하는 재질 배열")]
         public Material[] highlightMaterials;
 
-        [Header("감지 지속 시간(초)")]
-        [Tooltip("하이라이트 재질을 적용할 시간")]
-        public float detectDuration = 10f;
+        [Header("Item Data (buffDuration 포함)")]
+        [Tooltip("지속시간 등 메타데이터를 가진 SO를 할당")]
+        public ItemData data;
 
-        /// <summary>
-        /// IItemUse 인터페이스 구현: 아이템 사용 시 호출됩니다.
-        /// </summary>
-        /// <param name="user">아이템을 사용하는 GameObject (플레이어)</param>
+        // IItemUse 인터페이스 구현: 아이템 사용 시 호출됩니다.
+        // 아이템을 사용하는 GameObject (플레이어)
         public void Use(GameObject user)
         {
             if (user == null)
             {
-                Debug.LogWarning("LampUse.Use 호출 시 user가 null 입니다.");
+                Debug.LogWarning("LampUse: user가 null 입니다.");
                 return;
             }
 
-            // 1) 랜턴 이펙트 소환
+            // SO에서 설정한 감지 지속시간
+            float duration = data.buffDuration;
+            if (duration <= 0f)
+            {
+                Debug.LogWarning($"LampUse: data.buffDuration이 0 이하입니다. ({duration})");
+                return;
+            }
+
+            // 1) 랜턴 이펙트 인스턴스화
+            GameObject lanternInstance = null;
             if (lanternPrefab != null)
             {
-                var instance = Instantiate(lanternPrefab, user.transform.position, Quaternion.identity);
-                instance.transform.SetParent(user.transform);
+                lanternInstance = Instantiate(lanternPrefab,user.transform.position,Quaternion.identity);
+                lanternInstance.transform.SetParent(user.transform);
             }
             else
             {
                 Debug.LogWarning("LampUse: lanternPrefab이 설정되지 않았습니다.");
             }
 
-            // 2) 투명 오브젝트 감지 후 하이라이트 재질 적용 및 복원
+            // 2) 감지 + 복원 + 이펙트 제거
             var mb = user.GetComponent<MonoBehaviour>();
             if (mb != null)
             {
-                mb.StartCoroutine(DetectAndRevert());
+                // 여기서 prefab이 아니라 Instantiate 결과물을 넘겨야 한다
+                mb.StartCoroutine(DetectAndRevert(duration, lanternInstance));
             }
             else
             {
-                Debug.LogWarning("LampUse: 사용자 GameObject에 MonoBehaviour를 찾을 수 없어 코루틴을 실행할 수 없습니다.");
+                Debug.LogWarning("LampUse: Coroutine 실행을 위한 MonoBehaviour를 찾을 수 없습니다.");
             }
         }
 
-        private IEnumerator DetectAndRevert()
+        private IEnumerator DetectAndRevert(float duration, GameObject lanternInstance)
         {
             // 대상 오브젝트 그룹과 원본 재질 저장 리스트
             var groups = new List<GameObject[]>();
@@ -90,7 +98,7 @@ namespace JustClimb.Items
             }
 
             // 지정된 시간 대기
-            yield return new WaitForSeconds(detectDuration);
+            yield return new WaitForSeconds(duration);
 
             // 원본 재질로 복원
             for (int i = 0; i < groups.Count; i++)
@@ -104,6 +112,10 @@ namespace JustClimb.Items
                         renderer.material = savedMats[j];
                 }
             }
+
+            // 랜턴 이펙트 제거
+            if (lanternInstance != null)
+                Destroy(lanternInstance);
         }
     }
 }

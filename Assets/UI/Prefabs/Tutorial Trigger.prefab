@@ -66,4 +66,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 744f1921ff50c5743ae5d7ea104832ec, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TutorialPanel: {fileID: 0}

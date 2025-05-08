@@ -64,6 +64,7 @@ public class UI_Shop : UI_Popup
     Button[] _btnExchange = new Button[6];
     // 각 환전 옵션에 해당하는 보석 개수 배열
     readonly int[] _exchangeAmounts = { 1, 10, 100, 1000, 10000, 100000 };
+    
 
     // 보석→골드 환전 비율 상수
     const int GEM_TO_GOLD_RATIO = 400;
@@ -79,9 +80,7 @@ public class UI_Shop : UI_Popup
         {"Flag",    new Item{key="Flag",   price=300}},
     };
 
-    /// <summary>
-    /// UI 요소 바인딩 및 버튼 이벤트 연결
-    /// </summary>
+    // UI 요소 바인딩 및 버튼 이벤트 연결
     public override void Init()
     {
         base.Init();
@@ -140,10 +139,10 @@ public class UI_Shop : UI_Popup
             _btnExchange[i] = GetButton((int)Buttons.Exchange1 + i);
 
         // 구매 버튼 이벤트 연결
-        _btnBuyFeather.onClick.AddListener(() => TryBuy("Feather"));
-        _btnBuyWing.onClick.AddListener(() => TryBuy("Wing"));
-        _btnBuyLamp.onClick.AddListener(() => TryBuy("Lamp"));
-        _btnBuyFlag.onClick.AddListener(() => TryBuy("Flag"));
+        _btnBuyFeather.onClick.AddListener(() => TryBuy(_itemDefs["Feather"].key));
+        _btnBuyWing.onClick.AddListener(() => TryBuy(_itemDefs["Wing"].key));
+        _btnBuyLamp.onClick.AddListener(() => TryBuy(_itemDefs["Lamp"].key));
+        _btnBuyFlag.onClick.AddListener(() => TryBuy(_itemDefs["Flag"].key));
 
         // 환전 버튼 이벤트 연결
         _btnOpenConversion.onClick.AddListener(OpenConversion);
@@ -153,6 +152,32 @@ public class UI_Shop : UI_Popup
             int amt = _exchangeAmounts[i];
             _btnExchange[i].onClick.AddListener(() => TryExchange(amt));
         }
+
+        //// 2) 환전 라벨 바인딩
+        //_conversionAmountText = new TMP_Text[_exchangeAmounts.Length];
+        //for (int i = 0; i < _exchangeAmounts.Length; i++)
+        //{
+        //    // 예를 들어, Hierarchy가
+        //    // ConversionPanel
+        //    //    ├ Option1
+        //    //    │    └ AmountText (TextMeshProUGUI)
+        //    //    ├ Option2
+        //    //    │    └ AmountText
+        //    //    └ … 
+        //    //
+        //    // 이라고 가정할 때 아래처럼 Find 경로를 지정합니다.
+
+        //    var amountTextTransform =
+        //        _conversionPanel.transform
+        //                        .Find($"Exchange{i + 1}/AmountText");
+        //    if (amountTextTransform != null)
+        //        _conversionAmountText[i] =
+        //            amountTextTransform
+        //                .GetComponent<TextMeshProUGUI>();
+        //    else
+        //        Debug.LogError($"환전 옵션{i + 1}의 AmountText를 찾을 수 없습니다.");
+        //}
+
     }
 
     // Awake 시 Init() 자동 호출
@@ -206,7 +231,7 @@ public class UI_Shop : UI_Popup
     {
         var def = _itemDefs[key];
         if (ItemManager.Instance.SpendGold(def.price))
-            ItemManager.Instance.AddItem(key);
+            ItemManager.Instance.AddItem(def.key);  // 이 key가 ScriptableObject.itemId와 100% 일치해야됨.
         else
             Managers.UI.ShowPopupUI<GenericInfoPopup>("EmptyGoldPanel")
                        .Setup("Warning!", "You can't buy items because you're short of Gold.");
@@ -216,9 +241,15 @@ public class UI_Shop : UI_Popup
     void OpenConversion()
     {
         _conversionPanel.SetActive(true);
-        var convTxts = _conversionPanel.GetComponentsInChildren<TextMeshProUGUI>();
-        for (int i = 0; i < _exchangeAmounts.Length; i++)
-            convTxts[i].text = $"Gem {_exchangeAmounts[i]} => Gold {_exchangeAmounts[i] * GEM_TO_GOLD_RATIO}";
+
+        
+
+        //// 3) 바인딩한 라벨에만 텍스트 세팅
+        //for (int i = 0; i < _exchangeAmounts.Length; i++)
+        //{
+        //    _conversionAmountText[i].text =
+        //        $"Gem {_exchangeAmounts[i]} => Gold {_exchangeAmounts[i] * GEM_TO_GOLD_RATIO}";
+        //}
     }
 
     // 보석 → 골드 환전 시도
@@ -233,6 +264,24 @@ public class UI_Shop : UI_Popup
         {
             Managers.UI.ShowPopupUI<GenericInfoPopup>("EmptyGemPanel")
                        .Setup("Warning!", "You can't exchange Coins because you're short of Gem.");
+        }
+    }
+
+    protected override void HandleEscape()
+    {
+        // ESC 키를 눌렀을 때만 동작
+        if (Keyboard.current.escapeKey.wasPressedThisFrame)
+        {
+            // 1) 환전 패널 열려 있으면 닫기
+            if (_conversionPanel != null && _conversionPanel.activeSelf)
+            {
+                _conversionPanel.SetActive(false);
+            }
+            else
+            {
+                // 2) 아니면 팝업 자체 닫기
+                base.HandleEscape();
+            }
         }
     }
 }

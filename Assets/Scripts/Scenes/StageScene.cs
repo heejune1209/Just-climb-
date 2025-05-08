@@ -22,7 +22,7 @@ public class StageScene : BaseScene
         }
         Managers.UI.ShowSceneUI<UI_Stage>("UI_Stage");
     }
-
+    
     public override void Clear()
     {
         // 씬 종료 시 필요한 정리 로직

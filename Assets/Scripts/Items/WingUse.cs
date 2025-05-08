@@ -9,11 +9,14 @@ namespace JustClimb.Items
     {
         [Header("날개 사용 설정")]
         [SerializeField] private float _boostMultiplier = 1.5f;
-        [SerializeField] private float _duration = 10f;
 
         [Header("Wing Effect Prefab")]
         [Tooltip("활성화할 날개 이펙트 프리팹")]
         [SerializeField] private GameObject _wingEffectPrefab;
+
+        [Header("Item Data (buffDuration 포함)")]
+        [Tooltip("지속시간 등 메타데이터를 가진 SO를 할당")]
+        public ItemData data;
 
         /// <summary>
         /// IItemUse 인터페이스 구현: 아이템 사용 시 호출됩니다.
@@ -31,7 +34,15 @@ namespace JustClimb.Items
             var ability = user.GetComponent<AirControlAbility>();
             if (ability != null)
             {
-                ability.UseJumpBoost(_boostMultiplier, _duration);
+                // 지속시간을 SO에서 가져옴
+                float duration = data.buffDuration;
+                if (duration <= 0f)
+                {
+                    Debug.LogWarning($"WingUse: data.buffDuration이 0 이하입니다. ({duration})");
+                    return;
+                }
+
+                ability.UseJumpBoost(_boostMultiplier, duration);
 
                 // 사용 이펙트 생성
                 GameObject effectInstance = null;
@@ -45,7 +56,7 @@ namespace JustClimb.Items
                 var mb = user.GetComponent<MonoBehaviour>();
                 if (mb != null && effectInstance != null)
                 {
-                    mb.StartCoroutine(RemoveEffect(effectInstance));
+                    mb.StartCoroutine(RemoveEffect(effectInstance, duration));
                 }
                 else if (effectInstance != null)
                 {
@@ -58,12 +69,10 @@ namespace JustClimb.Items
             }
         }
 
-        /// <summary>
-        /// 일정 시간 후 사용 이펙트를 제거하는 코루틴
-        /// </summary>
-        private IEnumerator RemoveEffect(GameObject effect)
+        // 일정 시간 후 사용 이펙트를 제거하는 코루틴
+        private IEnumerator RemoveEffect(GameObject effect, float duration)
         {
-            yield return new WaitForSeconds(_duration);
+            yield return new WaitForSeconds(duration);
             if (effect != null)
                 Destroy(effect);
         }

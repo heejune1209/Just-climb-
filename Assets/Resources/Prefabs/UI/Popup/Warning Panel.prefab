@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 4191712402987226258}
   - component: {fileID: 8304842057257157194}
   m_Layer: 5
-  m_Name: Return
+  m_Name: CloseButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -396,7 +396,6 @@ MonoBehaviour:
   textFields:
   - {fileID: 7803511956763361875}
   - {fileID: 6374050995134964852}
-  closeButton: {fileID: 8304842057257157194}
 --- !u!1 &5144843704431917037
 GameObject:
   m_ObjectHideFlags: 0

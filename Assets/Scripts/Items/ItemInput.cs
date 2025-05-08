@@ -14,21 +14,25 @@ public class ItemInput : MonoBehaviour
         // 1번 키 → Feather
         if (Keyboard.current.digit1Key.wasPressedThisFrame)
         {
+            Debug.Log("1번 키 눌림, player = " + player);
             ItemManager.Instance.UseItem("Feather", player);
         }
         // 2번 키 → Wing
         if (Keyboard.current.digit2Key.wasPressedThisFrame)
         {
+            Debug.Log("2번 키 눌림, player = " + player);
             ItemManager.Instance.UseItem("Wing", player);
         }
         // 3번 키 → Lamp
         if (Keyboard.current.digit3Key.wasPressedThisFrame)
         {
+            Debug.Log("3번 키 눌림, player = " + player);
             ItemManager.Instance.UseItem("Lamp", player);
         }
         // 4번 키 → Flag
         if (Keyboard.current.digit4Key.wasPressedThisFrame)
         {
+            Debug.Log("4번 키 눌림, player = " + player);
             ItemManager.Instance.UseItem("Flag", player);
         }
     }

@@ -14,13 +14,10 @@ namespace DiasGames.Controller
         private AbilityScheduler _scheduler = null;
         private Health _health = null;
         private IMover _mover;
-        private ICapsule _capsule;
-        public GameObject tutorial;       
-        public GameObject HowtoPlayTrigger;
+        private ICapsule _capsule;       
                
         public float Visibletime = 1f;
         private const float _threshold = 0.01f;
-        PauseComponent _pauseComponent;
         [SerializeField] private bool hideCursor = true;
 
         [Header("Cinemachine")]
@@ -68,10 +65,7 @@ namespace DiasGames.Controller
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.eulerAngles.y;
 
         }
-        private void Start()
-        {
-            _pauseComponent = GetComponent<PauseComponent>();
-        }
+        
 
         private void OnEnable()
         {
@@ -141,23 +135,17 @@ namespace DiasGames.Controller
         {
             CameraRotation();
         }
-        
+
 
 
         private void Die()
         {
+            // 능력 스케줄러·이동 비활성화
             _scheduler.StopScheduler();
-
-            // disable any movement
             _mover.DisableGravity();
             _mover.StopMovement();
-
-            // disable main character collision
             _capsule.DisableCollision();
-
-            // activate root motion
-            _mover.ApplyRootMotion(Vector3.one);
-            //GameManager.Instance.PlayerDie();
+           
         }
 
         private void CameraRotation()
@@ -306,10 +294,7 @@ namespace DiasGames.Controller
         
         private void OnInformation(InputValue value)
         {           
-            if (HowtoPlayTrigger != null && value.isPressed)
-            {
-                _pauseComponent.OnTapGetHTPPanel(!_pauseComponent._isPaused);               
-            }
+            
 
         }
         private void OnSuicide(InputValue value)
@@ -317,7 +302,7 @@ namespace DiasGames.Controller
             
             if (value.isPressed)
             {
-                _health.Damage(_health.CurrentHP); // �÷��̾� ü���� 0���� �����Ͽ� ��� ó��
+                _health.Damage(_health.CurrentHP); 
             }
         }
         private void OnEnter(InputValue value)

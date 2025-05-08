@@ -23,9 +23,6 @@ public class UI_Stage : UI_Scene
     private TMP_Text _timerText;
     
 
-    [Header("Result 팝업 프리팹 이름")]
-    [SerializeField] private string resultPrefabName = "UI_Result";
-
 
     // **튜토리얼이 이미 표시됐는지** PlayerPrefs 키
     private const string TUTORIAL_KEY = "TutorialDisplayed";
@@ -52,7 +49,7 @@ public class UI_Stage : UI_Scene
         _timerText = GetText((int)Texts.TimerText);
 
         // 2) 고정 UI (인벤토리)
-        Managers.UI.ShowSceneUI<InGameItem>("Inventory");
+        Managers.UI.ShowSceneUI<UI_Inventory>("UI_Inventory");
 
         // 3) GameManager 이벤트 구독
         Managers.Game.OnDeathCountChanged += UpdateDeathCount;
@@ -107,16 +104,14 @@ public class UI_Stage : UI_Scene
             _timerText.text = $"Time : {elapsed.Minutes:00} : {elapsed.Seconds:00}";
     }
 
-    //void OnDestroy()
-    //{
-    //    // 이벤트 해제
-    //    Managers.Game.OnDeathCountChanged -= UpdateDeathCount;
-    //    Managers.Game.OnTimerUpdated -= UpdateTimerText;
-    //}
+    void OnDestroy()
+    {
+        // 이벤트 해제
+        Managers.Game.OnDeathCountChanged -= UpdateDeathCount;
+        Managers.Game.OnTimerUpdated -= UpdateTimerText;
+    }
 
-    /// <summary>
-    /// 트리거에서 호출: Stage1 특정 Tutorial 팝업 (한 번만)
-    /// </summary>
+    // 트리거에서 호출: Stage1 특정 Tutorial 팝업 (한 번만)
     public void ShowTutorial()
     {
         // 이미 팝업을 띄운 적이 있으면 종료
@@ -131,11 +126,10 @@ public class UI_Stage : UI_Scene
         PlayerPrefs.Save();
     }
 
-    /// <summary>
-    /// GoalTrigger에서 호출: 결과 팝업
-    /// </summary>
+    // GoalTrigger에서 호출: 결과 팝업
     public void ShowResult()
     {
-        //Managers.UI.ShowPopupUI<UI_Result>(resultPrefabName);
+        var popup = Managers.UI.ShowPopupUI<UI_Result>("UI_Result");
+        popup.ShowResult(Managers.Game.ElapsedTime());
     }
 }

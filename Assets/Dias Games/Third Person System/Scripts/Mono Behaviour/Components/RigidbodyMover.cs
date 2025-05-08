@@ -25,6 +25,14 @@ namespace DiasGames.Components
         [Tooltip("Changes the engine default value at awake")]
         [SerializeField] private float Gravity = -15.0f;
 
+        [Header("Jump Limit")]
+        // 최대 올라갈 수 있는 높이
+        [SerializeField] private float maxStepHeight = 0.5f;
+        // 지형 체크 거리
+        [SerializeField] private float stepCheckDistance = 0.5f;
+        // 바닥 기준 오프셋
+        [SerializeField] private float footHeightOffset = 0.1f;
+
         // player
         private float _speed;
         private float _animationBlend;
@@ -116,32 +124,42 @@ namespace DiasGames.Components
 
         public void Move(Vector2 moveInput, float targetSpeed, bool rotateCharacter = true)
         {
+            // 입력 방향 계산
+            Vector3 desiredDir = new Vector3(moveInput.x, 0f, moveInput.y).normalized;
+            if (desiredDir.sqrMagnitude > 0f)
+            {
+                // 전방에 장애물이 너무 높은지 검사
+                Vector3 origin = transform.position + Vector3.up * footHeightOffset;
+                Vector3 rayOrigin = origin + desiredDir * stepCheckDistance;
+                if (Physics.Raycast(rayOrigin, Vector3.down, out RaycastHit hit, maxStepHeight + footHeightOffset))
+                {
+                    float heightDiff = hit.point.y - transform.position.y;
+                    if (heightDiff > maxStepHeight)
+                    {
+                        // 너무 높으면 이동 무시
+                        return;
+                    }
+                }
+            }
+
+            // 원래 Move 로직(Quaternion 오버로드) 호출
             Move(moveInput, targetSpeed, _mainCamera.transform.rotation, rotateCharacter);
         }
 
         public void Move(Vector2 moveInput, float targetSpeed, Quaternion cameraRotation, bool rotateCharacter = true)
         {
-            // note: Vector2's == operator uses approximation so is not floating point error prone, and is cheaper than magnitude
-            // if there is no input, set the target speed to 0
             if (moveInput == Vector2.zero) targetSpeed = 0.0f;
 
-            // a reference to the players current horizontal velocity
             float currentHorizontalSpeed = new Vector3(_rigidbody.velocity.x, 0.0f, _rigidbody.velocity.z).magnitude;
-
             float speedOffset = 0.1f;
-            float inputMagnitude = moveInput.magnitude; // _input.analogMovement ? _input.move.magnitude : 1f;
+            float inputMagnitude = moveInput.magnitude;
 
             if (inputMagnitude > 1)
                 inputMagnitude = 1f;
 
-            // accelerate or decelerate to target speed
             if (currentHorizontalSpeed < targetSpeed - speedOffset || currentHorizontalSpeed > targetSpeed + speedOffset)
             {
-                // creates curved result rather than a linear one giving a more organic speed change
-                // note T in Lerp is clamped, so we don't need to clamp our speed
                 _speed = Mathf.Lerp(currentHorizontalSpeed, targetSpeed * inputMagnitude, Time.deltaTime * SpeedChangeRate);
-
-                // round speed to 3 decimal places
                 _speed = Mathf.Round(_speed * 1000f) / 1000f;
             }
             else
@@ -150,22 +168,17 @@ namespace DiasGames.Components
             }
             _animationBlend = Mathf.Lerp(_animationBlend, targetSpeed, Time.deltaTime * SpeedChangeRate);
 
-            // normalise input direction
             Vector3 inputDirection = new Vector3(moveInput.x, 0.0f, moveInput.y).normalized;
 
-            // note: Vector2's != operator uses approximation so is not floating point error prone, and is cheaper than magnitude
-            // if there is a move input rotate player when the player is moving
             if (moveInput != Vector2.zero)
             {
                 _targetRotation = Mathf.Atan2(inputDirection.x, inputDirection.z) * Mathf.Rad2Deg + cameraRotation.eulerAngles.y;
                 float rotation = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity, RotationSmoothTime);
 
-                // rotate to face input direction relative to camera position
                 if (rotateCharacter && !_useRotationRootMotion)
                     transform.rotation = Quaternion.Euler(0.0f, rotation, 0.0f);
             }
 
-            // update animator if using character
             if (_hasAnimator)
             {
                 _animator.SetFloat(_animIDSpeed, _animationBlend);
@@ -174,12 +187,20 @@ namespace DiasGames.Components
 
             Vector3 targetDirection = Quaternion.Euler(0.0f, _targetRotation, 0.0f) * Vector3.forward;
 
-            // don't apply movement if it's using root motion
             if (!_useRootMotion)
             {
                 Vector3 velocity = targetDirection.normalized * _speed;
                 velocity.y = _rigidbody.velocity.y;
-                _rigidbody.velocity = velocity;
+
+                if (_rigidbody.isKinematic)
+                {
+                    // Kinematic일 경우 MovePosition 사용
+                    _rigidbody.MovePosition(transform.position + velocity * Time.fixedDeltaTime);
+                }
+                else
+                {
+                    _rigidbody.velocity = velocity;
+                }
             }
         }
 
@@ -256,7 +277,15 @@ namespace DiasGames.Components
 
         public void SetVelocity(Vector3 velocity)
         {
-            _rigidbody.velocity = velocity;
+            if (_rigidbody.isKinematic)
+            {
+                // Kinematic일 경우 속도 설정 무시 또는 transform 이동
+                transform.position += velocity * Time.fixedDeltaTime;
+            }
+            else
+            {
+                _rigidbody.velocity = velocity;
+            }
         }
 
         public Vector3 GetVelocity()

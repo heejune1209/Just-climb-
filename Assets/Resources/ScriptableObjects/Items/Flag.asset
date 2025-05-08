@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2269b9d2a1e53f6408528fdc1e9b2f1f, type: 3}
   m_Name: Flag
   m_EditorClassIdentifier: 
-  itemId: ID_04
+  itemId: Flag
   displayName: Flag
   icon: {fileID: 21300000, guid: 9e9618573eb915247abebd564c68ee6d, type: 3}

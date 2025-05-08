@@ -11,8 +11,9 @@ namespace JustClimb.Items
         [Tooltip("이동 속도 배수")]
         public float speedMultiplier = 1.5f;
 
-        [Tooltip("버프 지속 시간 (초)")]
-        public float duration = 10f;
+        [Header("Item Data")]
+        [Tooltip("지속시간 등 메타데이터를 가진 SO를 할당")]
+        public ItemData data;
 
         [Header("Feather Effect Prefab")]
         [Tooltip("활성화할 깃털 이펙트 프리팹")]
@@ -23,29 +24,46 @@ namespace JustClimb.Items
         public void Use(GameObject user)
         {
             var loco = user.GetComponent<Locomotion>();
-            if (loco != null)
-            {
-                // 코루틴 실행을 위한 MonoBehaviour 참조
-                var mb = user.GetComponent<MonoBehaviour>();
-
-                // 효과 이펙트 인스턴스 생성
-                GameObject effectInstance = null;
-                if (featherEffectPrefab != null)
-                {
-                    effectInstance = Instantiate(featherEffectPrefab, user.transform.position, Quaternion.identity);
-                    effectInstance.transform.SetParent(user.transform);
-                }
-
-                // 버프와 이펙트 제거를 동시에 처리
-                mb.StartCoroutine(ApplyFeatherBuff(loco, effectInstance));
-            }
-            else
+            if (loco == null)
             {
                 Debug.LogWarning("FeatherUse: Locomotion 컴포넌트를 찾을 수 없습니다.");
+                return;
             }
+
+            // 지속시간을 SO에서 가져옴
+            float duration = data.buffDuration;
+            if (duration <= 0f)
+            {
+                Debug.LogWarning($"FeatherUse: data.buffDuration이 0 이하입니다. ({data.buffDuration})");
+                return;
+            }
+
+            // MonoBehaviour 코루틴 실행용
+            var mb = user.GetComponent<MonoBehaviour>();
+            if (mb == null)
+            {
+                Debug.LogWarning("FeatherUse: 코루틴 실행을 위한 MonoBehaviour를 찾을 수 없습니다.");
+                return;
+            }
+
+            // 이펙트 인스턴스화
+            GameObject effectInstance = null;
+            if (featherEffectPrefab != null)
+            {
+                effectInstance = Instantiate(
+                    featherEffectPrefab,
+                    user.transform.position,
+                    Quaternion.identity
+                );
+                effectInstance.transform.SetParent(user.transform);
+            }
+
+            // 버프 적용과 종료 처리를 코루틴으로
+            mb.StartCoroutine(ApplyFeatherBuff(loco, effectInstance, duration));
         }
 
-        private IEnumerator ApplyFeatherBuff(Locomotion loco, GameObject effectInstance)
+
+        private IEnumerator ApplyFeatherBuff(Locomotion loco, GameObject effectInstance, float duration)
         {
             // 원래 속도 저장
             float originalWalk = loco.WalkSpeed;
@@ -62,7 +80,7 @@ namespace JustClimb.Items
             loco.WalkSpeed = originalWalk;
             loco.SprintSpeed = originalSprint;
 
-            // 이펙트가 생성되었으면 제거
+            // 이펙트 제거
             if (effectInstance != null)
                 Destroy(effectInstance);
         }

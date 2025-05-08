@@ -5,10 +5,8 @@ using JustClimb.Items;
 
 namespace JustClimb.Manager
 {
-    /// <summary>
-    /// 아이템 정의·사용 로직·카운트 관리와
-    /// 보석·골드 같은 재화 관리까지 담당하는 싱글톤 매니저
-    /// </summary>
+    // 아이템 정의·사용 로직·카운트 관리와
+    // 보석·골드 같은 재화 관리까지 담당하는 싱글톤 매니저
     public class ItemManager : MonoBehaviour
     {
         // Lazy 싱글톤
@@ -45,7 +43,7 @@ namespace JustClimb.Manager
         int _gems;
         int _gold;
 
-        /// <summary>재화 변경 시 발행 (\"Gem\" 또는 \"Gold\", newCount)</summary>
+        // 재화 변경 시 발행 (\"Gem\" 또는 \"Gold\", newCount)
         public event Action<string, int> OnCurrencyChanged;
 
         // ItemManager 필드에 추가
@@ -54,8 +52,13 @@ namespace JustClimb.Manager
             {"Feather",  10f},  // 10초
             {"Wing",     10f},  // 10초
             {"Lamp",     20f},  // 20초
-            {"Flag",    120f},  // 2분 = 120초
+            {"Flag",     10f},  // 2분 = 120초
         };
+
+        // 아이템 사용 시 효과 지속시간(초) 저장용
+        Dictionary<string, float> _buffDurations = new Dictionary<string, float>();
+        Dictionary<string, float> _buffEndTimes = new Dictionary<string, float>();
+
         // 다음 사용 가능 시간 기록
         private Dictionary<string, float> _nextAvailableTime = new Dictionary<string, float>();
 
@@ -87,8 +90,18 @@ namespace JustClimb.Manager
             _itemDataDict = new Dictionary<string, ItemData>();
             var datas = Managers.Resource.LoadAll<ItemData>("ScriptableObjects/Items");
             foreach (var d in datas)
+            {
                 if (!string.IsNullOrEmpty(d.itemId) && !_itemDataDict.ContainsKey(d.itemId))
+                {
                     _itemDataDict.Add(d.itemId, d);
+
+                    // SO에 buffDuration이 있으면 딕셔너리에 추가
+                    if (d.buffDuration > 0f)
+                        _buffDurations[d.itemId] = d.buffDuration;
+                }
+                    
+            }
+               
         }
 
         // 아이템 사용 로직 로드
@@ -107,25 +120,25 @@ namespace JustClimb.Manager
 
         // 저장된 수량 불러오기 & 초기 이벤트 발행
         void LoadItemCounts()
-{
-    _itemCountDict = new Dictionary<string, int>();
-    foreach (var kv in _itemDataDict)
-    {
-        // defaultCount 대신 0을 기본값으로 사용
-        int saved = PlayerPrefs.GetInt(kv.Key, 0);
-        _itemCountDict.Add(kv.Key, saved);
-    }
-    // 구독자에게 초기 상태 알림
-    foreach (var kv in _itemCountDict)
-        OnItemCountChanged?.Invoke(kv.Key, kv.Value);
-}
+        {
+            _itemCountDict = new Dictionary<string, int>();
+            foreach (var kv in _itemDataDict)
+            {
+                // defaultCount 대신 0을 기본값으로 사용
+                int saved = PlayerPrefs.GetInt(kv.Key, 0);
+                _itemCountDict.Add(kv.Key, saved);
+            }
+            // 구독자에게 초기 상태 알림
+            foreach (var kv in _itemCountDict)
+                OnItemCountChanged?.Invoke(kv.Key, kv.Value);
+        }
 
 
         // 재화 데이터 로드
         void LoadCurrency()
         {
-            _gems = PlayerPrefs.GetInt("Gem", 0);
-            _gold = PlayerPrefs.GetInt("Gold", 0);
+            _gems = PlayerPrefs.GetInt("Gem", 200);
+            _gold = PlayerPrefs.GetInt("Gold", 100);
 
             // 초기 이벤트
             OnCurrencyChanged?.Invoke("Gem", _gems);
@@ -170,11 +183,35 @@ namespace JustClimb.Manager
             logic.Use(user);
             RemoveItem(itemId, 1);
 
-            // ❸ 쿨타임 시작
+            // ✅ [추가] UI 갱신 이벤트 호출
+            if (_itemCountDict.TryGetValue(itemId, out var count))
+            {
+                OnItemCountChanged?.Invoke(itemId, count);
+            }
+
+            // ❸ 버프 시작 기록
+            if (_buffDurations.TryGetValue(itemId, out var dur))
+                _buffEndTimes[itemId] = Time.time + dur;
+
+            // ❹ 쿨타임 시작
             if (_cooldownDurations.TryGetValue(itemId, out var cd))
                 _nextAvailableTime[itemId] = Time.time + cd;
 
             return true;
+        }
+
+
+        // 버프 남은 시간 조회
+        public float GetBuffRemaining(string itemId)
+        {
+            if (_buffEndTimes.TryGetValue(itemId, out var end))
+                return Mathf.Max(0f, end - Time.time);
+            return 0f;
+        }
+        // 버프 총 지속시간 조회
+        public float GetBuffDuration(string itemId)
+        {
+            return _buffDurations.TryGetValue(itemId, out var d) ? d : 0f;
         }
 
         // 아이템 제거
@@ -252,7 +289,8 @@ namespace JustClimb.Manager
         {
             return _itemDataDict.Keys;
         }
-        // 또는 ScriptableObject 정보까지 필요하면
+
+        // ScriptableObject로 정의된 모든 아이템 데이터 반환
         public Dictionary<string, ItemData> GetAllItemDefinitions()
         {
             // 복사해서 반환

@@ -24,6 +24,8 @@ namespace DiasGames.Abilities
         [Header("Event")]
         [SerializeField] private UnityEvent OnLanded = null;
 
+        
+
         private IMover _mover = null;
         private IDamage _damage;
         private CharacterAudioPlayer _audioPlayer;
@@ -178,10 +180,10 @@ namespace DiasGames.Abilities
         {
             if (_mover.IsGrounded())
             {
-                // ������ ��� �� ������ ��ȭ
+                
                 jumpHeight *= boostMultiplier;
 
-                // ���� �ð��� ������ �������� ������� ����
+                
                 StartCoroutine(ResetJumpHeight(boostMultiplier, duration));
             }
         }
@@ -190,7 +192,7 @@ namespace DiasGames.Abilities
         {
             yield return new WaitForSeconds(duration);
 
-            // ������ ���������� ����
+            
             jumpHeight /= originalMultiplier;
         }
 
