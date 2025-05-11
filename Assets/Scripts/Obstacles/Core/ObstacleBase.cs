@@ -38,8 +38,8 @@ namespace JustClimb.Obstacles.Core
         // ex) 낙석 시작, 포탑 발사 시작 등
         public abstract void Activate();
 
-        // 장애물이 비활성화될 때 실행할 로직을 구현하세요.
-        // 필요 없으면 빈 구현으로 두시면 됩니다.
+        // 장애물이 비활성화될 때 실행할 로직을 구현.
+        // 필요 없으면 빈 구현으로 두면 됨.
         // ex) 반복 호출 정지, 효과 비활성화 등
         public virtual void Deactivate()
         {
