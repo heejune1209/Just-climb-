@@ -34,4 +34,4 @@ Unity 엔진 기반 3D 백뷰 클라이밍 게임
 C#, Unity3D, Visual Studio 2022
 
 ## 관련 링크
-[![시연 동영상](https://youtu.be/HkNdxTHhVaw?si=IY2KK07vDpRfTPzP)
+![시연 동영상](https://youtu.be/HkNdxTHhVaw?si=IY2KK07vDpRfTPzP)
