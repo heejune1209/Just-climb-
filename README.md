@@ -19,7 +19,7 @@
 - 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
 
 ### Game Structure
-![Image](https://github.com/user-attachments/assets/b4008f9d-a8f7-414e-a667-21039835abe7)
+![image](https://github.com/user-attachments/assets/3bc31f13-ce7d-4ea4-a8c3-dd6282ab95d6)
 ### 주요 구성 요소
 - **UI 계층화**  
   - `UI_Base` → `UI_Scene` 상속 구조로 화면(Scene) 단위와 팝업(Popup) 단위 로직을 분리  
@@ -27,7 +27,7 @@
     `UI_Settings`, `UI_Shop`, `UI_Inventory` 등 팝업/세부 UI로 구성
 
 - **전체 게임 매니저 (Managers)**  
-  - `SceneManagerEX`, `SoundManager`, `ResourceManager`, `UIManager`, `GameManager`, `PoolManager`  
+  - `SceneManagerEX`, `SoundManager`, `ResourceManager`, `UIManager`, `GameManager`, `PoolManager`, `ItemManager`
   - 전역 상태(씬 전환, 사운드, 리소스, UI 팝업, 게임 타이머/체크포인트, 오브젝트 풀 등) 일괄 관리
 
 - **Stage System**  
@@ -40,6 +40,10 @@
   - `Extension.cs` – GameObject 확장 메서드
 ### Item Structure
 ![Image](https://github.com/user-attachments/assets/8e673abe-ea12-49bf-bc2b-83854262cff1)
+- **Data Layer**: `ItemData.asset` (ScriptableObject)로 공통 필드(id, name, icon 등)를 정의하고, `FeatherData.asset`, `WingData.asset` 등 개별 아이템 데이터를 에셋으로 분리  
+- **Logic Layer**: `ItemData.cs`와 `IItemUse` 인터페이스를 통해 `Use()` 메서드를 추상화하고, `FeatherUse.cs`·`WingUse.cs`·`LampUse.cs`·`FlagUse.cs`에서 각 아이템 사용 효과 구현  
+- **Management**: `ItemManager.cs`가 에셋 로드, 수량·쿨타임·사용 상태를 종합 관리  
+- **UI**: `UI_Inventory.cs`가 슬롯별 아이콘·개수·쿨타임을 화면에 표시하여 플레이어 인벤토리를 시각화  
 ### Obstacle Structure 
 ![image](https://github.com/user-attachments/assets/24ebe925-cbaf-4006-8240-513eebafee46)
 
