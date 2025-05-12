@@ -63,14 +63,31 @@
   `KnockbackZone.cs`, `JumpPad.cs`, `DeathZone.cs`, `MaterialChanger.cs` 등으로 장애물에 닿았을 때 발생할 충돌 반응이나 특수 효과를 구현.
 
 - **Pooling Support**  
-  `PoolableObstacle.cs`는 Object Pooling 기능을 제공하며, `ObstacleBase`를 상속해 장애물 인스턴스를 효율적으로 재사용.  
+  `PoolableObstacle.cs`는 Object Pooling 기능을 제공하며, `ObstacleBase`를 상속해 장애물 인스턴스를 재사용.  
 
-## 주요 역할
-- UI,UX 시스템 제작
-- 캐릭터 클라이밍 시스템 분석 및 수정 
-- 캐릭터 능력치 밸런싱
-- ScriptableObject 기반 ItemData와 IItemUse 인터페이스를 사용해 아이템 확장성을 확보하고, 쿨타임/사용 로직을 ItemManager에 통합하여 구조화
-- ObstacleBase와 ObstacleTrigger를 중심으로 장애물 감지,스폰 구조를 구축, RockDropper 등 장애물은 개별 SO 파라미터로 제어 가능
+## 주요 기여
+
+### ✅ 클라이밍 시스템 분석 및 수정
+
+### ✅ 캐릭터 능력치 밸런싱
+
+### ✅ UI/UX 시스템 제작
+- `UI_Scene`, `UI_Popup` 구조 설계 및 자동화 슬롯 생성 툴 제작
+- 이벤트 기반 구조로 UI 갱신을 분리하여 유지보수성과 확장성 강화
+
+### ✅ 아이템 시스템 설계 및 구현
+- ScriptableObject + 인터페이스 기반 구조로 설계
+- **신규 아이템 추가 시 코드 수정 없이 에셋 등록만으로 반영 가능**
+- 쿨타임, 수량, UI 반영을 모두 `ItemManager`에서 일괄 처리
+
+### ✅ 장애물 시스템 모듈화
+- 장애물 **트리거 / 스폰 / 효과**를 명확히 분리하여 구조화
+- 스폰 주기 및 파라미터를 **ScriptableObject**로 설정 가능하도록 유연하게 설계
+- **풀링(Pooling)** 적용으로 실시간 낙석 및 발사 성능 최적화
+
+### ✅ 캐릭터 클라이밍 FSM 개선
+- 기존 FSM 흐름 분석 후 **벽면 인식 로직 및 이동 제약 조건** 수정
+- **경사면 처리 누락** 문제를 직접 해결하여 자연스러운 클라이밍 구현
 
 ## 기술 스택 및 개발 환경
 C#, Unity3D, Visual Studio 2022
