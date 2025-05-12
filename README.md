@@ -28,7 +28,8 @@
 - UI,UX 시스템 제작
 - 캐릭터 클라이밍 시스템 분석 및 수정 
 - 캐릭터 능력치 밸런싱
-- 아이템 및 장애물 시스템 제작 및 효과 밸런싱
+- ScriptableObject 기반 ItemData와 IItemUse 인터페이스를 사용해 아이템 확장성을 확보하고, 쿨타임/사용 로직을 ItemManager에 통합하여 구조화
+- ObstacleBase와 ObstacleTrigger를 중심으로 장애물 감지,스폰 구조를 구축, RockDropper 등 장애물은 개별 SO 파라미터로 제어 가능
 
 ## 기술 스택 및 개발 환경
 C#, Unity3D, Visual Studio 2022
