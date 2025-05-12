@@ -19,7 +19,7 @@
 - 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
 
 ### Game Structure
-![Image](https://github.com/user-attachments/assets/8ba99876-4b0e-4633-a4af-6959b52a5b97)
+![Image](https://github.com/user-attachments/assets/b4008f9d-a8f7-414e-a667-21039835abe7)
 - UI는 UI_Scene, UI_Popup 계층으로 분리하고,
 - UIManager, SceneManager, ResourceManager 등 전역 매니저 시스템을 통해 상태 및 자원을 일관성 있게 관리합니다.
 - 각 Scene은 독립적인 UI와 시스템을 갖추고 있어 유지보수가 용이합니다.
