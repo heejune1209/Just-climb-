@@ -1,8 +1,9 @@
 ## Just Climb!
+🗓️ 프로젝트 개요
 - 기간 : 2023.09 ~ 2023.12
 - 인원 : 4인 (기획 1, 아트1, 프로그래머 2)
 - 역할 : 메인 프로그래머
-- 도구 : Unity, C#, Github
+- 도구 : Unity3D, C#, Github
 - 장르 : 어드벤처, 클라이밍, 3인칭 백뷰 
 - 플랫폼 : PC
 
@@ -14,8 +15,14 @@
 ## 설계서
 ### Game Flow
 ![Image](https://github.com/user-attachments/assets/679a1411-5d48-4aaa-879f-68a8efc2cd31)
+- 씬 전환 기반 구조로 타이틀 → 로비 → 스테이지 → 결과로 이어지는 흐름
+- 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
+
 ### Game Structure
 ![Image](https://github.com/user-attachments/assets/8ba99876-4b0e-4633-a4af-6959b52a5b97)
+- UI는 UI_Scene, UI_Popup 계층으로 분리하고,
+- UIManager, SceneManager, ResourceManager 등 전역 매니저 시스템을 통해 상태 및 자원을 일관성 있게 관리합니다.
+- 각 Scene은 독립적인 UI와 시스템을 갖추고 있어 유지보수가 용이합니다.
 ### Item Structure
 ![Image](https://github.com/user-attachments/assets/8e673abe-ea12-49bf-bc2b-83854262cff1)
 ### Obstacle Structure 
