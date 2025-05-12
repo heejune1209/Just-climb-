@@ -20,9 +20,24 @@
 
 ### Game Structure
 ![Image](https://github.com/user-attachments/assets/b4008f9d-a8f7-414e-a667-21039835abe7)
-- UI는 UI_Scene, UI_Popup 계층으로 분리하고,
-- UIManager, SceneManager, ResourceManager 등 전역 매니저 시스템을 통해 상태 및 자원을 일관성 있게 관리합니다.
-- 각 Scene은 독립적인 UI와 시스템을 갖추고 있어 유지보수가 용이합니다.
+### 주요 구성 요소
+- **UI 계층화**  
+  - `UI_Base` → `UI_Scene` 상속 구조로 화면(Scene) 단위와 팝업(Popup) 단위 로직을 분리  
+  - `UI_Main`, `UI_Lobby`, `UI_Stage` 등 Scene별 진입점과  
+    `UI_Settings`, `UI_Shop`, `UI_Inventory` 등 팝업/세부 UI로 구성
+
+- **전체 게임 매니저 (Managers)**  
+  - `SceneManagerEX`, `SoundManager`, `ResourceManager`, `UIManager`, `GameManager`, `PoolManager`  
+  - 전역 상태(씬 전환, 사운드, 리소스, UI 팝업, 게임 타이머/체크포인트, 오브젝트 풀 등) 일괄 관리
+
+- **Stage System**  
+  - `ItemSystem`, `ClimbingSystem`, `ObstacleSystem`, `InputSystem`  
+  - 게임 플레이의 핵심 기능을 모듈화하여 유지·보수성 및 확장성 확보
+
+- **Utilities (Helper) 클래스**  
+  - `Define.cs` – 프로젝트 전역 enum/상수  
+  - `Util.cs` – 계층 탐색, 컴포넌트 보장 유틸리티  
+  - `Extension.cs` – GameObject 확장 메서드
 ### Item Structure
 ![Image](https://github.com/user-attachments/assets/8e673abe-ea12-49bf-bc2b-83854262cff1)
 ### Obstacle Structure 
