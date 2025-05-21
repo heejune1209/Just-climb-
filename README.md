@@ -149,8 +149,8 @@
     - **UserStateService.SaveCharacterAsync** → `users.selected_character` 업데이트
       
   - **데이터베이스**
-  - `users.selected_character` 컬럼
-  - `user_character_history` 테이블로 변경 로그 보관
+    - `users.selected_character` 컬럼
+    - `user_character_history` 테이블로 변경 로그 보관
 
 > **전체 파이프라인 요약**
 >
