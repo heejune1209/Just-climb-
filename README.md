@@ -89,10 +89,22 @@
 
 ## 🔧 **향후 개선 계획**
 - ⏱ 스테이지별 클리어 타임 기반 랭킹 시스템 도입
-  - 서버(API)에서 클리어 기록 등록 및 랭킹 데이터 처리  
-  - Redis 기반 실시간 랭킹 정렬  
-  - 클리어 기록 등록 및 내 랭킹 조회 기능 구현  
-  - UI에서 상위 랭커와 본인 순위 확인 가능  
+* **클라이언트**
+
+  * `RankingManager`/`UI_Leaderboard` 구현 → 스테이지 클리어 시 `DataManager` 델타 이벤트(값이 바뀔 때마다 어떤 데이터가 어떻게 변했는지 알려주는 이벤트)로 `{ key:"ranking:stage1", value:time }` 발행
+  * `DataSyncManager` 에 델타 이벤트 전송 로직 추가 → `/api/users/{uid}/ranking` 호출
+  * `UI_SyncStatus`로 “랭킹 동기화 중/완료/실패” 표시
+    
+* **서버 (ASP .NET Core Web API)**
+
+  * **RankingController** (`POST /api/users/{uid}/ranking`, `GET /api/users/{uid}/ranking?stage=`)
+  * **IUserRankingService** -> 랭킹 기록 검증·Redis Sorted Set에 저장
+  * **ConflictResolver** -> 타임스탬프·최저 기록만 허용
+* **데이터베이스 & 캐시**
+
+  * `rankings` 테이블: (`user_id`, `stage`, `clear_time`, `recorded_at`)
+  * Redis Sorted Set (`ranking:stage1`) -> 실시간 상위 N명 조회
+  * `RedisSyncConfig.json` 으로 TTL/인덱스 설정
   
 - 🎮 **클라이밍 조작 보정 및 최적화**
   - 현재 클라이밍 방식은 조작키와 플레이어가 바라보고 있는 방향으로 가장 가까운 홀드로 이동을 하지만,
@@ -109,7 +121,76 @@
   - ScriptableObject 기반 데이터  
   - UI 패널에서 아이콘 클릭으로 선택  
   - 매니저 스크립트로 미리보기,확정 처리  
-  - JSON/서버 연동으로 선택 정보 저장  
+  - JSON/서버 연동으로 선택 정보 저장
+**향후 개선 계획 (ASP .NET Core Web API 기반 파이프라인 반영)**
+
+---
+
+### 1. 스테이지별 클리어 타임 기반 랭킹 시스템
+
+
+
+---
+
+### 2. 데이터 관리 개선 (Δ 기반 오프라인→온라인 싱크)
+
+* **클라이언트**
+
+  * **DataManager**
+
+    * 기존 JSON 저장/로드(`save.json`) 그대로 유지
+    * `OnDeltaGenerated(Delta d)` 이벤트 추가 (key, value, timestamp)
+  * **DataSyncManager**
+
+    * Δ 큐잉·주기적 배치 전송(5초)
+    * `OnApplicationPause/Quit` 시 즉시 Flush
+    * 실패 시 재큐잉 및 재시도
+  * **OfflineCacheManager**
+
+    * 네트워크 상태 감지 → 싱크 일시중단/재개
+  * **UI\_SyncStatus**
+
+    * 화면 우측 상단에 “🟢 동기화 OK / 🟡 대기 중 / 🔴 오류” 표시
+* **서버 (ASP .NET Core Web API)**
+
+  * **SaveController** (`POST /api/users/{uid}/state/delta`)
+  * **AuthService**: JWT 인증·인가
+  * **ConflictResolver**: Δ 타임스탬프·버전 기반 병합
+  * **UserStateService**: DB `users`·`user_items` UPSERT 로직
+* **데이터베이스 & 캐시**
+
+  * `users` 테이블: (`user_id`, `gold`, `gems`, `selected_character`, `flag_x,y,z`)
+  * `user_items` 테이블: (`user_id`, `item_type`, `count`) — UPSERT 쿼리
+  * Redis: 랭킹 외에도 “최근 Δ 처리 시간” 캐시용
+
+---
+
+### 3. 캐릭터 선택 기능 설계 개선
+
+* **클라이언트**
+
+  * **CharacterData** SO + `CharacterDatabase`
+  * **UI\_SelectCharacter**: 아이콘 클릭 → 프리뷰(`Managers.UI`) → 확정
+  * `DataManager` Δ 이벤트: `{ key:"character", value:selectedId }` 발행
+* **서버 (ASP .NET Core Web API)**
+
+  * **CharacterController** (`POST /api/users/{uid}/character`)
+  * **UserStateService.SaveCharacterAsync** → `users.selected_character` 업데이트
+* **데이터베이스**
+
+  * `users.selected_character` 컬럼
+  * (선택) `user_character_history` 테이블로 변경 로그 보관
+
+---
+
+> **전체 파이프라인 요약**
+>
+> 1. **클라이언트**: 로컬 JSON → Δ 생성 → `DataSyncManager` 주기 전송/재시도 → UI 표시
+> 2. **서버**: ASP .NET Core Web API (Kestrel) → 인증·검증 → `ConflictResolver` → DB/Redis 반영
+> 3. **DB/Redis**: 정규화 테이블 + 캐시 로직 → 실시간 랭킹·상태 조회
+
+위 계획대로 구현하시면, **오프라인 우선** + **실시간 랭킹** + **안정적 충돌 해결** + **모니터링** 을 모두 만족하는 완전한 데이터 파이프라인이 갖춰집니다.
+
 
 ## 기술 스택 및 개발 환경
 C#, Unity3D, Visual Studio 2022
