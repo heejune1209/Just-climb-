@@ -152,11 +152,10 @@
     - `users.selected_character` 컬럼
     - `user_character_history` 테이블로 변경 로그 보관
 
-> **전체 파이프라인 요약**
->
-> 1. **클라이언트**: 로컬 JSON -> Δ(델타) 생성 -> `DataSyncManager` 주기 전송/재시도 -> UI 표시
-> 2. **서버**: ASP .NET Core Web API -> 인증·검증 → `ConflictResolver` -> DB/Redis 반영
-> 3. **DB/Redis**: 정규화 테이블 + 캐시 로직 → 실시간 랭킹·상태 조회
+- **전체 파이프라인 요약**
+  1. **클라이언트**: 로컬 JSON -> Δ(델타) 생성 -> `DataSyncManager` 주기 전송/재시도 -> UI 표시
+  2. **서버**: ASP .NET Core Web API -> 인증·검증 → `ConflictResolver` -> DB/Redis 반영
+  3. **DB/Redis**: 정규화 테이블 + 캐시 로직 → 실시간 랭킹·상태 조회
 
 
 ## 기술 스택 및 개발 환경
