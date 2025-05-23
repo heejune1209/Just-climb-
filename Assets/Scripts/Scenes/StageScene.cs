@@ -20,11 +20,12 @@ public class StageScene : BaseScene
             Debug.LogError($"[StageScene] 잘못된 sceneString: '{sceneString}'. Define.Scene에 해당 이름이 없습니다.");
             SceneType = Define.Scene.Unknown;
         }
-        Managers.UI.ShowSceneUI<UI_Stage>("UI_Stage");
+        Managers.Instance.UI.ShowSceneUI<UI_Stage>("UI_Stage");
     }
     
     public override void Clear()
     {
-        // 씬 종료 시 필요한 정리 로직
+        // Scene 전환 직전 기존 UI 정리
+        Managers.Clear();
     }
 }

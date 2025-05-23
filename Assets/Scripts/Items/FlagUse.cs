@@ -19,7 +19,7 @@ namespace JustClimb.Items
 
             // 현재 위치를 바로 체크포인트로 저장
             Vector3 savePos = user.transform.position;
-            Managers.Game.SaveFlagPosition(savePos);
+            Managers.Instance.Game.SaveFlagPosition(savePos);
 
             // 이펙트는 플레이어 머리 위에 띄우기 (옵션)
             if (flagPrefab != null)

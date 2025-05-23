@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2269b9d2a1e53f6408528fdc1e9b2f1f, type: 3}
   m_Name: Feather
   m_EditorClassIdentifier: 
-  itemId: Feather
+  itemid: 1
   displayName: Feather
   icon: {fileID: 21300000, guid: 6f991510b1184494681e9a9f87fad133, type: 3}
+  price: 100
+  description: Lightweight & Low Air Resistance Feather.The speed of movement increases
+    when used.
   buffDuration: 10
+  cooldownDuration: 20

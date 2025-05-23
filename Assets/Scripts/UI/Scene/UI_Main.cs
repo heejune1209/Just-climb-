@@ -64,34 +64,34 @@ public class UI_Main : UI_Scene
         // 로비 씬으로 바로 가지 않고, 로딩 씬을 통해 넘어가도록 
         GetButton((int)Buttons.StartGame).gameObject.BindEvent(_ =>
         {
-            Managers.Sound.PlaySFX(0);       // 클릭 효과음 (인덱스 0)
-            PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(Define.Scene.Lobby));
-            Managers.Scene.LoadScene(Define.Scene.Loading);
+            Managers.Instance.Sound.PlaySFX(0);       // 클릭 효과음 (인덱스 0)
+            PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Lobby));
+            Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
         });
         // 설정 팝업 열기
         GetButton((int)Buttons.Settings).gameObject.BindEvent(_ =>
         {
-            Managers.Sound.PlaySFX(0);
-            Managers.UI.ShowPopupUI<UI_Settings>("UI_Settings");
+            Managers.Instance.Sound.PlaySFX(0);
+            Managers.Instance.UI.ShowPopupUI<UI_Settings>("UI_Settings");
         });
         // 업적 씬으로 이동
         GetButton((int)Buttons.Achievements).gameObject.BindEvent(_ =>
         {
-            Managers.Sound.PlaySFX(0);
-            Managers.UI.ShowPopupUI<UI_Achievement>("UI_Achievement");
+            Managers.Instance.Sound.PlaySFX(0);
+            Managers.Instance.UI.ShowPopupUI<UI_Achievement>("UI_Achievement");
         });
         // 캐릭터 선택 씬으로 이동
         GetButton((int)Buttons.CharacterSelect).gameObject.BindEvent(_ =>
         {
-            Managers.Sound.PlaySFX(0);
-            PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(Define.Scene.SelectCharacter));
-            Managers.Scene.LoadScene(Define.Scene.Loading);
+            Managers.Instance.Sound.PlaySFX(0);
+            PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.SelectCharacter));
+            Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
         });
         // 게임 종료 (에디터 플레이 중엔 에디터 재생 정지, 빌드 시엔 애플리케이션 종료)
         GetButton((int)Buttons.ExitGame).gameObject.BindEvent(_ =>
         {
 #if UNITY_EDITOR
-            Managers.Sound.PlaySFX(0);
+            Managers.Instance.Sound.PlaySFX(0);
             EditorApplication.isPlaying = false;
 #else
         Application.Quit();
@@ -104,7 +104,7 @@ public class UI_Main : UI_Scene
         // ESC 키 처리: 설정 팝업 닫기 또는 종료 확인 팝업 열기      
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            var settingsGO = Managers.UI.Root.transform.Find("SettingsUI");
+            var settingsGO = Managers.Instance.UI.Root.transform.Find("SettingsUI");
             if (settingsGO != null && settingsGO.gameObject.activeSelf)
             {
                 settingsGO.GetComponent<UI_Settings>().ClosePopupUI();

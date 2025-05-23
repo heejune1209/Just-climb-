@@ -76,7 +76,7 @@ public class RockGenerator : MonoBehaviour
 
         foreach (DropAreaInfo dropAreaTime in dropAreaTimes)
         {
-            Managers.Sound.PlaySFX(5);
+            Managers.Instance.Sound.PlaySFX(5);
             GameObject dropArea = dropAreaTime.dropArea;
             float dropTime = dropAreaTime.dropTime;
             float turnonLight = dropAreaTime.turnonLight;

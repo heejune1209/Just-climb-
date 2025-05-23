@@ -46,7 +46,7 @@ namespace JustClimb.Obstacles.Spawners
             while (true)
             {
                 // 1) 포탄 생성 및 발사
-                GameObject proj = Managers.Resource.Instantiate(
+                GameObject proj = Managers.Instance.Resource.Instantiate(
                     $"Prefabs/{data.projectilePrefab.name}", firePoint);
                 var rb = proj.GetComponent<Rigidbody>();
                 if (rb != null)
@@ -55,7 +55,7 @@ namespace JustClimb.Obstacles.Spawners
                 // 2) 폭발 이펙트 재생
                 if (data.explosionPrefab != null)
                 {
-                    GameObject fx = Managers.Resource.Instantiate(
+                    GameObject fx = Managers.Instance.Resource.Instantiate(
                         $"Prefabs/{data.explosionPrefab.name}", firePoint);
                     var ps = fx.GetComponent<ParticleSystem>();
                     if (ps != null)

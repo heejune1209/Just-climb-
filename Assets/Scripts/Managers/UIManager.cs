@@ -41,6 +41,26 @@ public class UIManager
             canvas.sortingOrder = 0;
         }
     }
+    /// <summary>
+    /// 앱 시작 시 한 번만 호출해서
+    /// - @UI_Root 오브젝트 생성·DontDestroyOnLoad
+    /// </summary>
+    public void Init()
+    {
+        // 루트 오브젝트가 없으면 만들고
+        GameObject root = GameObject.Find("@UI_Root");
+        if (root == null)
+            root = new GameObject { name = "@UI_Root" };
+
+        // 3) 언제나 활성 상태로 보장
+        if (!root.activeSelf)
+            root.SetActive(true);
+
+        // 로드된 씬을 전환해도 파괴되지 않도록
+        Object.DontDestroyOnLoad(root);
+        
+    }
+
 
     public T MakeSubItem<T>(Transform parent = null, string name = null) where T : UI_Base
     {
@@ -51,7 +71,7 @@ public class UIManager
             name = typeof(T).Name;
 
         // 경로에 이미 에디터 상에 만들어 둔 Prefab이 있어야 한다
-        GameObject go = Managers.Resource.Instantiate($"UI/SubItem/{name}");
+        GameObject go = Managers.Instance.Resource.Instantiate($"UI/SubItem/{name}");
 
         // parent 지정
         // 지정된 Transform 아래에 자식으로 배치
@@ -73,7 +93,7 @@ public class UIManager
             name = typeof(T).Name;
 
         // 경로에 이미 에디터 상에 만들어 둔 Prefab이 있어야 한다
-        GameObject go = Managers.Resource.Instantiate($"UI/Scene/{name}");
+        GameObject go = Managers.Instance.Resource.Instantiate($"UI/Scene/{name}");
         // UI_Scene 컴포넌트 가져오기/추가 → _sceneUI에 저장
         T sceneUI = Util.GetOrAddComponent<T>(go); // 이때 씬에 새 GameObject가 생성되고, 그 위에 UI_Inven 컴포넌트가 붙어 있다.
         // 오브젝트가 생성되면서 오브젝트의 UI_Inven.Start()를 호출
@@ -102,7 +122,7 @@ public class UIManager
             name = typeof(T).Name;
 
         // 경로에 이미 에디터 상에 만들어 둔 Prefab이 있어야 한다
-        GameObject go = Managers.Resource.Instantiate($"UI/Popup/{name}");
+        GameObject go = Managers.Instance.Resource.Instantiate($"UI/Popup/{name}");
 
         // UI_Popup 컴포넌트 가져오기/추가
         T popup = Util.GetOrAddComponent<T>(go);
@@ -115,7 +135,7 @@ public class UIManager
         {
             Time.timeScale = 0f;
             if (isStageScene)
-                Managers.Game.IsTimerPaused = true;
+                Managers.Instance.Game.IsTimerPaused = true;
         }
 
         // **커서 보이기**: 메인 씬이 아니면
@@ -183,7 +203,7 @@ public class UIManager
 
         UI_Popup popup = _popupStack.Pop();
         _openPopupTypes.Remove(popup.GetType());  // ← 추가
-        Managers.Resource.Destroy(popup.gameObject);
+        Managers.Instance.Resource.Destroy(popup.gameObject);
         popup = null;
         _order--; // order 줄이기
 
@@ -193,7 +213,7 @@ public class UIManager
             Time.timeScale = 1f;
             string scene = SceneManager.GetActiveScene().name;
             if (scene.Contains("Stage"))
-                Managers.Game.IsTimerPaused = false;
+                Managers.Instance.Game.IsTimerPaused = false;
 
             // **커서 숨기기**: 메인 씬이 아니면
             if (scene != "Main")
@@ -211,11 +231,32 @@ public class UIManager
         while (_popupStack.Count > 0)
             ClosePopupUI();
     }
-
-    public void Clear()
+    // 기존 팝업을 모두 닫습니다.
+    public void ClearPopupUI()
     {
         CloseAllPopupUI();
-        _sceneUI = null;
+    }
+
+
+    // 현재 띄워진 씬용 UI를 파괴하고 레퍼런스를 정리합니다.
+    public void ClearSceneUI()
+    {
+        var root = Root.transform;
+        for (int i = root.childCount - 1; i >= 0; i--)
+        {
+            var child = root.GetChild(i);
+            if (child.GetComponent<UI_Scene>() != null)
+                Object.Destroy(child.gameObject);
+        }
+    }
+
+    /// <summary>
+    /// 전체 정리: 팝업 + 씬 UI 모두 지워야 할 때 호출
+    /// </summary>
+    public void ClearAllUI()
+    {
+        ClearPopupUI();
+        ClearSceneUI();
     }
 
 }

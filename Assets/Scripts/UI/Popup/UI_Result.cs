@@ -4,8 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
-using JustClimb.Manager;  
+using JustClimb.Manager;
 
+// 책임: 
+// 결과 화면 그리기(시간, 사망 수, 보석 애니메이션)
+// 버튼 클릭으로 씬 전환
+// 보상 지급 로직(CurrencyManager.AddGems) 호출
+// 스테이지 완료 처리(StageManager.SetCleared) 호출
 public class UI_Result : UI_Popup
 {
     // 자동 바인딩용 enum
@@ -52,82 +57,57 @@ public class UI_Result : UI_Popup
         // 3) 버튼 이벤트
         _btnMainMenu.onClick.AddListener(() =>
         {
-            PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(Define.Scene.Main));
-            Managers.Scene.LoadScene(Define.Scene.Loading);
+            PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Main));
+            Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
         });
         _btnNextStage.onClick.AddListener(GoToNextStage);
         _btnLobbyMenu.onClick.AddListener(() =>
         {
-            PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(Define.Scene.Lobby));
-            Managers.Scene.LoadScene(Define.Scene.Loading);
+            PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Lobby));
+            Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
         });
     }
 
-    // UI 띄우고, 보상·저장·UI 표시를 모두 처리.
+    /// <summary>
+    /// 결과 UI 표시 + 보상 지급 + 저장까지 처리합니다.
+    /// </summary>
     public void ShowResult(TimeSpan elapsed)
     {
-        // 시간·죽음수 표시
+        // 1) 시간·사망수 표시
         _timeText.text = $"Time: {elapsed.Minutes:00}:{elapsed.Seconds:00}";
-        _deathText.text = $"Deaths: {Managers.Game.PlayerDeathCount}";
+        _deathText.text = $"Deaths: {Managers.Instance.Game.PlayerDeathCount}";
 
-        // 슬라이더: 0 ~ 1200초(20분)
-        // 초기엔 maxValue가 1200이고 value도 1200
+        // 2) 타이머 슬라이더
         _timerSlider.maxValue = 600f;
-        _timerSlider.value = Mathf.Clamp(600f - (float)elapsed.TotalSeconds, 0f, 600f);
+        _timerSlider.value = Mathf.Clamp(
+            600f - (float)elapsed.TotalSeconds, 0f, 600f
+        );
 
-        // 보석 개수 계산 & 지급
-        // 경과 시간(초)을 변수에 담고
-        double totalSec = elapsed.TotalSeconds;
+        // 3) 보석 개수 계산
+        int gemCount = (elapsed.TotalSeconds < 300) ? 3
+                     : (elapsed.TotalSeconds < 600) ? 2
+                     : 1;
 
-        // 보석 개수 계산
-        int gemCount;
-        if (totalSec < 300) gemCount = 3;  // 5분 미만
-        else if (totalSec < 600) gemCount = 2;  // 10분 미만
-        else gemCount = 1;  // 그 이후
+        // 4) CurrencyManager 통해 보석 지급
+        Managers.Instance.Currency.AddGems(gemCount);
 
-        ItemManager.Instance.AddGems(gemCount);
-
-        // 보석 UI & 애니메이션
+        // 5) 보석 애니메이션
         for (int i = 0; i < 3; i++)
         {
-            bool give = i < gemCount;
-            _gems[i].canvasRenderer.SetAlpha(give ? 1f : 0f);
-            if (give) StartCoroutine(AnimateGem(_gems[i]));
+            bool visible = i < gemCount;
+            _gems[i].canvasRenderer.SetAlpha(visible ? 1f : 0f);
+            if (visible)
+                StartCoroutine(AnimateGem(_gems[i]));
         }
 
-        // 5) 스테이지 클리어 저장
-        SaveStageClear(elapsed, gemCount);
-    }
-
-    private void SaveStageClear(TimeSpan duration, int gemCount)
-    {
-        string name = SceneManager.GetActiveScene().name;
-        if (!name.StartsWith("Stage") ||
-            !int.TryParse(name.Substring(5), out int stageNum))
-            return;
-
-        // 이전 최고 보상 개수 불러오기
-        int prevBest = PlayerPrefs.GetInt($"BestGemCount{stageNum}", 0);
-
-        // 차액 계산 & 지급
-        int delta = Mathf.Max(0, gemCount - prevBest);
-        if (delta > 0)
-            ItemManager.Instance.AddGems(delta);
-
-        // 최고 보상 개수 갱신
-        if (gemCount > prevBest)
-            PlayerPrefs.SetInt($"BestGemCount{stageNum}", gemCount);
-
-        // 기존 클리어 타임 저장
-        int newTime = (int)duration.TotalSeconds;
-        int oldTime = PlayerPrefs.GetInt($"ClearTime{stageNum}", int.MaxValue);
-        if (newTime < oldTime)
-            PlayerPrefs.SetInt($"ClearTime{stageNum}", newTime);
-
-        // 스테이지 클리어 플래그 (잠금 해제)
-        PlayerPrefs.SetInt($"Stage{stageNum}", 1);
-
-        PlayerPrefs.Save();
+        // 6) StageManager에 클리어 저장 (플래그·보상·기록 갱신)
+        string scene = SceneManager.GetActiveScene().name;
+        if (scene.StartsWith("Stage") &&
+            int.TryParse(scene.Substring(5), out int stageNum))
+        {
+            Managers.Instance.Stage
+                .SetCleared(stageNum, gemCount, (int)elapsed.TotalSeconds);
+        }
     }
 
     private IEnumerator AnimateGem(Image gem)
@@ -155,7 +135,7 @@ public class UI_Result : UI_Popup
         int num = int.Parse(scene.Substring(5));
         Define.Scene next = (Define.Scene)Enum.Parse(typeof(Define.Scene), $"Stage{num + 1}");
 
-        PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(next));
-        Managers.Scene.LoadScene(Define.Scene.Loading);
+        PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(next));
+        Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
     }
 }

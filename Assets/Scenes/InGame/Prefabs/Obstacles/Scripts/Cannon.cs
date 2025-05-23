@@ -45,7 +45,7 @@ public class Cannon : MonoBehaviour
     {
         GameObject projectile = Instantiate(projectilePrefab, gameObject.transform.position, Quaternion.LookRotation(fireDirection));
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
-        Managers.Sound.PlaySFX(6);
+        Managers.Instance.Sound.PlaySFX(6);
         // ��ƼŬ ������Ʈ ��������
         ParticleSystem particleSystem = ExplosionPre.GetComponent<ParticleSystem>();
 

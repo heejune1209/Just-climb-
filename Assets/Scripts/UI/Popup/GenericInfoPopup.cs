@@ -30,10 +30,8 @@ public class GenericInfoPopup : UI_Popup
             closeButton.onClick.AddListener(ClosePopupUI);
     }
 
-    /// <summary>
-    /// 넘겨주는 만큼만 보이고, 나머지는 자동 숨김.
-    /// ex) Setup("타이틀", "본문", "100")  
-    /// </summary>
+    // 넘겨주는 만큼만 보이고, 나머지는 자동 숨김.
+    // ex) Setup("타이틀", "본문", "100")  
     public void Setup(params string[] texts)
     {
         for (int i = 0; i < textFields.Length; i++)

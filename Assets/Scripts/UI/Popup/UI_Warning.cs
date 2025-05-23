@@ -47,7 +47,7 @@ public class UI_Warning : UI_Popup
             _settingsBtn.gameObject.BindEvent(_ =>
             {
                 //Managers.Sound.PlaySFX(0);
-                Managers.UI.ShowPopupUI<UI_Settings>("UI_Settings");
+                Managers.Instance.UI.ShowPopupUI<UI_Settings>("UI_Settings");
             });
 
         if (_returnBtn != null)
@@ -56,8 +56,8 @@ public class UI_Warning : UI_Popup
                 // 이전 씬으로 돌아가기
                 ClosePopupUI();
                 
-                PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(Define.Scene.Main));
-                Managers.Scene.LoadScene(Define.Scene.Loading); 
+                PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Main));
+                Managers.Instance.Scene.LoadScene(Define.Scene.Loading); 
             });
 
         if (_backToLobbyBtn != null)
@@ -66,8 +66,8 @@ public class UI_Warning : UI_Popup
                 // 이전 씬으로 돌아가기
                 ClosePopupUI();
                 
-                PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(Define.Scene.Lobby));
-                Managers.Scene.LoadScene(Define.Scene.Loading);
+                PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Lobby));
+                Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
             });
     }
 

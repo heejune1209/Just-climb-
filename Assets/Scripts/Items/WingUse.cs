@@ -18,10 +18,7 @@ namespace JustClimb.Items
         [Tooltip("지속시간 등 메타데이터를 가진 SO를 할당")]
         public ItemData data;
 
-        /// <summary>
-        /// IItemUse 인터페이스 구현: 아이템 사용 시 호출됩니다.
-        /// </summary>
-        /// <param name="user">아이템을 사용하는 GameObject (플레이어)</param>
+        // IItemUse 인터페이스 구현: 아이템 사용 시 호출됩니다.
         public void Use(GameObject user)
         {
             if (user == null)

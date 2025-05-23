@@ -1,300 +1,179 @@
 using System;
-using UnityEngine;
 using System.Collections.Generic;
+using UnityEngine;
 using JustClimb.Items;
 
 namespace JustClimb.Manager
 {
-    // 아이템 정의·사용 로직·카운트 관리와
-    // 보석·골드 같은 재화 관리까지 담당하는 싱글톤 매니저
+    /// <summary>
+    /// 아이템 정의·사용 로직·카운트 관리 전담.
+    /// JSON 저장·로드는 DataManager, 도메인 로직은 여기서 처리.
+    /// </summary>
     public class ItemManager : MonoBehaviour
     {
-        // Lazy 싱글톤
-        private static ItemManager _instance;
-        public static ItemManager Instance
+        // --- SO 기반 사용 로직 매핑 ---
+        Dictionary<ItemType, IItemUse> _itemUseDict;
+
+        // --- 버프·쿨다운 관리 ---
+        Dictionary<ItemType, float> _buffEndTimes = new Dictionary<ItemType, float>();
+        Dictionary<ItemType, float> _nextAvailableTime = new Dictionary<ItemType, float>();
+
+        // 아이템 수량 변경 이벤트 (itemId, newCount)
+        public event Action<ItemType, int> OnItemCountChanged;
+
+        /// <summary>
+        /// Managers.Awake()에서 호출합니다.
+        /// </summary>
+        public void Init()
         {
-            get
-            {
-                if (_instance == null)
-                {
-                    var existing = FindObjectOfType<ItemManager>();
-                    if (existing != null)
-                        _instance = existing;
-                    else
-                    {
-                        var go = new GameObject { name = "@ItemManager" };
-                        _instance = go.AddComponent<ItemManager>();
-                    }
-                    DontDestroyOnLoad(_instance.gameObject);
-                }
-                return _instance;
-            }
-        }
-
-        // --- 아이템 관리용 ---
-        Dictionary<string, ItemData> _itemDataDict;
-        Dictionary<string, IItemUse> _itemUseDict;
-        Dictionary<string, int> _itemCountDict;
-
-        // 아이템 수량 변경 시 발행 (itemId, newCount)
-        public event Action<string, int> OnItemCountChanged;
-
-        // --- 재화 관리용 ---
-        int _gems;
-        int _gold;
-
-        // 재화 변경 시 발행 (\"Gem\" 또는 \"Gold\", newCount)
-        public event Action<string, int> OnCurrencyChanged;
-
-        // ItemManager 필드에 추가
-        private Dictionary<string, float> _cooldownDurations = new Dictionary<string, float>
-        {
-            {"Feather",  10f},  // 10초
-            {"Wing",     10f},  // 10초
-            {"Lamp",     20f},  // 20초
-            {"Flag",     10f},  // 2분 = 120초
-        };
-
-        // 아이템 사용 시 효과 지속시간(초) 저장용
-        Dictionary<string, float> _buffDurations = new Dictionary<string, float>();
-        Dictionary<string, float> _buffEndTimes = new Dictionary<string, float>();
-
-        // 다음 사용 가능 시간 기록
-        private Dictionary<string, float> _nextAvailableTime = new Dictionary<string, float>();
-
-        void Awake()
-        {
-            // 중복 생성 방지
-            if (_instance != null && _instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            _instance = this;
-            DontDestroyOnLoad(gameObject);
-
-            // 1) 아이템 로드
-            LoadItemDefinitions();
+            // 1) SO 로직 로드
             LoadItemUses();
-            LoadItemCounts();
 
-            // 2) 재화 로드
-            LoadCurrency();
+            // 2) 초기 상태 발행
+            foreach (var type in Managers.Instance.ItemDB.GetAllItemDefinitions().Keys)
+                OnItemCountChanged?.Invoke(type, GetItemCount(type));
         }
 
         // =====================
-        // 아이템 데이터 로드
+        // IItemUse 로직 로드
         // =====================
-        void LoadItemDefinitions()
-        {
-            _itemDataDict = new Dictionary<string, ItemData>();
-            var datas = Managers.Resource.LoadAll<ItemData>("ScriptableObjects/Items");
-            foreach (var d in datas)
-            {
-                if (!string.IsNullOrEmpty(d.itemId) && !_itemDataDict.ContainsKey(d.itemId))
-                {
-                    _itemDataDict.Add(d.itemId, d);
-
-                    // SO에 buffDuration이 있으면 딕셔너리에 추가
-                    if (d.buffDuration > 0f)
-                        _buffDurations[d.itemId] = d.buffDuration;
-                }
-                    
-            }
-               
-        }
-
-        // 아이템 사용 로직 로드
         void LoadItemUses()
         {
-            _itemUseDict = new Dictionary<string, IItemUse>();
-            var sos = Managers.Resource.LoadAll<ScriptableObject>("Game/ItemUse");
+            _itemUseDict = new Dictionary<ItemType, IItemUse>();
+            var sos = Managers.Instance.Resource.LoadAll<ScriptableObject>("Game/ItemUse");
             foreach (var so in sos)
-                if (so is IItemUse useLogic)
+                if (so is IItemUse logic)
                 {
-                    var key = so.name.Replace("Use", "");
-                    if (!_itemUseDict.ContainsKey(key))
-                        _itemUseDict.Add(key, useLogic);
+                    var name = so.name.Replace("Use", "");
+                    if (Enum.TryParse<ItemType>(name, out var type)
+                        && !_itemUseDict.ContainsKey(type))
+                    {
+                        _itemUseDict.Add(type, logic);
+                    }
                 }
-        }
-
-        // 저장된 수량 불러오기 & 초기 이벤트 발행
-        void LoadItemCounts()
-        {
-            _itemCountDict = new Dictionary<string, int>();
-            foreach (var kv in _itemDataDict)
-            {
-                // defaultCount 대신 0을 기본값으로 사용
-                int saved = PlayerPrefs.GetInt(kv.Key, 0);
-                _itemCountDict.Add(kv.Key, saved);
-            }
-            // 구독자에게 초기 상태 알림
-            foreach (var kv in _itemCountDict)
-                OnItemCountChanged?.Invoke(kv.Key, kv.Value);
-        }
-
-
-        // 재화 데이터 로드
-        void LoadCurrency()
-        {
-            _gems = PlayerPrefs.GetInt("Gem", 200);
-            _gold = PlayerPrefs.GetInt("Gold", 100);
-
-            // 초기 이벤트
-            OnCurrencyChanged?.Invoke("Gem", _gems);
-            OnCurrencyChanged?.Invoke("Gold", _gold);
         }
 
         // =====================
         // 공개 API
+        // =====================
 
-        // 아이템 수량 조회
-        public int GetItemCount(string itemId)
+        // 현재 아이템 보유 개수 조회
+        public int GetItemCount(ItemType itemId)
         {
-            return _itemCountDict.TryGetValue(itemId, out var c) ? c : 0;
-        }
-
-        // 아이템 보유 여부
-        public bool HasItem(string itemId)
-        {
-            return _itemCountDict.TryGetValue(itemId, out var c) && (c > 0);
+            return GetItemCountInternal(itemId);
         }
 
         // 아이템 획득
-        public void AddItem(string itemId, int amount = 1)
+        public void AddItem(ItemType itemId, int amount = 1)
         {
-            if (!_itemCountDict.ContainsKey(itemId))
-                _itemCountDict[itemId] = 0;
-            _itemCountDict[itemId] += amount;
-            SaveItemCount(itemId);
+            int newCount = GetItemCount(itemId) + amount;
+            SetItemCountInternal(itemId, newCount);
+            Managers.Instance.Data.Save();
+            OnItemCountChanged?.Invoke(itemId, newCount);
         }
 
-        // 아이템 사용
-        public bool UseItem(string itemId, GameObject user)
+        // 아이템 사용 시도
+        public bool UseItem(ItemType itemId, GameObject user)
         {
-            // ❶ 쿨타임 남았으면 사용 불가
-            if (_nextAvailableTime.TryGetValue(itemId, out var ready) && Time.time < ready)
+            var data = Managers.Instance.ItemDB.Get(itemId);
+
+            // 쿨다운 체크
+            if (_nextAvailableTime.TryGetValue(itemId, out var ready)
+                && Time.time < ready)
                 return false;
 
-            // ❷ 기존 사용 로직 실행
-            if (!HasItem(itemId) || !_itemUseDict.TryGetValue(itemId, out var logic))
+            // 소지 & 사용 로직
+            if (GetItemCount(itemId) <= 0
+                || !_itemUseDict.TryGetValue(itemId, out var logic))
                 return false;
 
-            logic.Use(user);
+            logic.Use(user);  // LampUse, WingUse, FeatherUse, FlagUse 등 
+
+            // 개수 차감 & 이벤트
             RemoveItem(itemId, 1);
 
-            // ✅ [추가] UI 갱신 이벤트 호출
-            if (_itemCountDict.TryGetValue(itemId, out var count))
-            {
-                OnItemCountChanged?.Invoke(itemId, count);
-            }
+            // 버프 적용 기록
+            if (data.buffDuration > 0f)
+                _buffEndTimes[itemId] = Time.time + data.buffDuration;
 
-            // ❸ 버프 시작 기록
-            if (_buffDurations.TryGetValue(itemId, out var dur))
-                _buffEndTimes[itemId] = Time.time + dur;
-
-            // ❹ 쿨타임 시작
-            if (_cooldownDurations.TryGetValue(itemId, out var cd))
-                _nextAvailableTime[itemId] = Time.time + cd;
+            // 쿨다운 기록
+            if (data.cooldownDuration > 0f)
+                _nextAvailableTime[itemId] = Time.time + data.cooldownDuration;
 
             return true;
-        }
-
-
-        // 버프 남은 시간 조회
-        public float GetBuffRemaining(string itemId)
-        {
-            if (_buffEndTimes.TryGetValue(itemId, out var end))
-                return Mathf.Max(0f, end - Time.time);
-            return 0f;
-        }
-        // 버프 총 지속시간 조회
-        public float GetBuffDuration(string itemId)
-        {
-            return _buffDurations.TryGetValue(itemId, out var d) ? d : 0f;
         }
 
         // 아이템 제거
-        public void RemoveItem(string itemId, int amount = 1)
+        public void RemoveItem(ItemType itemId, int amount = 1)
         {
-            if (!_itemCountDict.ContainsKey(itemId))
-                return;
-            _itemCountDict[itemId] = Mathf.Max(0, _itemCountDict[itemId] - amount);
-            SaveItemCount(itemId);
+            int newCount = Mathf.Max(0, GetItemCount(itemId) - amount);
+            SetItemCountInternal(itemId, newCount);
+            Managers.Instance.Data.Save();
+            OnItemCountChanged?.Invoke(itemId, newCount);
         }
 
-        // 보석 조회
-        public int GetGems() => _gems;
-        // 골드 조회
-        public int GetGold() => _gold;
-
-        // 보석 획득
-        public void AddGems(int amount)
+        // 버프 남은 시간 조회
+        public float GetBuffRemaining(ItemType itemId)
         {
-            _gems += amount;
-            SaveCurrency("Gem", _gems);
+            return _buffEndTimes.TryGetValue(itemId, out var end)
+               ? Mathf.Max(0f, end - Time.time) : 0f;
         }
 
-        // 골드 획득
-        public void AddGold(int amount)
+        // 버프 총 지속 시간 조회
+        public float GetBuffDuration(ItemType itemId)
         {
-            _gold += amount;
-            SaveCurrency("Gold", _gold);
+            return Managers.Instance.ItemDB.Get(itemId).buffDuration;
         }
 
-        // 골드 사용 시도
-        public bool SpendGold(int amount)
+        // 쿨다운 남은 시간 조회
+        public float GetCooldownRemaining(ItemType itemId)
         {
-            if (_gold < amount) return false;
-            _gold -= amount;
-            SaveCurrency("Gold", _gold);
-            return true;
+            return _nextAvailableTime.TryGetValue(itemId, out var cd)
+               ? Mathf.Max(0f, cd - Time.time) : 0f;
         }
 
-        // =====================
-        // 내부 저장 & 이벤트
-
-        void SaveItemCount(string itemId)
+        // 총 쿨다운 길이 조회
+        public float GetCooldownDuration(ItemType itemId)
         {
-            PlayerPrefs.SetInt(itemId, _itemCountDict[itemId]);
-            PlayerPrefs.Save();
-            OnItemCountChanged?.Invoke(itemId, _itemCountDict[itemId]);
-        }
-
-        void SaveCurrency(string key, int value)
-        {
-            PlayerPrefs.SetInt(key, value);
-            PlayerPrefs.Save();
-            OnCurrencyChanged?.Invoke(key, value);
-        }
-
-        // 남은 쿨타임(초)
-        public float GetCooldownRemaining(string itemId)
-        {
-            if (_nextAvailableTime.TryGetValue(itemId, out var ready))
-                return Mathf.Max(0f, ready - Time.time);
-            return 0f;
-        }
-
-        // 총 쿨타임 길이(초)
-        public float GetCooldownDuration(string itemId)
-        {
-            if (_cooldownDurations.TryGetValue(itemId, out var cd))
-                return cd;
-            return 0f;
+            return Managers.Instance.ItemDB.Get(itemId).cooldownDuration;
         }
 
         // 모든 아이템 ID 목록
-        public IEnumerable<string> GetAllItemIds()
+        public IEnumerable<ItemType> GetAllItemIds()
         {
-            return _itemDataDict.Keys;
+            return Managers.Instance.ItemDB.GetAllItemDefinitions().Keys;
         }
 
-        // ScriptableObject로 정의된 모든 아이템 데이터 반환
-        public Dictionary<string, ItemData> GetAllItemDefinitions()
+        // =====================
+        // 내부 저장·로드 헬퍼
+        // =====================
+
+        // DataManager.Current.items에서 해당 아이템 개수 읽기
+        int GetItemCountInternal(ItemType itemId)
         {
-            // 복사해서 반환
-            return new Dictionary<string, ItemData>(_itemDataDict);
+            var arr = Managers.Instance.Data.Current.items;
+            var inv = Array.Find(arr, x => x.itemId == itemId);
+            return inv != null ? inv.count : 0;
+        }
+
+        // DataManager.Current.items에 해당 아이템 개수 쓰기
+        void SetItemCountInternal(ItemType itemId, int count)
+        {
+            var dm = Managers.Instance.Data;
+            var list = new List<InventoryItem>(dm.Current.items);
+            int idx = list.FindIndex(x => x.itemId == itemId);
+            if (idx < 0)
+            {
+                if (count > 0)
+                    list.Add(new InventoryItem(itemId, count));
+            }
+            else
+            {
+                if (count > 0) list[idx].count = count;
+                else list.RemoveAt(idx);
+            }
+
+            dm.Current.items = list.ToArray();
         }
     }
 }

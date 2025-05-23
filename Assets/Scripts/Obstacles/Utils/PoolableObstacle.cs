@@ -16,6 +16,6 @@ public abstract class PoolableObstacle : ObstacleBase
 
         // Poolable 컴포넌트를 통해 풀에 반환
         Poolable poolable = GetComponent<Poolable>();
-        Managers.Pool.Push(poolable);
+        Managers.Instance.Pool.Push(poolable);
     }
 }

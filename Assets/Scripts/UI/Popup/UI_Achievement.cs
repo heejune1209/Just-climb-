@@ -70,24 +70,24 @@ public class UI_Achievement : UI_Popup
         _rewardBtn = GetButton((int)Buttons.RewardButton);
         _rewardBtn.onClick.AddListener(() =>
         {
-            Managers.Sound.PlaySFX(0);    // 클릭 사운드
+            Managers.Instance.Sound.PlaySFX(0);    // 클릭 사운드
             OnRewardPressed();
         });
 
         // 카테고리 탭 버튼
         GetButton((int)Buttons.StageTabButton).onClick.AddListener(() =>
         {
-            Managers.Sound.PlaySFX(0);
+            Managers.Instance.Sound.PlaySFX(0);
             SwitchCategory(Category.Stage);
         });
         GetButton((int)Buttons.CharacterTabButton).onClick.AddListener(() =>
         {
-            Managers.Sound.PlaySFX(0);
+            Managers.Instance.Sound.PlaySFX(0);
             SwitchCategory(Category.Character);
         });
         GetButton((int)Buttons.ItemTabButton).onClick.AddListener(() =>
         {
-            Managers.Sound.PlaySFX(0);
+            Managers.Instance.Sound.PlaySFX(0);
             SwitchCategory(Category.Item);
         });
 
@@ -105,7 +105,7 @@ public class UI_Achievement : UI_Popup
         // 닫기 버튼
         GetButton((int)Buttons.CloseButton).gameObject.BindEvent(_ =>
         {
-            Managers.Sound.PlaySFX(0);
+            Managers.Instance.Sound.PlaySFX(0);
             ClosePopupUI();
         });
     }
@@ -126,7 +126,7 @@ public class UI_Achievement : UI_Popup
                 int idx = i;
                 btn.onClick.AddListener(() =>
                 {
-                    Managers.Sound.PlaySFX(0);
+                    Managers.Instance.Sound.PlaySFX(0);
                     ShowDetail(idx);
                 });
             }

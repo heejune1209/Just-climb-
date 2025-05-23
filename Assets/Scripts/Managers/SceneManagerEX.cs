@@ -18,13 +18,12 @@ public class SceneManagerEx
 
     public void LoadScene(Define.Scene type)
     {
-        Managers.Clear(); // 씬을 로드하기 전에 현재 씬을 초기화
+        // 1) 씬 UI만 지우기
+        Managers.Instance.UI.ClearSceneUI();
+
+        // 2) 팝업만 지우기 + 풀 등 전역 정리
+        Managers.Clear();
 
         SceneManager.LoadScene(GetSceneName(type)); // SceneManager는 UnityEngine의 SceneManager
-    }
-
-    public void Clear()
-    {
-        CurrentScene.Clear();
     }
 }

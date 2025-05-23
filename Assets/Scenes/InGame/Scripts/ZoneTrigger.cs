@@ -32,8 +32,8 @@ public class ZoneTrigger : MonoBehaviour
         switch (mode)
         {
             case TriggerMode.Fireworks:
-                //Managers.Sound.PlaySFX(9);
-                //Managers.Sound.PlaySFX(10);
+                //Managers.Instance.Sound.PlaySFX(9);
+                //Managers.Instance.Sound.PlaySFX(10);
                 PlayFireworks();
                 break;
 
@@ -52,7 +52,7 @@ public class ZoneTrigger : MonoBehaviour
 
     void ShowResult()
     {
-        var popup = Managers.UI.ShowPopupUI<UI_Result>("UI_Result");
-        popup.ShowResult(Managers.Game.ElapsedTime());
+        var popup = Managers.Instance.UI.ShowPopupUI<UI_Result>("UI_Result");
+        popup.ShowResult(Managers.Instance.Game.ElapsedTime());
     }
 }

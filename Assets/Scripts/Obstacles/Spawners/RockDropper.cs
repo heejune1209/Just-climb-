@@ -58,7 +58,7 @@ namespace JustClimb.Obstacles.Spawners
             while (true)
             {
                 // 풀링을 지원하는 ResourceManager로 프리팹 인스턴스화
-                Managers.Resource.Instantiate(
+                Managers.Instance.Resource.Instantiate(
                     $"Prefabs/{data.rockPrefab.name}",
                     dropPoint
                 );

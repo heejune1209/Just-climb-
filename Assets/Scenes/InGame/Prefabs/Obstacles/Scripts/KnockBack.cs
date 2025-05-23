@@ -17,7 +17,7 @@ public class KnockBack : MonoBehaviour
             {
                 //ContactPoint contact = other.GetContact(0);
                 Vector3 targetPosition = playerRigidbody.position + knockbackDirection.normalized * knockbackDistance;
-                Managers.Sound.PlaySFX(8);
+                Managers.Instance.Sound.PlaySFX(8);
                 // ���� ������ ���� ���� �����ϸ� �� �������� ������ �˹�.
 
 

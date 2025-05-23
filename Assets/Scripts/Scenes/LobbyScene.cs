@@ -7,11 +7,12 @@ public class LobbyScene : BaseScene
         base.Init();
         SceneType = Define.Scene.Lobby;
         // UI_Lobby 프리팹을 @LobbyScene 루트 아래에 표시
-        Managers.UI.ShowSceneUI<UI_Lobby>("UI_Lobby");
+        Managers.Instance.UI.ShowSceneUI<UI_Lobby>("UI_Lobby");
     }
 
     public override void Clear()
     {
-        // 씬 종료 시 필요한 정리 로직
+        // Scene 전환 직전 기존 UI 정리
+        Managers.Clear();
     }
 }

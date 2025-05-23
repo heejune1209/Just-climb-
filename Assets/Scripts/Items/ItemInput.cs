@@ -1,39 +1,46 @@
+using JustClimb.Items;
 using JustClimb.Manager;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class ItemInput : MonoBehaviour
+namespace JustClimb.Input
 {
-    [Tooltip("아이템 사용 시 대상(대개 플레이어) 게임오브젝트")]
-    public GameObject player;
-
-    void Update()
+    // 키 입력(1~4)으로 아이템 사용을 시도합니다.
+    public class ItemInput : MonoBehaviour
     {
-        // 1번 키 → Feather
-        if (Keyboard.current.digit1Key.wasPressedThisFrame)
+        [Tooltip("아이템 사용 시 대상(대개 플레이어) 게임오브젝트")]
+        [SerializeField] private GameObject player;
+
+        void Update()
         {
-            Debug.Log("1번 키 눌림, player = " + player);
-            ItemManager.Instance.UseItem("Feather", player);
+            if (Keyboard.current.digit1Key.wasPressedThisFrame)
+                TryUse(ItemType.Feather);
+            if (Keyboard.current.digit2Key.wasPressedThisFrame)
+                TryUse(ItemType.Wing);
+            if (Keyboard.current.digit3Key.wasPressedThisFrame)
+                TryUse(ItemType.Lamp);
+            if (Keyboard.current.digit4Key.wasPressedThisFrame)
+                TryUse(ItemType.Flag);
         }
-        // 2번 키 → Wing
-        if (Keyboard.current.digit2Key.wasPressedThisFrame)
+
+        private void TryUse(ItemType itemType)
         {
-            Debug.Log("2번 키 눌림, player = " + player);
-            ItemManager.Instance.UseItem("Wing", player);
-        }
-        // 3번 키 → Lamp
-        if (Keyboard.current.digit3Key.wasPressedThisFrame)
-        {
-            Debug.Log("3번 키 눌림, player = " + player);
-            ItemManager.Instance.UseItem("Lamp", player);
-        }
-        // 4번 키 → Flag
-        if (Keyboard.current.digit4Key.wasPressedThisFrame)
-        {
-            Debug.Log("4번 키 눌림, player = " + player);
-            ItemManager.Instance.UseItem("Flag", player);
+            Debug.Log($"[ItemInput] {itemType} 키 눌림, player = {player.name}");
+
+            // ItemManager를 통해 사용 시도
+            bool used = Managers.Instance.Item.UseItem(itemType, player);
+
+            if (used)
+            {
+                // 사용 성공 시, ItemManager에서 남은 개수 조회
+                int remaining = Managers.Instance.Item.GetItemCount(itemType);
+                Debug.Log($"[ItemInput] {itemType} 사용 성공. 남은 개수: {remaining}");
+            }
+            else
+            {
+                // 사용 실패 (미보유 또는 쿨타임)
+                Debug.Log($"[ItemInput] {itemType} 사용 실패 (미보유 혹은 쿨타임 중)");
+            }
         }
     }
 }

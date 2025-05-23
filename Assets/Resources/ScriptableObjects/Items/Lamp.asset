@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2269b9d2a1e53f6408528fdc1e9b2f1f, type: 3}
   m_Name: Lamp
   m_EditorClassIdentifier: 
-  itemId: Lamp
+  itemid: 3
   displayName: Lamp
   icon: {fileID: 21300000, guid: f9c70dace5fd71e4ab9f05e30e2287b8, type: 3}
+  price: 200
+  description: A lamp that lights up your surroundings. When used, it finds transparent
+    objects around it.
   buffDuration: 10
+  cooldownDuration: 20

@@ -92,7 +92,7 @@ public class PoolManager : MonoBehaviour
 
             // DontDestroyOnLoad 해제 용도
             if (parent == null)
-                poolable.transform.parent = Managers.Scene.CurrentScene.transform;
+                poolable.transform.parent = Managers.Instance.Scene.CurrentScene.transform;
 
             // poolable 👉 풀에서 꺼낸 오브젝트의 Poolable
             poolable.transform.parent = parent; // 파라미터로 받은 parent 를 부모로 설정

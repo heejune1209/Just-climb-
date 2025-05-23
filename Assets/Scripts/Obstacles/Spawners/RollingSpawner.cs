@@ -46,7 +46,7 @@ namespace JustClimb.Obstacles.Spawners
             while (true)
             {
                 // 1) 풀링 지원 리소스 매니저로 프리팹 인스턴스화
-                GameObject stone = Managers.Resource.Instantiate(
+                GameObject stone = Managers.Instance.Resource.Instantiate(
                     $"Prefabs/{data.stonePrefab.name}",
                     spawnPoint
                 );

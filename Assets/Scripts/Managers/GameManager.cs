@@ -54,30 +54,23 @@ public class GameManager : MonoBehaviour
         return TimeSpan.FromSeconds(_elapsedSeconds);
     }
 
-    void Awake()
+    /// <summary>
+    /// Managers 컨테이너에서 Awake() 직후 호출됩니다.
+    /// </summary>
+    public void Init()
     {
-        DontDestroyOnLoad(gameObject);
-
-        // 씬 전환 콜백
+        // 1) 씬 전환 콜백 등록
         SceneManager.sceneLoaded += OnSceneLoaded;
         SceneManager.sceneUnloaded += OnSceneUnloaded;
 
-        // PlayerPrefs에서 깃발 위치 불러오기
+        // 2) 이전에 저장된 깃발 위치 불러오기
+        // JSON 로드 후, 현재 스테이지에 저장된 깃발 위치 복원
         if (TryGetStageIndex(out int idx))
         {
-            string kx = string.Format(KEY_FLAG_X, idx);
-            string ky = string.Format(KEY_FLAG_Y, idx);
-            string kz = string.Format(KEY_FLAG_Z, idx);
-
-            if (PlayerPrefs.HasKey(kx) &&
-                PlayerPrefs.HasKey(ky) &&
-                PlayerPrefs.HasKey(kz))
+            var sd = Managers.Instance.Data.Current;
+            if (idx < sd.stageFlagPositions.Length)
             {
-                FlagPosition = new Vector3(
-                    PlayerPrefs.GetFloat(kx),
-                    PlayerPrefs.GetFloat(ky),
-                    PlayerPrefs.GetFloat(kz)
-                );
+                FlagPosition = sd.stageFlagPositions[idx].ToVector3();
                 HasFlagPosition = true;
             }
         }
@@ -85,12 +78,11 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        // 타이머 계산
         if (!IsTimerPaused)
         {
             _elapsedSeconds += Time.deltaTime;
             OnTimerUpdated?.Invoke(TimeSpan.FromSeconds(_elapsedSeconds));
-        }       
+        }
     }
     void OnDestroy()
     {
@@ -98,21 +90,14 @@ public class GameManager : MonoBehaviour
         SceneManager.sceneUnloaded -= OnSceneUnloaded;
     }
 
-    // 플레이어 사망 시 호출.
-    // 사망 카운트 증가·저장하고, 깃발 위치로 리스폰.
-    // out 매개변수는 넘겨줄 때 초기화가 필요 없고, 메서드 내부에서 idx = … 처리를 반드시 해 주기 때문에,
-    // 호출부로 돌아오면 idx에 그 값이 담겨 있다. 그리고 Call by Reference 방식이다.
+    // 플레이어 사망 시 호출.   
     public void OnPlayerDead()
     {
-        // 1) 사망 카운트 증가·저장
+        // (1) 사망 카운트 증가 → 데이터에 반영
         PlayerDeathCount++;
-        if (TryGetStageIndex(out int idx))
-        {
-            PlayerPrefs.SetInt($"Death{idx}", PlayerDeathCount);
-            PlayerPrefs.Save();
-        }
+        // → 원한다면 JSON에 deathCount 배열을 추가해 같은 방식으로 저장 가능
 
-        // 2) 3초 뒤에 실제 리스폰 처리 실행
+        // (2) 리스폰
         StartCoroutine(RespawnAfterDelay(3f));
     }
 
@@ -122,21 +107,41 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(delay);
 
-        // 현재 씬 다시 로드
+        // 현재 로드된 씬 이름을 가져와서
         string sceneName = SceneManager.GetActiveScene().name;
-        SceneManager.LoadScene(sceneName);       
+
+        // Define.Scene enum으로 변환 시도
+        if (Enum.TryParse<Define.Scene>(sceneName, out var sceneType))
+        {
+            // 3) SceneManagerEx의 LoadScene 호출
+            Managers.Instance.Scene.LoadScene(sceneType);
+        }
+        else
+        {
+            Debug.LogError($"[GameManager] 씬 이름 '{sceneName}'을 Define.Scene으로 변환할 수 없습니다.");
+            // 실패 시엔 기존 방식으로라도 한번 로드
+            SceneManager.LoadScene(sceneName);
+        }
     }
 
 
-    // 체크포인트 저장 메서드
+    /// <summary>
+    /// 깃발 사용 시 호출 (FlagUse.Use에서)
+    /// JSON의 stageFlagPositions[idx]에 저장
+    /// </summary>
     public void SaveFlagPosition(Vector3 pos)
     {
         if (!TryGetStageIndex(out int idx)) return;
-        // Stage1_FlagX, Stage2_FlagX 처럼 키를 만듭니다.
-        PlayerPrefs.SetFloat(string.Format(KEY_FLAG_X, idx), pos.x);
-        PlayerPrefs.SetFloat(string.Format(KEY_FLAG_Y, idx), pos.y);
-        PlayerPrefs.SetFloat(string.Format(KEY_FLAG_Z, idx), pos.z);
-        PlayerPrefs.Save();
+
+        var data = Managers.Instance.Data.Current;
+
+        // 배열 크기 보장
+        var flags = new List<SerializableVector3>(data.stageFlagPositions);
+        while (flags.Count <= idx) flags.Add(default);
+        flags[idx] = new SerializableVector3(pos.x, pos.y, pos.z);
+
+        data.stageFlagPositions = flags.ToArray();
+        Managers.Instance.Data.Save();
 
         FlagPosition = pos;
         HasFlagPosition = true;
@@ -148,32 +153,29 @@ public class GameManager : MonoBehaviour
     {
         if (scene.name.StartsWith("Stage") && TryGetStageIndex(out int idx))
         {
-            // 사망 횟수 복원
-            int savedDeaths = PlayerPrefs.GetInt($"Death{idx}", 0);
-            PlayerDeathCount = savedDeaths;
+            var sd = Managers.Instance.Data.Current;
 
-            // 시간 복원
-            float savedTime = PlayerPrefs.GetFloat($"Time{idx}", 0f);
-            _elapsedSeconds = savedTime;
+            // (1) 플레이 시간 복원
+            _elapsedSeconds = idx < sd.stagePlayTimes.Length
+                ? sd.stagePlayTimes[idx]
+                : 0f;
             OnTimerUpdated?.Invoke(TimeSpan.FromSeconds(_elapsedSeconds));
 
-            // Health.OnDead 이벤트 구독
+            // (2) Health.OnDead 구독
             SubscribePlayerDeath();
-
-            // 타이머 재개
             IsTimerPaused = false;
 
-            // 깃발 리스폰
-            if (HasFlagPosition)
+            // (3) 깃발 리스폰
+            if (idx < sd.stageFlagPositions.Length)
             {
-                var player = GameObject.FindGameObjectWithTag("Player");
+                var v = sd.stageFlagPositions[idx].ToVector3();
+                var player = GameObject.FindWithTag("Player");
                 if (player != null)
-                    player.transform.position = FlagPosition;
+                    player.transform.position = v;
             }
         }
         else
         {
-            // 스테이지가 아니면 타이머 정지
             IsTimerPaused = true;
         }
     }
@@ -183,8 +185,14 @@ public class GameManager : MonoBehaviour
     {
         if (scene.name.StartsWith("Stage") && TryGetStageIndex(out int idx))
         {
-            PlayerPrefs.SetFloat($"Time{idx}", (float)_elapsedSeconds);
-            PlayerPrefs.Save();
+            // 플레이 시간 저장
+            var data = Managers.Instance.Data.Current;
+            var plays = new List<float>(data.stagePlayTimes);
+            while (plays.Count <= idx) plays.Add(0f);
+            plays[idx] = (float)_elapsedSeconds;
+            data.stagePlayTimes = plays.ToArray();
+
+            Managers.Instance.Data.Save();
         }
     }
 

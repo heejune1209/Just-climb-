@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
 using JustClimb.Manager;   // ItemManager 네임스페이스
+using JustClimb.Items;
 
 public class UI_Shop : UI_Popup
 {
@@ -65,20 +66,8 @@ public class UI_Shop : UI_Popup
     // 각 환전 옵션에 해당하는 보석 개수 배열
     readonly int[] _exchangeAmounts = { 1, 10, 100, 1000, 10000, 100000 };
     
-
     // 보석→골드 환전 비율 상수
-    const int GEM_TO_GOLD_RATIO = 400;
-
-    // 아이템 정의 구조체: key는 아이템 ID, price는 가격
-    struct Item { public string key; public int price; }
-    // UI에서 사용할 아이템별 가격 정보 사전
-    Dictionary<string, Item> _itemDefs = new Dictionary<string, Item>()
-    {
-        {"Feather", new Item{key="Feather",price=100}},
-        {"Wing",    new Item{key="Wing",   price=100}},
-        {"Lamp",    new Item{key="Lamp",   price=200}},
-        {"Flag",    new Item{key="Flag",   price=300}},
-    };
+    const int GEM_TO_GOLD_RATIO = 400;   
 
     // UI 요소 바인딩 및 버튼 이벤트 연결
     public override void Init()
@@ -109,27 +98,11 @@ public class UI_Shop : UI_Popup
         _btnDescLamp = GetButton((int)Buttons.DescLamp);
         _btnDescFlag = GetButton((int)Buttons.DescFlag);
 
-        // 설명 팝업 버튼에 리스너 추가
-        _btnDescFeather.onClick.AddListener(() =>
-            Managers.UI.ShowPopupUI<GenericInfoPopup>("FeatherInfo")
-                .Setup("Feather",
-                       "Lightweight & Low Air Resistance Feather.\r\nThe speed of movement increases when used.",
-                       $"Price : {_itemDefs["Feather"].price}"));
-        _btnDescWing.onClick.AddListener(() =>
-            Managers.UI.ShowPopupUI<GenericInfoPopup>("WingInfo")
-                .Setup("Wing",
-                       "Strong leather climbing shoes.\r\nJumping power increases when used.",
-                       $"Price : {_itemDefs["Wing"].price}"));
-        _btnDescLamp.onClick.AddListener(() =>
-            Managers.UI.ShowPopupUI<GenericInfoPopup>("LampInfo")
-                .Setup("Lamp",
-                       "A lamp that lights up your surroundings.\r\nWhen used, it finds transparent objects around it.",
-                       $"Price : {_itemDefs["Lamp"].price}"));
-        _btnDescFlag.onClick.AddListener(() =>
-            Managers.UI.ShowPopupUI<GenericInfoPopup>("FlagInfo")
-                .Setup("Flag",
-                       "Flag that allows you to save and return your current location.\r\nSave/load the current location within the stage when used.",
-                       $"Price : {_itemDefs["Flag"].price}"));
+        // 설명 팝업 리스너
+        _btnDescFeather.onClick.AddListener(() => ShowItemInfo(ItemType.Feather));
+        _btnDescWing.onClick.AddListener(() => ShowItemInfo(ItemType.Wing));
+        _btnDescLamp.onClick.AddListener(() => ShowItemInfo(ItemType.Lamp));
+        _btnDescFlag.onClick.AddListener(() => ShowItemInfo(ItemType.Flag));
 
         // 환전소 패널 및 버튼 바인딩
         _conversionPanel = GetGameObject((int)Panels.ConversionPanel);
@@ -138,73 +111,68 @@ public class UI_Shop : UI_Popup
         for (int i = 0; i < _btnExchange.Length; i++)
             _btnExchange[i] = GetButton((int)Buttons.Exchange1 + i);
 
-        // 구매 버튼 이벤트 연결
-        _btnBuyFeather.onClick.AddListener(() => TryBuy(_itemDefs["Feather"].key));
-        _btnBuyWing.onClick.AddListener(() => TryBuy(_itemDefs["Wing"].key));
-        _btnBuyLamp.onClick.AddListener(() => TryBuy(_itemDefs["Lamp"].key));
-        _btnBuyFlag.onClick.AddListener(() => TryBuy(_itemDefs["Flag"].key));
+        // 구매 버튼
+        _btnBuyFeather.onClick.AddListener(() => BuyItem(ItemType.Feather));
+        _btnBuyWing.onClick.AddListener(() => BuyItem(ItemType.Wing));
+        _btnBuyLamp.onClick.AddListener(() => BuyItem(ItemType.Lamp));
+        _btnBuyFlag.onClick.AddListener(() => BuyItem(ItemType.Flag));
 
         // 환전 버튼 이벤트 연결
-        _btnOpenConversion.onClick.AddListener(OpenConversion);
+        _btnOpenConversion.onClick.AddListener(() => _conversionPanel.SetActive(true));
         _btnCloseConversion.onClick.AddListener(() => _conversionPanel.SetActive(false));
         for (int i = 0; i < _exchangeAmounts.Length; i++)
         {
             int amt = _exchangeAmounts[i];
             _btnExchange[i].onClick.AddListener(() => TryExchange(amt));
         }
-
-        //// 2) 환전 라벨 바인딩
-        //_conversionAmountText = new TMP_Text[_exchangeAmounts.Length];
-        //for (int i = 0; i < _exchangeAmounts.Length; i++)
-        //{
-        //    // 예를 들어, Hierarchy가
-        //    // ConversionPanel
-        //    //    ├ Option1
-        //    //    │    └ AmountText (TextMeshProUGUI)
-        //    //    ├ Option2
-        //    //    │    └ AmountText
-        //    //    └ … 
-        //    //
-        //    // 이라고 가정할 때 아래처럼 Find 경로를 지정합니다.
-
-        //    var amountTextTransform =
-        //        _conversionPanel.transform
-        //                        .Find($"Exchange{i + 1}/AmountText");
-        //    if (amountTextTransform != null)
-        //        _conversionAmountText[i] =
-        //            amountTextTransform
-        //                .GetComponent<TextMeshProUGUI>();
-        //    else
-        //        Debug.LogError($"환전 옵션{i + 1}의 AmountText를 찾을 수 없습니다.");
-        //}
-
     }
 
     // Awake 시 Init() 자동 호출
     void Awake() => Init();
 
+    // 래핑용 핸들러 (언급된 델리게이트와 언바인딩을 위해 메서드로 분리)
+    private void HandleGoldChanged(int newGold)
+    {
+        OnCurrencyChanged("Gold", newGold);
+    }
+    private void HandleGemsChanged(int newGems)
+    {
+        OnCurrencyChanged("Gem", newGems);
+    }
+
+
     // 팝업 켜질 때 이벤트 구독 및 초기 UI 반영
     private void OnEnable()
     {
-        var mgr = ItemManager.Instance;
-        mgr.OnCurrencyChanged += OnCurrencyChanged;    // 재화 변경 이벤트
-        mgr.OnItemCountChanged += OnItemCountChanged;   // 아이템 수량 변경 이벤트
+        // 1) CurrencyManager 이벤트 구독
+        var currency = Managers.Instance.Currency;
+        currency.OnGoldChanged += HandleGoldChanged;
+        currency.OnGemsChanged += HandleGemsChanged;
 
-        // 팝업 오픈 시점에 현재 값 UI에 반영
-        OnCurrencyChanged("Gem", mgr.GetGems());
-        OnCurrencyChanged("Gold", mgr.GetGold());
-        OnItemCountChanged("Feather", mgr.GetItemCount("Feather"));
-        OnItemCountChanged("Wing", mgr.GetItemCount("Wing"));
-        OnItemCountChanged("Lamp", mgr.GetItemCount("Lamp"));
-        OnItemCountChanged("Flag", mgr.GetItemCount("Flag"));
+        // 2) InventoryManager(아이템) 이벤트 구독
+        var inventory = Managers.Instance.Item;
+        inventory.OnItemCountChanged += OnItemCountChanged;
+
+        // 3) 초기 UI 반영
+        HandleGemsChanged(currency.GetGems());
+        HandleGoldChanged(currency.GetGold());
+
+        OnItemCountChanged(ItemType.Feather, inventory.GetItemCount(ItemType.Feather));
+        OnItemCountChanged(ItemType.Wing, inventory.GetItemCount(ItemType.Wing));
+        OnItemCountChanged(ItemType.Lamp, inventory.GetItemCount(ItemType.Lamp));
+        OnItemCountChanged(ItemType.Flag, inventory.GetItemCount(ItemType.Flag));
     }
 
-    // 팝업 꺼질 때 이벤트 구독 해제
     private void OnDisable()
     {
-        var mgr = ItemManager.Instance;
-        mgr.OnCurrencyChanged -= OnCurrencyChanged;
-        mgr.OnItemCountChanged -= OnItemCountChanged;
+        // 1) CurrencyManager 이벤트 해제
+        var currency = Managers.Instance.Currency;
+        currency.OnGoldChanged -= HandleGoldChanged;
+        currency.OnGemsChanged -= HandleGemsChanged;
+
+        // 2) InventoryManager 이벤트 해제
+        var inventory = Managers.Instance.Item;
+        inventory.OnItemCountChanged -= OnItemCountChanged;
     }
 
     // 재화 변경 시 텍스트 업데이트
@@ -215,56 +183,44 @@ public class UI_Shop : UI_Popup
     }
 
     // 아이템 수량 변경 시 해당 슬롯 텍스트 업데이트
-    void OnItemCountChanged(string id, int cnt)
+    void OnItemCountChanged(ItemType id, int cnt)
     {
         switch (id)
         {
-            case "Feather": _featherCount.text = cnt.ToString(); break;
-            case "Wing": _wingCount.text = cnt.ToString(); break;
-            case "Lamp": _lampCount.text = cnt.ToString(); break;
-            case "Flag": _flagCount.text = cnt.ToString(); break;
+            case ItemType.Feather: _featherCount.text = cnt.ToString(); break;
+            case ItemType.Wing: _wingCount.text = cnt.ToString(); break;
+            case ItemType.Lamp: _lampCount.text = cnt.ToString(); break;
+            case ItemType.Flag: _flagCount.text = cnt.ToString(); break;
         }
     }
 
+    // 아이템 설명 팝업 열기
+    void ShowItemInfo(ItemType itemId)
+    {
+        var data = Managers.Instance.ItemDB.Get(itemId);
+        Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>($"{itemId}Info")
+            .Setup(data.displayName, data.description, $"Price : {data.price}");
+    }
+
     // 아이템 구매 시도: 골드 지불 후 아이템 추가
-    void TryBuy(string key)
+    void BuyItem(ItemType itemId)
     {
-        var def = _itemDefs[key];
-        if (ItemManager.Instance.SpendGold(def.price))
-            ItemManager.Instance.AddItem(def.key);  // 이 key가 ScriptableObject.itemId와 100% 일치해야됨.
+        var data = Managers.Instance.ItemDB.Get(itemId);
+        if (Managers.Instance.Currency.SpendGold(data.price))
+            Managers.Instance.Item.AddItem(itemId);  // 이 key가 ScriptableObject.itemId와 100% 일치해야됨.
         else
-            Managers.UI.ShowPopupUI<GenericInfoPopup>("EmptyGoldPanel")
+            Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>("EmptyGoldPanel")
                        .Setup("Warning!", "You can't buy items because you're short of Gold.");
-    }
-
-    // 환전 패널 열기: 자식 텍스트에 옵션별 환전 정보 세팅
-    void OpenConversion()
-    {
-        _conversionPanel.SetActive(true);
-
-        
-
-        //// 3) 바인딩한 라벨에만 텍스트 세팅
-        //for (int i = 0; i < _exchangeAmounts.Length; i++)
-        //{
-        //    _conversionAmountText[i].text =
-        //        $"Gem {_exchangeAmounts[i]} => Gold {_exchangeAmounts[i] * GEM_TO_GOLD_RATIO}";
-        //}
-    }
+    }    
 
     // 보석 → 골드 환전 시도
     void TryExchange(int gemAmt)
     {
-        if (ItemManager.Instance.GetGems() >= gemAmt)
-        {
-            ItemManager.Instance.AddGold(gemAmt * GEM_TO_GOLD_RATIO);
-            ItemManager.Instance.AddGems(-gemAmt);
-        }
+        if (Managers.Instance.Currency.SpendGems(gemAmt))
+            Managers.Instance.Currency.AddGold(gemAmt * GEM_TO_GOLD_RATIO);
         else
-        {
-            Managers.UI.ShowPopupUI<GenericInfoPopup>("EmptyGemPanel")
-                       .Setup("Warning!", "You can't exchange Coins because you're short of Gem.");
-        }
+            Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>("EmptyGemPanel")
+                       .Setup("Warning!", "You don't have enough Gems.");
     }
 
     protected override void HandleEscape()

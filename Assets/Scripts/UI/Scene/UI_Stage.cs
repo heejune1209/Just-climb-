@@ -18,7 +18,6 @@ public class UI_Stage : UI_Scene
         TimerText,       // 경과 시간
     }
 
-    private GameObject _inventory;
     private TMP_Text _deathCountText;
     private TMP_Text _timerText;
     
@@ -44,19 +43,18 @@ public class UI_Stage : UI_Scene
         Bind<GameObject>(typeof(Gameobjects));
         Bind<TextMeshProUGUI>(typeof(Texts));
 
-        _inventory = GetGameObject((int)Gameobjects.Inventory);
         _deathCountText = GetText((int)Texts.DeathCountText);
         _timerText = GetText((int)Texts.TimerText);
 
         // 2) 고정 UI (인벤토리)
-        Managers.UI.ShowSceneUI<UI_Inventory>("UI_Inventory");
+        Managers.Instance.UI.ShowSceneUI<UI_Inventory>("UI_Inventory");
 
         // 3) GameManager 이벤트 구독
-        Managers.Game.OnDeathCountChanged += UpdateDeathCount;
-        Managers.Game.OnTimerUpdated += UpdateTimerText;
+        Managers.Instance.Game.OnDeathCountChanged += UpdateDeathCount;
+        Managers.Instance.Game.OnTimerUpdated += UpdateTimerText;
 
         // **초기값 한 번 뿌려주기**
-        UpdateDeathCount(Managers.Game.PlayerDeathCount);
+        UpdateDeathCount(Managers.Instance.Game.PlayerDeathCount);
         UpdateTimerText(TimeSpan.Zero);
     }
 
@@ -66,27 +64,27 @@ public class UI_Stage : UI_Scene
 
         // Tab 누를 때만 정보창 띄우기 (Warning 창이 떠 있으면 무시)
         if (tab.wasPressedThisFrame
-            && !Managers.UI.IsPopupOpen<UI_Information>()
-            && !Managers.UI.IsPopupOpen<UI_Warning>())
+            && !Managers.Instance.UI.IsPopupOpen<UI_Information>()
+            && !Managers.Instance.UI.IsPopupOpen<UI_Warning>())
         {
-            Managers.UI.ShowPopupUI<UI_Information>("UI_Information"); 
+            Managers.Instance.UI.ShowPopupUI<UI_Information>("UI_Information"); 
         }
 
         // Tab 뗄 때, 맨 위 팝업이 정보창이면 닫아주기
         if (tab.wasReleasedThisFrame)
         {
             // GetTopPopup()이 UI_Information인 경우에만
-            if (Managers.UI.GetTopPopup() is UI_Information)
+            if (Managers.Instance.UI.GetTopPopup() is UI_Information)
             {
-                Managers.UI.ClosePopupUI();               
+                Managers.Instance.UI.ClosePopupUI();               
             }
                 
         }
 
         if (Keyboard.current.escapeKey.wasPressedThisFrame &&
-            Managers.UI.GetTopPopup() == null)
+            Managers.Instance.UI.GetTopPopup() == null)
         {            
-            Managers.UI.ShowPopupUI<UI_Warning>("UI_Warning_Stage");
+            Managers.Instance.UI.ShowPopupUI<UI_Warning>("UI_Warning_Stage");
         }
     }
 
@@ -107,8 +105,8 @@ public class UI_Stage : UI_Scene
     void OnDestroy()
     {
         // 이벤트 해제
-        Managers.Game.OnDeathCountChanged -= UpdateDeathCount;
-        Managers.Game.OnTimerUpdated -= UpdateTimerText;
+        Managers.Instance.Game.OnDeathCountChanged -= UpdateDeathCount;
+        Managers.Instance.Game.OnTimerUpdated -= UpdateTimerText;
     }
 
     // 트리거에서 호출: Stage1 특정 Tutorial 팝업 (한 번만)
@@ -119,7 +117,7 @@ public class UI_Stage : UI_Scene
             return;
                
         // 처음 띄우는 순간
-        Managers.UI.ShowPopupUI<GenericInfoPopup>("UI_Tutorial");
+        Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>("UI_Tutorial");
 
         // 다시는 띄우지 않도록 저장
         PlayerPrefs.SetInt(TUTORIAL_KEY, 1);
@@ -129,7 +127,7 @@ public class UI_Stage : UI_Scene
     // GoalTrigger에서 호출: 결과 팝업
     public void ShowResult()
     {
-        var popup = Managers.UI.ShowPopupUI<UI_Result>("UI_Result");
-        popup.ShowResult(Managers.Game.ElapsedTime());
+        var popup = Managers.Instance.UI.ShowPopupUI<UI_Result>("UI_Result");
+        popup.ShowResult(Managers.Instance.Game.ElapsedTime());
     }
 }

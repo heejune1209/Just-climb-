@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using JustClimb.Manager;
+using JustClimb.Items;
 
 public class UI_Inventory : UI_Scene
 {
@@ -20,44 +21,38 @@ public class UI_Inventory : UI_Scene
     public Image[] slotCooldownOverlays;
 
     [Header("버프 지속시간 오버레이")]
-    public Image[] slotBuffOverlays;  
+    public Image[] slotBuffOverlays;
 
     // UI에 표시할 아이템 ID 순서 정의
-    private readonly string[] _itemIds = { "Feather", "Wing", "Lamp", "Flag" };
+    private readonly ItemType[] _itemTypes =
+        { ItemType.Feather, ItemType.Wing, ItemType.Lamp, ItemType.Flag };
 
     public override void Init()
     {
         base.Init();  // 부모 클래스(UI_Scene)의 Init 호출
 
-        // ItemManager에서 모든 아이템 정의를 가져옴
-        var defs = ItemManager.Instance.GetAllItemDefinitions();
-
-        // 정의된 아이템 ID 순서대로 아이콘을 초기 설정
-        for (int i = 0; i < _itemIds.Length; i++)
+        // ItemDatabase에서 아이콘만 로드
+        var defs = Managers.Instance.ItemDB.GetAllItemDefinitions();
+        for (int i = 0; i < _itemTypes.Length && i < slotIcons.Length; i++)
         {
-            string id = _itemIds[i];  // 현재 슬롯에 해당하는 아이템 ID
-            if (i < slotIcons.Length && defs.ContainsKey(id))
-            {
-                // 슬롯 아이콘 이미지를 해당 아이템의 스프라이트로 변경
-                slotIcons[i].sprite = defs[id].icon;
-            }
+            var type = _itemTypes[i];
+            if (defs.TryGetValue(type, out var data))
+                slotIcons[i].sprite = data.icon;
         }
-
-        // 아이템 수량 변경 이벤트를 구독하여 UI 업데이트 연결
-        ItemManager.Instance.OnItemCountChanged += OnItemCountChanged;
     }
 
     private void OnEnable()
     {
-        // 🔹 아이템 수량 변경 이벤트 구독
-        ItemManager.Instance.OnItemCountChanged += OnItemCountChanged;
-
+        // 아이템 수량 변경 이벤트 구독
+        Managers.Instance.Item.OnItemCountChanged += OnItemCountChanged;
+            
         // 현재 상태를 즉시 반영
-        for (int i = 0; i < _itemIds.Length; i++)
+        for (int i = 0; i < _itemTypes.Length; i++)
         {
-            string id = _itemIds[i];
-            slotCountTexts[i].text = ItemManager.Instance.GetItemCount(id).ToString();
+            var id = _itemTypes[i];
+            slotCountTexts[i].text = Managers.Instance.Item.GetItemCount(id).ToString();
             UpdateCooldownOverlay(i, id);
+            UpdateBuffOverlay(i, id);  // 버프 오버레이 초기 반영
         }
     }
 
@@ -65,20 +60,20 @@ public class UI_Inventory : UI_Scene
     private void Update()
     {
         // 매 프레임마다 모든 슬롯의 쿨타임 오버레이를 갱신
-        for (int i = 0; i < _itemIds.Length; i++)
+        for (int i = 0; i < _itemTypes.Length; i++)
         {
-            UpdateCooldownOverlay(i, _itemIds[i]);
-            UpdateBuffOverlay(i, _itemIds[i]);
+            UpdateCooldownOverlay(i, _itemTypes[i]);
+            UpdateBuffOverlay(i, _itemTypes[i]);
         }
     }
 
     // 슬롯 인덱스와 아이템 ID를 받아 해당 슬롯의 오버레이를 설정
-    private void UpdateCooldownOverlay(int slotIndex, string itemId)
+    private void UpdateCooldownOverlay(int slotIndex, ItemType itemId)
     {
         // 남은 쿨타임 시간(초) 조회
-        float remaining = ItemManager.Instance.GetCooldownRemaining(itemId);
+        float remaining = Managers.Instance.Item.GetCooldownRemaining(itemId);
         // 총 쿨타임 길이(초) 조회
-        float duration = ItemManager.Instance.GetCooldownDuration(itemId);
+        float duration = Managers.Instance.Item.GetCooldownDuration(itemId);
 
         if (remaining > 0f)
         {
@@ -94,10 +89,10 @@ public class UI_Inventory : UI_Scene
     }
 
     // 슬롯 인덱스와 아이템 ID를 받아 해당 슬롯의 버프 오버레이를 설정
-    private void UpdateBuffOverlay(int slotIndex, string itemId)
+    private void UpdateBuffOverlay(int slotIndex, ItemType itemId)
     {
-        float remaining = ItemManager.Instance.GetBuffRemaining(itemId);
-        float duration = ItemManager.Instance.GetBuffDuration(itemId);
+        float remaining = Managers.Instance.Item.GetBuffRemaining(itemId);
+        float duration = Managers.Instance.Item.GetBuffDuration(itemId);
 
         if (remaining > 0f && duration > 0f)
         {
@@ -111,12 +106,12 @@ public class UI_Inventory : UI_Scene
     }
 
     // ItemManager에서 수량 변경 이벤트가 발생할 때 호출됨
-    private void OnItemCountChanged(string itemId, int newCount)
+    private void OnItemCountChanged(ItemType itemId, int newCount)
     {
         // 변경된 아이템 ID에 해당하는 슬롯 인덱스를 찾아서 텍스트만 업데이트
-        for (int i = 0; i < _itemIds.Length; i++)
+        for (int i = 0; i < _itemTypes.Length; i++)
         {
-            if (_itemIds[i] == itemId)
+            if (_itemTypes[i] == itemId)
             {
                 slotCountTexts[i].text = newCount.ToString();
                 break;  // 찾으면 루프 종료
@@ -127,7 +122,7 @@ public class UI_Inventory : UI_Scene
     private void OnDisable()
     {
         // 🔹 이벤트 구독 해제 (메모리 누수 방지)
-        if (ItemManager.Instance != null)
-            ItemManager.Instance.OnItemCountChanged -= OnItemCountChanged;
+        if (Managers.Instance.Item != null)
+            Managers.Instance.Item.OnItemCountChanged -= OnItemCountChanged;
     }
 }

@@ -27,7 +27,7 @@ public class ResourceManager
             if (index >= 0)
                 name = name.Substring(index + 1); // 이게 바로 프리팹의 이름.
 
-            GameObject go = Managers.Pool.GetOriginal(name);
+            GameObject go = Managers.Instance.Pool.GetOriginal(name);
             if (go != null)
                 return go as T;
         }
@@ -59,7 +59,7 @@ public class ResourceManager
         }
 
         if (original.GetComponent<Poolable>() != null)
-            return Managers.Pool.Pop(original, parent).gameObject;
+            return Managers.Instance.Pool.Pop(original, parent).gameObject;
 
         // 2. 풀링된 오브젝트가 있나?
         GameObject go = Object.Instantiate(original, parent); 
@@ -79,7 +79,7 @@ public class ResourceManager
         Poolable poolable = go.GetComponent<Poolable>();
         if (poolable != null)
         {
-            Managers.Pool.Push(poolable);
+            Managers.Instance.Pool.Push(poolable);
             return;
         }
 

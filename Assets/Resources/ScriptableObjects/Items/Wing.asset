@@ -12,7 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2269b9d2a1e53f6408528fdc1e9b2f1f, type: 3}
   m_Name: Wing
   m_EditorClassIdentifier: 
-  itemId: Wing
+  itemid: 2
   displayName: Wing
   icon: {fileID: 21300000, guid: a9f7c3536026ca542b9c5b78a4652e8c, type: 3}
+  price: 100
+  description: Strong leather climbing shoes.Jumping power increases when used.
   buffDuration: 10
+  cooldownDuration: 20

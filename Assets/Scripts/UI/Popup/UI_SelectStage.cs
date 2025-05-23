@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using JustClimb.Manager;
 
 [Serializable]
 public class StageGemGroup
@@ -11,6 +12,10 @@ public class StageGemGroup
     public List<Image> gems;
 }
 
+// 책임:
+// 버튼 잠금·언락 표시(IsUnlocked)
+// 과거 보석 보상 표시(GetBestReward)
+// 스테이지 선택 시 씬 전환(SceneManagerEx.LoadScene)
 public class UI_SelectStage : UI_Popup
 {
     [Header("Stage Buttons")]
@@ -25,86 +30,135 @@ public class UI_SelectStage : UI_Popup
     [Header("Return Button")]
     [SerializeField] private Button returnButton;       // 팝업 닫기 버튼
 
+    private StageManager _stageMgr;
+
     public override void Init()
     {
-        base.Init(); // Canvas 세팅, ESC 처리 자동 적용
+        base.Init(); // Canvas 세팅, ESC 처리 등
 
-        // Return 버튼 연결
+        _stageMgr = Managers.Instance.Stage;
+
+        // 1) 팝업 닫기 버튼
         if (returnButton != null)
             returnButton.onClick.AddListener(ClosePopupUI);
+
+        // 2) 스테이지 언락/보상 변경 이벤트 구독
+        _stageMgr.OnStageUnlocked += OnStageUnlocked;
+        _stageMgr.OnBestRewardUpdated += OnBestRewardUpdated;
+
+        // 3) 최초 UI 셋업
+        SetupStages();
+    }
+
+    void Awake()
+    {
+        Init();
+    }
+
+
+    private void OnDestroy()
+    {
+        // 언구독(clean up)
+        if (_stageMgr != null)
+        {
+            _stageMgr.OnStageUnlocked -= OnStageUnlocked;
+            _stageMgr.OnBestRewardUpdated -= OnBestRewardUpdated;
+        }
     }
 
     private void Start()
     {
-        Init();
-        SetupStages();
+        // SetupStages는 Init() 안에서도 호출해 줘도 좋습니다.
+        // SetupStages();
     }
 
+
+    /// <summary>
+    /// 팝업 오픈 시 전체 스테이지 버튼/잠금/보석 상태를 한 번에 초기화
+    /// </summary>
     private void SetupStages()
     {
         int count = stageButtons.Count;
 
         for (int i = 0; i < count; i++)
         {
-            int stageIndex = i;
-            int stageNumber = i + 1;
+            int stageNum = i + 1;
+            bool unlocked = _stageMgr.IsUnlocked(stageNum);
+            int bestReward = _stageMgr.GetBestReward(stageNum);
 
-            // 1번 스테이지는 항상 오픈, 그 외는 이전 스테이지 클리어 여부로 판단
-            bool unlocked = stageNumber == 1
-                         || PlayerPrefs.GetInt("Stage" + (stageNumber - 1), 0) == 1;
+            // 버튼 활성화/잠금 아이콘
+            stageButtons[i].interactable = unlocked;
+            if (i < lockImages.Count)
+                lockImages[i].SetActive(!unlocked);
 
-            // 잠금 아이콘만 표시
-            if (lockImages != null && stageIndex < lockImages.Count)
-                lockImages[stageIndex].SetActive(!unlocked);
-
-            // 기존 리스너 제거
-            stageButtons[stageIndex].onClick.RemoveAllListeners();
-
-            // 클릭 이벤트: 항상 허용, unlocked 여부로 분기
-            stageButtons[stageIndex].onClick.AddListener(() =>
+            // 클릭 핸들러
+            int idx = i;
+            stageButtons[i].onClick.RemoveAllListeners();
+            stageButtons[i].onClick.AddListener(() =>
             {
-                if (unlocked)
-                {
-                    GoToStageScene(stageNumber);
-                }
+                if (_stageMgr.IsUnlocked(idx + 1))
+                    GoToStageScene(idx + 1);
                 else
-                {
-                    Managers.UI
-                        .ShowPopupUI<GenericInfoPopup>("Warning Panel")
-                        .Setup(
-                            "Warning!",
-                            $"Clear Stage 1-{stageNumber - 1} first."
-                        );
-                }
+                    ShowLockedWarning(idx + 1);
             });
+
+            // 보석 투명도 초기화
+            if (i < stageGemGroups.Count)
+                SetGemAlphas(i, bestReward);
         }
 
-        // 보상 보석 투명도 세팅 (기존 로직)
-        for (int i = 0; i < stageGemGroups.Count; i++)
-            SetGemAlphas(stageGemGroups[i].gems, i + 1);
-
-        // 커서 보이기
+        // 커서
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
     }
 
-    // 보석 이미지 투명도 세팅
-    private void SetGemAlphas(List<Image> gems, int stageNumber)
+    /// <summary>
+    /// 스테이지가 언락됐을 때 개별 버튼만 활성화
+    /// </summary>
+    private void OnStageUnlocked(int stageNum)
     {
-        const float defaultRawAlpha = 150f;  // 기본 raw 알파(0~255)
+        int idx = stageNum - 1;
+        if (idx < 0 || idx >= stageButtons.Count) return;
+
+        stageButtons[idx].interactable = true;
+        if (idx < lockImages.Count)
+            lockImages[idx].SetActive(false);
+    }
+
+    /// <summary>
+    /// 새로운 최고 보상이 갱신됐을 때 보석 투명도만 다시 그려줌
+    /// </summary>
+    private void OnBestRewardUpdated(int stageNum, int bestReward)
+    {
+        int idx = stageNum - 1;
+        if (idx < 0 || idx >= stageGemGroups.Count) return;
+
+        SetGemAlphas(idx, bestReward);
+    }
+
+    /// <summary>
+    /// 보석 이미지의 알파(투명도) 세팅
+    /// 잠금된 스테이지 보석은 모두 0.3f,
+    /// 언락된 스테이지 보석은 획득 개수만큼 1f, 나머지는 0.3f
+    /// </summary>
+    private void SetGemAlphas(int stageIndex, int bestReward)
+    {
+        bool unlocked = _stageMgr.IsUnlocked(stageIndex + 1);
+
+        // 해당 인덱스의 Group 이 유효한지 체크
+        if (stageIndex < 0 || stageIndex >= stageGemGroups.Count) return;
+
+        var gems = stageGemGroups[stageIndex].gems;
+
         for (int j = 0; j < gems.Count; j++)
         {
-            // PlayerPrefs에 저장된 raw 알파(0~255) 값을 불러오거나 기본값 사용
-            string key = $"Gem{stageNumber}_{j}";
-            float rawAlpha = PlayerPrefs.GetFloat(key, defaultRawAlpha);
+            float alpha;
+            if (!unlocked)
+                alpha = 0.3f;
+            else
+                alpha = (j < bestReward) ? 1f : 0.3f;
 
-            // 0~1 범위로 정규화
-            float a = Mathf.Clamp01(rawAlpha / 255f);
-
-            // 이미지에 적용
-            var col = gems[j].color;
-            col.a = a;
-            gems[j].color = col;
+            gems[j].canvasRenderer.SetAlpha(alpha);
         }
     }
 
@@ -121,10 +175,18 @@ public class UI_SelectStage : UI_Popup
         var targetScene = (Define.Scene)sceneEnum;
 
         // 다음에 로드할 씬 이름 기록 (로딩 씬을 거치는 경우)
-        PlayerPrefs.SetString("nextScene", Managers.Scene.GetSceneName(targetScene));
+        PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(targetScene));
 
         //Managers.Sound.PlaySFX(0);
-        Managers.Scene.LoadScene(Define.Scene.Loading);
+        Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
         //Managers.Sound.PlayBGM(2);
+    }
+
+    private void ShowLockedWarning(int stageNumber)
+    {
+        Managers.Instance.UI
+            .ShowPopupUI<GenericInfoPopup>("Warning Panel")
+            .Setup("Warning!",
+                   $"Clear Stage 1–{stageNumber - 1} first.");
     }
 }

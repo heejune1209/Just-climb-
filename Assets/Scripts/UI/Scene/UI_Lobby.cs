@@ -38,25 +38,25 @@ public class UI_Lobby : UI_Scene
     {
         // 1) 플레이어가 영역 안에 있고 E 키를 눌렀다면, 해당 팝업이 열려 있지 않은 경우에만
         if (!string.IsNullOrEmpty(_currentArea) &&
-            !Managers.UI.IsPopupOpen<UI_Shop>() &&
-            !Managers.UI.IsPopupOpen<UI_Worldview>() &&
-            !Managers.UI.IsPopupOpen<UI_SelectChapter>() &&
-            !Managers.UI.IsPopupOpen<UI_Ranking>() &&
+            !Managers.Instance.UI.IsPopupOpen<UI_Shop>() &&
+            !Managers.Instance.UI.IsPopupOpen<GenericInfoPopup>() &&
+            !Managers.Instance.UI.IsPopupOpen<UI_SelectChapter>() &&
+            !Managers.Instance.UI.IsPopupOpen<UI_Ranking>() &&
             Keyboard.current.eKey.wasPressedThisFrame)
         {
             switch (_currentArea)
             {
                 case "Shop":
-                    Managers.UI.ShowPopupUI<UI_Shop>("UI_Shop");
+                    Managers.Instance.UI.ShowPopupUI<UI_Shop>("UI_Shop");
                     break;
                 case "WorldView":
-                    Managers.UI.ShowPopupUI<UI_Worldview>("UI_Worldview");
+                    Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>("UI_Worldview");
                     break;
                 case "SelectStage":
-                    Managers.UI.ShowPopupUI<UI_SelectChapter>("UI_SelectChapter");
+                    Managers.Instance.UI.ShowPopupUI<UI_SelectChapter>("UI_SelectChapter");
                     break;
                 case "Ranking":
-                    Managers.UI.ShowPopupUI<UI_Ranking>("UI_Ranking");
+                    Managers.Instance.UI.ShowPopupUI<UI_Ranking>("UI_Ranking");
                     break;
             }
             _promptText.gameObject.SetActive(false);
@@ -64,9 +64,9 @@ public class UI_Lobby : UI_Scene
 
         // 2) ESC 키: 다른 팝업(월드뷰, 상점, 스테이지, 랭킹 등)이 전부 닫혀 있을 때만
         if (Keyboard.current.escapeKey.wasPressedThisFrame &&
-            Managers.UI.GetTopPopup() == null)
+            Managers.Instance.UI.GetTopPopup() == null)
         {
-            Managers.UI.ShowPopupUI<UI_Warning>("UI_Warning");
+            Managers.Instance.UI.ShowPopupUI<UI_Warning>("UI_Warning");
         }
     }
 

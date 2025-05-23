@@ -17,7 +17,7 @@ public class Jumping : MonoBehaviour
             {
                 Vector3 knockbackVelocity = knockbackDirection.normalized * knockbackSpeed;
                 playerRigidbody.velocity = knockbackVelocity;
-                Managers.Sound.PlaySFX(8);
+                Managers.Instance.Sound.PlaySFX(8);
                 //playerRigidbody.AddForce(knockbackDirection.normalized * knockbackForce, ForceMode.Impulse);
                 // ���� ������ ���� ���� �����ϸ� �� �������� ������ �˹�.
 

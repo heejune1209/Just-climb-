@@ -29,28 +29,32 @@ public class SoundManager : MonoBehaviour
 
     private Dictionary<string, AudioClip> _clipCache = new Dictionary<string, AudioClip>();
 
-    void Awake()
+    // Managers 컨테이너에서 AddComponent → Init() 순으로 초기화
+    public void Init()
     {
-        if (Managers.Sound == null)
-        {
-            // Managers에 등록
-            Managers.Sound = this;
+        // AudioSource 세팅
+        _bgmSource = gameObject.AddComponent<AudioSource>();
+        _bgmSource.loop = true;
+        _bgmSource.outputAudioMixerGroup =
+            audioMixer.FindMatchingGroups("BackGround Music")[0];
 
-            DontDestroyOnLoad(gameObject);
+        _sfxSource = gameObject.AddComponent<AudioSource>();
+        _sfxSource.outputAudioMixerGroup =
+            audioMixer.FindMatchingGroups("Effect Sound Group")[0];
 
-            _bgmSource = gameObject.AddComponent<AudioSource>();
-            _bgmSource.loop = true;
-            _bgmSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("BackGround Music")[0];
+        // 씬 전환 감지
+        SceneManager.sceneLoaded += OnSceneLoaded;
 
-            _sfxSource = gameObject.AddComponent<AudioSource>();
-            _sfxSource.outputAudioMixerGroup = audioMixer.FindMatchingGroups("Effect Sound Group")[0];
+        // 볼륨 설정 (PlayerPrefs)
+        float vol = PlayerPrefs.HasKey("MusicVol")
+                  ? PlayerPrefs.GetFloat("MusicVol")
+                  : 0.5f;
+        SetBgmVolume(vol);
 
-            SceneManager.sceneLoaded += OnSceneLoaded;
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        vol = PlayerPrefs.HasKey("SFXVol")
+            ? PlayerPrefs.GetFloat("SFXVol")
+            : 0.5f;
+        SetSfxVolume(vol);
     }
 
     void OnDestroy()
@@ -140,14 +144,6 @@ public class SoundManager : MonoBehaviour
     {
         audioMixer.SetFloat("SFXVol", Mathf.Log10(Mathf.Clamp(v, .0001f, 1f)) * 20f);
         PlayerPrefs.SetFloat("SFXVol", v);
-    }
-
-    void Start()
-    {
-        float vol = PlayerPrefs.HasKey("MusicVol") ? PlayerPrefs.GetFloat("MusicVol") : 0.5f;
-        SetBgmVolume(vol);
-        vol = PlayerPrefs.HasKey("SFXVol") ? PlayerPrefs.GetFloat("SFXVol") : 0.5f;
-        SetSfxVolume(vol);
     }
 
     private AudioClip LoadClip(string path)

@@ -7,12 +7,22 @@ public class LobbyTrigger : MonoBehaviour
 
     private UI_Lobby _uiLobby;
 
-    private void Start()
+    void Start()
     {
-        // Managers.UI.Root 아래에 붙어 있는 UI_Lobby 컴포넌트 찾기
-        _uiLobby = Managers.UI.Root.GetComponentInChildren<UI_Lobby>();
+        // 1) 이미 씬에 배치된 UI_Lobby 컴포넌트를 우선 찾습니다.
+        _uiLobby = FindObjectOfType<UI_Lobby>();
+
+        // 2) 없으면 UIManager를 통해 Prefab에서 생성합니다.
         if (_uiLobby == null)
-            Debug.LogError("UI_Lobby를 찾을 수 없습니다!");
+        {
+            _uiLobby = Managers.Instance.UI.ShowSceneUI<UI_Lobby>("UI_Lobby");
+        }
+
+        // 3) 그래도 없으면 에러 로그
+        if (_uiLobby == null)
+        {
+            Debug.LogError("[LobbyTrigger] UI_Lobby를 찾거나 생성하지 못했습니다!");
+        }
     }
 
     private void OnTriggerEnter(Collider other)

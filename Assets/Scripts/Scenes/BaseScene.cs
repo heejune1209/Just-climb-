@@ -25,8 +25,13 @@ public abstract class BaseScene : MonoBehaviour
     {
         Object obj = FindAnyObjectByType(typeof(EventSystem));
         if (obj == null)
-            Managers.Resource.Instantiate("UI/EventSystem").name = "@EventSystem";
+            Managers.Instance.Resource.Instantiate("UI/EventSystem").name = "@EventSystem";
     }
 
-    public abstract void Clear();
+    public virtual void Clear()
+    {
+        // UI Scene Root 파괴
+        Managers.Instance.UI.ClearSceneUI();
+        // (필요하다면) 씬 전용 오브젝트 추가 정리
+    }
 }
