@@ -165,6 +165,7 @@ C#, Unity3D, Visual Studio 2022
 ### 시연 동영상
 https://youtu.be/HkNdxTHhVaw?si=IY2KK07vDpRfTPzP
 
+```mermaid
 graph LR
   %% Managers 컨테이너
   Managers["@Managers\n(Managers)"]
@@ -281,4 +282,4 @@ graph LR
   UIStage --> UIInv
   UIStage --> UITut
   UIStage --> UIWarnS
-
+```
