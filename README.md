@@ -164,34 +164,3 @@ C#, Unity3D, Visual Studio 2022
 ## 관련 링크
 ### 시연 동영상
 https://youtu.be/HkNdxTHhVaw?si=IY2KK07vDpRfTPzP
-
-```mermaid
-graph LR
-  subgraph Persistence
-    DM[DataManager]
-  end
-
-  subgraph Domain
-    CM[CurrencyManager]
-    IM[ItemManager]
-    SM[StageManager]
-  end
-
-  subgraph Infrastructure
-    RM[ResourceManager]
-    UIM[UIManager]
-    SCM[SceneManagerEx]
-    PDM[PoolManager]
-    SON[SoundManager]
-  end
-
-  Managers --> DM
-  Managers --> CM
-  Managers --> IM
-  Managers --> SM
-  Managers --> RM
-  Managers --> UIM
-  Managers --> SCM
-  Managers --> PDM
-  Managers --> SON
-```
