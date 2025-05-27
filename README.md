@@ -64,7 +64,7 @@
   - (추후) 로컬·글로벌 랭킹 관리  
 
 - **ItemDatabase**  
-  - `ItemData.asset` 목록 로드, 아이템 정의 등의 정적 밸런스 정보 제공
+  - `ItemData.asset` 목록 로드, 아이템 정의 등의 정적 데이터 정보 제공
 
 ### Infrastructure Layer
 - **ResourceManager**  
