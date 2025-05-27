@@ -10,6 +10,8 @@ sequenceDiagram
     participant UIManager  as UIManager
     participant UI_Lobby   as UI_Lobby
     participant UI_Shop    as UI_Shop
+    participant ResourceMgr  as ResourceManager
+
 
     %% 1) 로비 씬 로드 및 UI_Lobby 생성
     Note over LobbyScene, UIManager: 로비씬이 로드되면
