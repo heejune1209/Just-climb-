@@ -19,7 +19,7 @@
 - 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
 
 ### Game Structure
-![image](https://github.com/user-attachments/assets/3bc31f13-ce7d-4ea4-a8c3-dd6282ab95d6)
+![image](https://github.com/user-attachments/assets/aa2492bf-4dec-4723-98d1-31663a64c910)
 ### 주요 구성 요소
 - **UI 계층화**  
   - `UI_Base` → `UI_Scene` 상속 구조로 화면(Scene) 단위와 팝업(Popup) 단위 로직을 분리  
