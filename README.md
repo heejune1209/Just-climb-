@@ -205,6 +205,9 @@
 ---
 
 ## 🔧 **향후 개선 계획**
+
+![image](https://github.com/user-attachments/assets/807fc5e1-be00-42af-9ff8-5317de2bd149)
+
 - ⏱ 스테이지별 클리어 타임 기반 랭킹 시스템 도입
 
   - **클라이언트**
