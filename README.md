@@ -39,7 +39,7 @@
    - `gold`, `gems`, `selectedCharacter`  
    - `items`: `InventoryItem[]`  
    - `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`  
-   - `stageFlagPositions`  
+   - `stageFlagPositions`  등의 데이터들을 직렬화
 
 - **InventoryItem**  
   - 아이템별 `itemId`·`count`를 저장하는 구조체
