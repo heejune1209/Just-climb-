@@ -135,7 +135,8 @@
 ---
     
 ### 아이템·재화 시스템 구조
-![image](https://github.com/user-attachments/assets/9e3168af-230d-48be-927a-7b9f0cb9216d)
+![image](https://github.com/user-attachments/assets/3e08867c-3aa3-4872-96d4-93a4b4a64304)
+
 - **Definition Layer**: ScriptableObject 에셋(`ItemData.asset` + 개별 SO)  
 - **Logic Layer**: `ItemData.cs`+`IItemUse` 인터페이스 → 개별 `*Use.cs` 구현  
 - **Data Layer**: `SaveData`·`InventoryItem` 클래스 + `DataManager` (JSON 입출력·이벤트)  
