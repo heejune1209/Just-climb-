@@ -198,7 +198,7 @@
 ### ✅ 매니저 컨테이너 & 계층형 아키텍처
 * **`Managers` 싱글톤**: Persistence/Domain/Infrastructure/UI 전 매니저(`DataManager`, `ItemManager`, `UIManager` 등) `Init()` 일괄 호출로 생명주기 집중 관리
 * **Clear/Init 패턴**: 씬 전환 시 `Managers.Clear()`로 팝업·UI 정리, `BaseScene` 상속 구조로 `Init()` 강제 실행
-* **4계층 분리**: Persistence·Domain·Infrastructure·UI 레이어 명확화, Mermaid/PlantUML 다이어그램 문서화
+* **4계층 분리**: Persistence·Domain·Infrastructure·UI 레이어 명확화.
   
 ### ✅ 캐릭터 능력치 밸런싱
 
