@@ -173,10 +173,10 @@
 - `UI_Scene`, `UI_Popup` 구조 설계 및 자동화 슬롯 생성 툴 제작
 - 이벤트 기반 구조로 UI 갱신을 분리하여 유지보수성과 확장성 강화
 
-### ✅ 아이템 시스템 설계 및 구현
+### ✅ 아이템·재화 시스템 설계 및 구현
 - ScriptableObject + 인터페이스 기반 구조로 설계
 - **신규 아이템 추가 시 코드 수정 없이 에셋 등록만으로 반영 가능**
-- 쿨타임, 수량, UI 반영을 모두 `ItemManager`에서 일괄 처리
+- **`CurrencyManager`/`ItemManager`**: `DataManager` 이벤트 구독 기반으로 골드·보석·아이템 수량 변경 시 `OnGoldChanged`·`OnItemCountChanged` 발행 → UI 자동 동기화
 
 ### ✅ 장애물 시스템 모듈화
 - 장애물 **트리거 / 스폰 / 효과**를 명확히 분리하여 구조화
@@ -186,6 +186,19 @@
 ### ✅ 클라이밍 시스템 분석 및 수정
 - 기존 FSM 흐름 분석 후 **벽면 인식 로직 및 이동 제약 조건** 수정
 - **경사면 처리 누락** 문제를 직접 해결하여 자연스러운 클라이밍 구현
+
+### ✅ 데이터 관리 및 구조 리펙토링
+- **PlayerPrefs → JSON** 전환: `DataManager`/`SaveData` 도입으로 `save.json` 기반 직렬화·역직렬화 구현
+- **스테이지 메트릭(Metric)** 확장: 플레이 시간(`stagePlayTimes`), 사망 횟수(`stageDeathCounts`), 깃발 위치(`stageFlagPositions`), 최단 기록(`stageTimes`) 등 `SaveData`에 통합
+
+### ✅ 스테이지 메트릭(Metric)·체크포인트 관리
+- **`StageManager`**: 언락 플래그·최고 보상·최단 클리어 타임·최저 사망 횟수 이벤트 기반 갱신
+- **`GameManager`**: 씬 로드/언로드 콜백으로 플레이 시간 복원·저장, 체크포인트(깃발) 위치 복원·저장
+
+### ✅ 매니저 컨테이너 & 계층형 아키텍처
+* **`Managers` 싱글톤**: Persistence/Domain/Infrastructure/UI 전 매니저(`DataManager`, `ItemManager`, `UIManager` 등) `Init()` 일괄 호출로 생명주기 집중 관리
+* **Clear/Init 패턴**: 씬 전환 시 `Managers.Clear()`로 팝업·UI 정리, `BaseScene` 상속 구조로 `Init()` 강제 실행
+* **4계층 분리**: Persistence·Domain·Infrastructure·UI 레이어 명확화, Mermaid/PlantUML 다이어그램 문서화
   
 ### ✅ 캐릭터 능력치 밸런싱
 
