@@ -20,24 +20,92 @@
 
 ### Game Structure
 ![image](https://github.com/user-attachments/assets/aa2492bf-4dec-4723-98d1-31663a64c910)
-### 주요 구성 요소
+## 주요 구성 요소
+
+### Persistence Layer
+- **DataManager**  
+  로컬 JSON(`save.json`)의 읽기/쓰기 담당.  
+  - `Init()` → 파일 복사/로드  
+  - `Load()` → `OnLoaded` 이벤트  
+  - `Save()` → `OnSaved` 이벤트  
+  - `DeleteAllData()` → 데이터 초기화  
+- **SaveData**  
+  게임 상태를 직렬화하는 모델 클래스  
+  - `gold`, `gems`, `selectedCharacter`  
+  - `items`: `InventoryItem[]`  
+  - `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`  
+  - `stageFlagPositions`  
+- **InventoryItem**  
+  아이템별 `itemId`·`count`를 저장하는 구조체
+
+### Domain Layer
+- **CurrencyManager**  
+  `DataManager` 이벤트 구독 → 골드/보석 관리  
+  - `OnGoldChanged(int)`, `OnGemsChanged(int)`  
+  - `GetGold()`, `AddGold()`, `SpendGold()`  
+- **ItemManager**  
+  ScriptableObject 기반 아이템 사용 로직 로드  
+  - `LoadItemUses()` → `IItemUse` 구현체 자동 등록  
+  - 수량·쿨타임·버프 관리, `UseItem()` API  
+- **StageManager**  
+  스테이지 클리어 플래그·보상·기록 전담  
+  - `SetCleared(stage, gems, time, deaths)`  
+  - `OnStageUnlocked`, `OnBestRewardUpdated`, `OnBestTimeUpdated`, `OnBestDeathUpdated`  
+- **RankingManager**  
+  (추후) 로컬·글로벌 랭킹 관리  
+- **ItemDatabase**  
+  `ItemData.asset` 목록 로드·아이템 정의 제공
+
+### Infrastructure Layer
+- **ResourceManager**  
+  `Resources.Load`/`Instantiate`/`Destroy` 래핑  
+- **UIManager**  
+  `@UI_Root` 생성 → 씬(`UI_Scene`), 팝업(`UI_Popup`) UI 인스턴스화  
+  - Canvas 세팅, 팝업 스택 관리, `Time.timeScale` 제어  
+- **SceneManagerEX**  
+  씬 전환 전 `Managers.Clear()` → `SceneManager.LoadScene()`  
+- **SoundManager**  
+  BGM/SFX 풀 관리  
+- **PoolManager**  
+  오브젝트 풀링 지원  
+- **GameManager**  
+  플레이 타이머·사망 카운트·체크포인트 관리  
+- **Utilities**  
+  - `Define.cs`: 전역 enum/상수  
+  - `Util.cs`: 컴포넌트 보장·계층 탐색  
+  - `Extension.cs`: `GameObject` 확장 메서드
+
+### UI Layer
 - **UI 계층화**  
-  - `UI_Base` → `UI_Scene` 상속 구조로 화면(Scene) 단위와 팝업(Popup) 단위 로직을 분리  
-  - `UI_Main`, `UI_Lobby`, `UI_Stage` 등 Scene별 진입점과  
-    `UI_Settings`, `UI_Shop`, `UI_Inventory` 등 팝업/세부 UI로 구성
+  - `UI_Base`  
+    - 모든 UI 컴포넌트의 공통 바인딩·초기화 로직 포함 (추상 클래스).  
+  - `UI_Scene : UI_Base`  
+    - 각 씬 전용 UI 진입점. `Init()` 추상화 → `Awake()` 시 자동 호출.  
+  - `UI_Popup : UI_Base`  
+    - 팝업 UI 전용, 스택 기반 중첩·닫기, `Time.timeScale`·커서 제어.  
+- **Scene–UI 호출 관계**  
+  - `BaseScene` (추상 MonoBehaviour)  
+    - `Awake()` 에서 `Init()` 호출 → 가상 메서드 `Init()` 이 자식으로 dispatch  
+    - `Clear()` 에서 팝업·씬 UI 정리  
+  - **MainScene**, **LobbyScene**, **StageScene**  
+    - `BaseScene` 상속  
+    - `Init()` override 내부에서  
+      ```csharp
+      Managers.Instance.UI.ShowSceneUI<UI_Main>("UI_Main");
+      // 또는 ShowSceneUI<UI_Lobby>, ShowSceneUI<UI_Stage>
+      ```  
+      을 호출해 해당 씬의 UI 진입점을 띄움  
+- **주요 UI 컴포넌트**  
+  - **Title Scene**: `UI_Main`, `UI_Achievement`, `UI_Settings`, `SelectCharacter`  
+  - **Lobby Scene**: `UI_Lobby`, `UI_Shop`, `UI_Warning`, `UI_SelectChapter`,  
+    `UI_SelectStage`, `UI_GenericInfoPopup`, `UI_WorldView`, `UI_Ranking`  
+  - **Stage Scene**: `UI_Stage`, `UI_Inventory`, `UI_Information`, `UI_Tutorial`, `UI_Result`, `UI_Warning`
 
-- **전체 게임 매니저 (Managers)**  
-  - `SceneManagerEX`, `SoundManager`, `ResourceManager`, `UIManager`, `GameManager`, `PoolManager`, `ItemManager`
-  - 전역 상태(씬 전환, 사운드, 리소스, UI 팝업, 게임 타이머/체크포인트, 오브젝트 풀 등) 일괄 관리
-
-- **Stage System**  
-  - `ItemSystem`, `ClimbingSystem`, `ObstacleSystem`, `InputSystem`  
-  - 게임 플레이의 핵심 기능을 모듈화하여 유지·보수성 및 확장성 확보
-
-- **Utilities (Helper) 클래스**  
-  - `Define.cs` – 프로젝트 전역 enum/상수  
-  - `Util.cs` – 계층 탐색, 컴포넌트 보장 유틸리티  
-  - `Extension.cs` – GameObject 확장 메서드
+### Game Systems
+- **ItemSystem**: `FeatherUse`, `WingUse`, `LampUse`, `FlagUse`  
+- **ClimbingSystem**: 벽면 그랩·이동 FSM  
+- **ObstacleSystem**: 장애물 스폰·충돌 효과  
+- **InputSystem**: 키보드·게임패드 입력 처리 (`ItemInput` 등)
     
 ### Item Structure
 ![Image](https://github.com/user-attachments/assets/8e673abe-ea12-49bf-bc2b-83854262cff1)
