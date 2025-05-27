@@ -42,7 +42,7 @@
    - `stageFlagPositions`  등의 데이터들을 직렬화
 
 - **InventoryItem**  
-  - 아이템별 `itemId`·`count`를 저장하는 구조체
+  - 아이템별 `itemId`·`count`를 저장하는 클래스
 
 ### Domain Layer
 - **CurrencyManager**  
