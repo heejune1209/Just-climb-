@@ -22,6 +22,10 @@
 ![image](https://github.com/user-attachments/assets/aa2492bf-4dec-4723-98d1-31663a64c910)
 ## 주요 구성 요소
 
+- **UI 계층화** → `UI_Base`→`UI_Scene`/`UI_Popup`
+- **Scene 로직** → `BaseScene.Awake()` → `Init()` 가상 호출 → 자식 `MainScene/LobbyScene/StageScene.Init()` → `UIManager.ShowSceneUI<…>()`
+- 4-Tier 아키텍처를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
+  
 ### Persistence Layer
 - **DataManager**  
   로컬 JSON(`save.json`)의 읽기/쓰기 담당.  
