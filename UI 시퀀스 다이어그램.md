@@ -1,6 +1,6 @@
 
-1) 상점에서 아이템 구매 흐름
-- Player → UI_Shop → ItemManager → PlayerPrefs → UI 갱신까지의 흐름
+1) Lobby Scene에서 UI_Shop팝업이 열리고 닫히는 흐름
+- 로비 씬에서 UI_Lobby → LobbyTrigger → UI_Shop 팝업이 열리고, ESC 키로 닫히는 흐름
 ```mermaid
 sequenceDiagram
     %% 참여자 정의
