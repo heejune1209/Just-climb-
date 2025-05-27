@@ -123,10 +123,12 @@
   - **Stage Scene**: `UI_Stage`, `UI_Inventory`, `UI_Information`, `UI_Tutorial`, `UI_Result`, `UI_Warning`
 
 ### Game Systems
-- **ItemSystem**: `FeatherUse`, `WingUse`, `LampUse`, `FlagUse`  
-- **ClimbingSystem**: 벽면 그랩·이동 FSM  
-- **ObstacleSystem**: 장애물 스폰·충돌 효과  
-- **InputSystem**: 키보드·게임패드 입력 처리 (`ItemInput` 등)
+ - **ItemSystem**: `FeatherUse`, `WingUse`, `LampUse`, `FlagUse`  
+ - **ClimbingSystem**: 벽면 그랩·이동 FSM  
+ - **ObstacleSystem**: 장애물 스폰·충돌 효과  
+ - **InputSystem**: 키보드·게임패드 입력 처리 (`ItemInput` 등)
+
+- [UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
 ---
     
