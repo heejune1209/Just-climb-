@@ -29,6 +29,7 @@ sequenceDiagram
     %% 4) ESC 키 입력 → 팝업 닫기
     Player->>UI_Shop: ESC 키 입력
     UI_Shop->>UIManager: ClosePopupUI(this)
-    UIManager-->>UI_Shop: UI_Shop 파괴 (Destroy)
+    Note right of UIManager: 1) _popupStack.Pop()  2) Resource.Destroy(popup.go)
+    UIManager->>ResourceMgr: Destroy(UI_Shop.gameObject)
 
 ```
