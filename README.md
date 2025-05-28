@@ -139,7 +139,7 @@
 ![image](https://github.com/user-attachments/assets/3e08867c-3aa3-4872-96d4-93a4b4a64304)
 
 - **Definition Layer**: ScriptableObject 에셋(`ItemData.asset` + 개별 SO)  
-- **Logic Layer**: [`ItemData.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs)+[`IItemUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs) 인터페이스 → 개별 `*Use.cs` 구현  
+- **Logic Layer**: [`ItemData.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs)+[`IItemUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs) 인터페이스 → 개별 `(아이템 이름)Use.cs` 구현  
 - **Data Layer**: `SaveData`·`InventoryItem` 클래스 + `DataManager` (JSON 입출력·이벤트)  
 - **Domain Layer**: `ItemDatabase`, `ItemManager`, `CurrencyManager` (로직·이벤트)  
 - **UI Layer**: `UI_Inventory` (아이템 슬롯 UI 표시)  
