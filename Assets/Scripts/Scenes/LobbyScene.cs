@@ -2,6 +2,11 @@ using UnityEngine;
 
 public class LobbyScene : BaseScene
 {
+    // 정리된 호출 흐름
+    // BaseScene.Awake()
+    // ↳ virtual Init() 호출 → LobbyScene.Init()
+    //   ↳ base.Init() 호출 → BaseScene.Init() (기본 초기화)
+    //   ↳ 나머지 LobbyScene.Init() 로직 실행
     protected override void Init()
     {
         base.Init();

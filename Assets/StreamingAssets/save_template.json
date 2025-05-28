@@ -9,5 +9,6 @@
 
   "stageRewards": [], // 스테이지별 획득 보석 개수 (int[])
   "stageTimes": [], // 최단 클리어 타임(초) 기록용 (float[])
-  "stagePlayTimes": [] // 현재 진행 중인 플레이 시간(초) 기록용 (float[])
+  "stagePlayTimes": [], // 현재 진행 중인 플레이 시간(초) 기록용 (float[])
+  "stageDeathCounts": [] // 스테이지별 사망 횟수 (int[])
 }

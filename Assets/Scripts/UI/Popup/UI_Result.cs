@@ -106,7 +106,7 @@ public class UI_Result : UI_Popup
             int.TryParse(scene.Substring(5), out int stageNum))
         {
             Managers.Instance.Stage
-                .SetCleared(stageNum, gemCount, (int)elapsed.TotalSeconds);
+                .SetCleared(stageNum, gemCount, (int)elapsed.TotalSeconds, Managers.Instance.Game.PlayerDeathCount);
         }
     }
 

@@ -202,7 +202,7 @@ public class UIManager
             return;
 
         UI_Popup popup = _popupStack.Pop();
-        _openPopupTypes.Remove(popup.GetType());  // ← 추가
+        _openPopupTypes.Remove(popup.GetType());
         Managers.Instance.Resource.Destroy(popup.gameObject);
         popup = null;
         _order--; // order 줄이기

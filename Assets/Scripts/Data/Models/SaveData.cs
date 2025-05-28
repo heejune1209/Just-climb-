@@ -12,7 +12,10 @@ public struct SerializableVector3
     {
         this.x = x; this.y = y; this.z = z;
     }
-    public Vector3 ToVector3() => new Vector3(x, y, z);
+    public Vector3 ToVector3()
+    {
+        return new Vector3(x, y, z);
+    }
 }
 
 // JSON 키 이름이 SaveData 클래스(혹은 Serializable 타입)의
@@ -36,4 +39,6 @@ public class SaveData
     public int[] stageRewards = new int[0];     // 획득 보석 개수
     public float[] stageTimes = new float[0];   // 최단 클리어 타임 (초)
     public float[] stagePlayTimes = new float[0];   // 현재 플레이 시간 (초)
+
+    public int[] stageDeathCounts = new int[0]; // 스테이지별 사망 횟수
 }

@@ -63,6 +63,7 @@ public class Managers : MonoBehaviour
     public PoolManager Pool { get; private set; }
     /// <summary>ScriptableObject 기반 아이템 정의</summary>
     public ItemDatabase ItemDB { get; private set; }
+    public RankingManager Ranking { get; private set; }
 
     void Awake()
     {
@@ -105,6 +106,9 @@ public class Managers : MonoBehaviour
 
         Game = GetOrAddComponent<GameManager>();
         Game.Init();
+
+        Ranking = new RankingManager();
+        Ranking.Init();
 
         // Resources 폴더 기준으로 Managers/SoundManager 를 찾습니다
         var go = Resource.Instantiate("Managers/SoundManager");

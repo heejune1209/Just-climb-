@@ -8,6 +8,7 @@ using DiasGames;
 using System.Reflection;
 using Cinemachine.Examples;
 using static UnityEditor.Experimental.GraphView.GraphView;
+using Unity.VisualScripting;
 
 public class GameManager : MonoBehaviour
 {
@@ -37,11 +38,6 @@ public class GameManager : MonoBehaviour
 
     // 내부: 누적된 경과 시간(초)
     private double _elapsedSeconds;
-
-    // 체크포인트 저장 키 템플릿
-    private const string KEY_FLAG_X = "Stage{0}_FlagX";
-    private const string KEY_FLAG_Y = "Stage{0}_FlagY";
-    private const string KEY_FLAG_Z = "Stage{0}_FlagZ";
 
     // 마지막으로 깃발을 꽂은 위치
     public Vector3 FlagPosition { get; private set; }
@@ -73,6 +69,12 @@ public class GameManager : MonoBehaviour
                 FlagPosition = sd.stageFlagPositions[idx].ToVector3();
                 HasFlagPosition = true;
             }
+            // ─── 사망 횟수 복원 ───
+            if (idx < sd.stageDeathCounts.Length)
+            {
+                // 프로퍼티로 세팅하면 이벤트도 발행됨
+                PlayerDeathCount = sd.stageDeathCounts[idx];
+            }
         }
     }
 
@@ -95,7 +97,18 @@ public class GameManager : MonoBehaviour
     {
         // (1) 사망 카운트 증가 → 데이터에 반영
         PlayerDeathCount++;
-        // → 원한다면 JSON에 deathCount 배열을 추가해 같은 방식으로 저장 가능
+
+        // (2) JSON에 사망횟수 저장
+        if (TryGetStageIndex(out int idx))
+        {
+            var data = Managers.Instance.Data.Current;
+            var deaths = new List<int>(data.stageDeathCounts);
+            while (deaths.Count <= idx) deaths.Add(0);
+            deaths[idx] = PlayerDeathCount;
+            data.stageDeathCounts = deaths.ToArray();
+            Managers.Instance.Data.Save();
+        }
+
 
         // (2) 리스폰
         StartCoroutine(RespawnAfterDelay(3f));
@@ -155,17 +168,29 @@ public class GameManager : MonoBehaviour
         {
             var sd = Managers.Instance.Data.Current;
 
-            // (1) 플레이 시간 복원
-            _elapsedSeconds = idx < sd.stagePlayTimes.Length
-                ? sd.stagePlayTimes[idx]
-                : 0f;
-            OnTimerUpdated?.Invoke(TimeSpan.FromSeconds(_elapsedSeconds));
+            if (sd.stageClears.Length > idx && sd.stageClears[idx])
+            {
+                // 이미 클리어된 스테이지를 다시 도전 → 0부터 시작
+                _elapsedSeconds = 0;
+                PlayerDeathCount = 0;
+            }
+            else
+            {
+                // 최초 도전 혹은 재진입(일시정지) → 저장된 값 복원
+                _elapsedSeconds = idx < sd.stagePlayTimes.Length
+                    ? sd.stagePlayTimes[idx]
+                    : 0f;
+                PlayerDeathCount = idx < sd.stageDeathCounts.Length
+                    ? sd.stageDeathCounts[idx]
+                    : 0;
+            }
 
-            // (2) Health.OnDead 구독
+            OnTimerUpdated?.Invoke(TimeSpan.FromSeconds(_elapsedSeconds));
+            // Health.OnDead 구독
             SubscribePlayerDeath();
             IsTimerPaused = false;
 
-            // (3) 깃발 리스폰
+            // 깃발 리스폰
             if (idx < sd.stageFlagPositions.Length)
             {
                 var v = sd.stageFlagPositions[idx].ToVector3();
@@ -187,6 +212,8 @@ public class GameManager : MonoBehaviour
         {
             // 플레이 시간 저장
             var data = Managers.Instance.Data.Current;
+
+            // stagePlayTimes 배열의 데이터를 새로 만든 List에 모두 복사
             var plays = new List<float>(data.stagePlayTimes);
             while (plays.Count <= idx) plays.Add(0f);
             plays[idx] = (float)_elapsedSeconds;
@@ -213,8 +240,12 @@ public class GameManager : MonoBehaviour
     private bool TryGetStageIndex(out int idx)
     {
         string name = SceneManager.GetActiveScene().name;
-        if (name.StartsWith("Stage") && int.TryParse(name.Substring(5), out idx))
+        if (name.StartsWith("Stage") && int.TryParse(name.Substring(5), out var num))
+        {
+            idx = num - 1;    
             return true;
+        }
+            
         idx = -1;
         return false;
     }

@@ -1,4 +1,4 @@
-using JustClimb.Manager;
+using JustClimb.Data;
 using System;
 using System.IO;
 using UnityEngine;
@@ -12,9 +12,12 @@ public class DataManager
     public event Action<SaveData> OnLoaded;
     public event Action<SaveData> OnSaved;
 
+    // JSON 데이터가 변경될 때마다 델타(Event)를 발행.
+    public event Action<DeltaEvent> OnDeltaGenerated;
+
     // 내부용: 저장 파일 경로
     string _filePath;
-    // (선택) 기본 템플릿을 복사해오는 경로
+    // 기본 템플릿을 복사해오는 경로
     string _templatePath;
 
     /// <summary>
@@ -71,6 +74,9 @@ public class DataManager
             Debug.Log($"[DataManager] JSON 저장 시작: {_filePath}");
             string json = JsonUtility.ToJson(Current, true);
             File.WriteAllText(_filePath, json);
+
+            // 3) 델타 이벤트 발행 (전체 JSON 델타)
+            OnDeltaGenerated?.Invoke(new DeltaEvent("json:full", json));
 
             // 2) 저장 완료 사실을 알리는 콜백
             Debug.Log($"[DataManager] JSON 파일 내용:\n{json}");

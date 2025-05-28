@@ -5,32 +5,34 @@ using UnityEngine;
 
 namespace JustClimb.Manager
 {
-    /// <summary>
-    /// 스테이지 클리어 플래그, 보상, 최고 기록(클리어 타임) 관리를 전담.
-    /// JSON 로드 직후 초기 상태를 발행하고,
-    /// SetCleared() 호출 시 즉시 업데이트 후 저장.
-    /// </summary>
+    // 스테이지의 언락 여부, 보상, 최단 클리어 타임, 최저 사망 횟수 관리를 담당.
+    // JSON 로드 직후와 SetCleared 호출 후에 DispatchAll을 통해 초기/갱신된 상태를 이벤트로 발행.
     public class StageManager
     {
-        public event Action<int> OnStageUnlocked;       // 언락 이벤트 (stageNum)
-        public event Action<int, int> OnBestRewardUpdated;   // 새로운 최고 보상 이벤트 (stageNum, bestReward)
-        public event Action<int, float> OnBestTimeUpdated;     // 새로운 최고 기록 이벤트 (stageNum, bestTime)
+        public event Action<int> OnStageUnlocked;       // 스테이지 언락(클리어) 시 발생 (stageNum)
+        public event Action<int, int> OnBestRewardUpdated;   // 최고 보상(gem) 갱신 시 발생 (stageNum, bestReward)
+        public event Action<int, float> OnBestTimeUpdated;     // 최단 클리어 타임 갱신 시 발생 (stageNum, bestTime)
+        public event Action<int, int> OnBestDeathUpdated;  // 스테이지의 최소 사망 횟수(death best) 기록이 갱신될때 호출되는 이벤트 (stageNum, bestDeathCount)
 
+        // Managers.Awake() 직후 호출.
+        // OnLoaded 구독 + 즉시 DispatchAll 호출.
         public void Init()
         {
             var dataMgr = Managers.Instance.Data;
-            // SaveData 인스턴스를 saveData라는 이름으로 받고, DispatchAll()만 실행
+            // JSON 파일 로드 완료 시 DispatchAll 실행
             dataMgr.OnLoaded += (SaveData saveData) => DispatchAll();
 
-            // 시작 직후에도 한 번 실행
+            // Init 호출 직후에도 한 번 상태를 발행하여 UI를 초기화
             DispatchAll();
         }
-        
-        // 현재 저장된 데이터를 참조
+
+        // 현재 메모리에 로드된 SaveData를 반환
         private SaveData Current
         {
             get { return Managers.Instance.Data.Current; }
         }
+
+
         // 해당 스테이지가 언락(클리어)되었는지
         public bool IsUnlocked(int stageNum)
         {
@@ -57,7 +59,7 @@ namespace JustClimb.Manager
         }
 
         // 스테이지 클리어 처리: 플래그, 보상, 기록 업데이트 및 저장
-        public void SetCleared(int stageNum, int gemCount, float clearTime)
+        public void SetCleared(int stageNum, int gemCount, float clearTime, int deathCount)
         {
             // 1) 클리어 플래그
             var clears = new List<bool>(Current.stageClears);
@@ -89,12 +91,24 @@ namespace JustClimb.Manager
                 OnBestTimeUpdated?.Invoke(stageNum, clearTime);
             }
 
-            // 4) JSON 저장
+            // 4) 최저 사망 횟수(death best) 갱신
+            var deaths = new List<int>(Current.stageDeathCounts);
+            while (deaths.Count < stageNum) 
+                deaths.Add(int.MaxValue);
+            
+            if (deathCount < deaths[stageNum - 1])
+            {
+                deaths[stageNum - 1] = deathCount;
+                Current.stageDeathCounts = deaths.ToArray();
+                OnBestDeathUpdated?.Invoke(stageNum, deathCount);
+            }
+
+            // JSON 저장
             Managers.Instance.Data.Save();
         }
 
-        // JSON에서 불러온 시점과 저장 이후에, 
-        // 현재 SaveData에 담긴 모든 스테이지 정보를 이벤트로 발행.
+        // JSON 로드 직후와 Init 직후에 호출되어
+        // 저장된 모든 스테이지 데이터를 이벤트로 발행.
         void DispatchAll()
         {
             var sd = Current;
@@ -113,6 +127,11 @@ namespace JustClimb.Manager
             for (int i = 0; i < sd.stageTimes.Length; i++)
                 if (sd.stageTimes[i] < float.MaxValue)
                     OnBestTimeUpdated?.Invoke(i + 1, sd.stageTimes[i]);
+
+            // 최저 사망 횟수 이벤트
+            for (int i = 0; i < sd.stageDeathCounts.Length; i++)
+                if (sd.stageDeathCounts[i] < int.MaxValue)
+                    OnBestDeathUpdated?.Invoke(i + 1, sd.stageDeathCounts[i]);
         }
     }
 }

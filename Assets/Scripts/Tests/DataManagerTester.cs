@@ -1,44 +1,66 @@
-using JustClimb.Items;
+using System;
+using System.Linq;
+using JustClimb.Manager;
 using UnityEngine;
 
 public class DataManagerTester : MonoBehaviour
 {
     void Start()
     {
-        // 1) 초기화
-        Managers.Instance.Data.Init();
+        //// 1) 초기화 (Init() 내부에서 Load()까지 실행됨)
+        //Managers.Instance.Data.Init();
 
-        // 2) 초기 값 로그
-        Debug.Log("[Test] Initial Gold: " + Managers.Instance.Data.Current.gold);
-        Debug.Log("[Test] Initial Gems: " + Managers.Instance.Data.Current.gems);
-        //Debug.Log("[Test] Initial testItem Count: " + Managers.Data.GetItemCount("testItem"));
+        //// 2) 강제 Load 호출 (Init 이후 재확인용)
+        //Managers.Instance.Data.Load();
 
-        // 3) 값 변경
-        //Managers.Data.AddGold(100);
-        //Managers.Data.AddGems(500);
-        //Managers.Data.SetItemCount("testItem", 5);
+        //// 3) 마이그레이션 수행
+        //MigrateZeroBasedIndexes(Managers.Instance.Data.Current);
 
-        //Managers.Data.ClearAllItems();
+        //// 4) 마이그레이션 후 바로 저장
+        //Managers.Instance.Data.Save();
 
-        Managers.Instance.Data.Load();
+        //// 5) 결과 로그
+        //Debug.Log("[Test] stagePlayTimes after migration: " +
+        //          string.Join(", ", Managers.Instance.Data.Current.stagePlayTimes));
+        //Debug.Log("[Test] stageDeathCounts after migration: " +
+        //          string.Join(", ", Managers.Instance.Data.Current.stageDeathCounts));
+        //for (int i = 0; i < Managers.Instance.Data.Current.stageFlagPositions.Length; i++)
+        //{
+        //    var p = Managers.Instance.Data.Current.stageFlagPositions[i];
+        //    Debug.Log($"[Test] stageFlagPositions[{i}] after migration: {p.x}, {p.y}, {p.z}");
+        //}
+    }
 
-        //// 4) 변경 후 값 로그
-        //Debug.Log("[Test] After AddGold(100): " + Managers.Data.Current.gold);
-        ////Debug.Log("[Test] After SetItemCount(\"testItem\", 5): "
-        ////          + Managers.Data.GetItemCount("testItem"));
-        //Debug.Log("[Test] After AddGems(500): " + Managers.Data.Current.gems);
+    /// <summary>
+    /// 1-based 인덱스였던 Stage 데이터를 0-based로 당겨 줍니다.
+    /// (예: 기존 slot[1] → slot[0], slot[2] → slot[1], …)
+    /// </summary>
+    void MigrateZeroBasedIndexes(SaveData data)
+    {
+        // 플레이 타임
+        if (data.stagePlayTimes.Length > 1
+         && Math.Abs(data.stagePlayTimes[0]) < 1e-6f
+         && data.stagePlayTimes[1] > 0f)
+        {
+            data.stagePlayTimes = data.stagePlayTimes.Skip(1).ToArray();
+        }
 
-        //// 5) 강제 리로드
-        //Managers.Data.Load();
+        // 사망 카운트
+        if (data.stageDeathCounts.Length > 1
+         && data.stageDeathCounts[0] == 0
+         && data.stageDeathCounts[1] > 0)
+        {
+            data.stageDeathCounts = data.stageDeathCounts.Skip(1).ToArray();
+        }
 
-        //// 6) 로드 후 값 로그
-        //Debug.Log("[Test] After Reload Gold: " + Managers.Data.Current.gold);
-        ////Debug.Log("[Test] After Reload testItem Count: "
-        ////          + Managers.Data.GetItemCount("testItem"));
-        //Debug.Log("[Test] After Reload Gems: " + Managers.Data.Current.gems);
-
-        //// 7) 파일 위치 안내
-        //Debug.Log("[Test] save.json path: "
-        //          + Application.persistentDataPath + "/save.json");
+        // 깃발 위치
+        if (data.stageFlagPositions.Length > 1
+         && data.stageFlagPositions[0].x == 0f
+         && (data.stageFlagPositions[1].x != 0f
+          || data.stageFlagPositions[1].y != 0f
+          || data.stageFlagPositions[1].z != 0f))
+        {
+            data.stageFlagPositions = data.stageFlagPositions.Skip(1).ToArray();
+        }
     }
 }
