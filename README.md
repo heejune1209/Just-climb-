@@ -36,28 +36,28 @@
    - `Save()` → `OnSaved` 이벤트  
    - `DeleteAllData()` → 데이터 초기화  
 
-- **SaveData**  
+- **[SaveData](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/SaveData.cs)**  
   - 게임 상태를 직렬화하는 모델 클래스  
    - `gold`, `gems`, `selectedCharacter`  
    - `items`: `InventoryItem[]`  
    - `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`  
    - `stageFlagPositions`  등의 데이터들을 직렬화
 
-- **InventoryItem**  
+- **[InventoryItem](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/InventoryItem.cs)**  
   - 아이템별 `itemId`·`count`를 저장하는 클래스
 
 ### Domain Layer
-- **CurrencyManager**  
+- **[CurrencyManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/CurrencyManager.cs)**  
   - `DataManager` 이벤트 구독 → 골드/보석 관리  
    - `OnGoldChanged(int)`, `OnGemsChanged(int)`  
    - `GetGold()`, `AddGold()`, `SpendGold()`  
 
-- **ItemManager**  
+- **[ItemManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/ItemManager.cs)**  
   - ScriptableObject 기반 아이템 사용 로직 로드  
    - `LoadItemUses()` → `IItemUse` 구현체 자동 등록  
    - 수량·쿨타임·버프 관리, `UseItem()` API  
 
-- **StageManager**  
+- **[StageManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/StageManager.cs)**  
   - 스테이지 클리어 플래그·보상·기록 전담  
    - `SetCleared(stage, gems, time, deaths)`  
    - `OnStageUnlocked`, `OnBestRewardUpdated`, `OnBestTimeUpdated`, `OnBestDeathUpdated`  
@@ -65,37 +65,37 @@
 - **RankingManager**  
   - (추후) 로컬·글로벌 랭킹 관리  
 
-- **ItemDatabase**  
+- **[ItemDatabase](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/StaticData/ItemDatabase.cs)**  
   - `ItemData.asset` 목록 로드, 아이템 정의 등의 정적 데이터 정보 제공
 
 ### Infrastructure Layer
-- **ResourceManager**  
+- **[ResourceManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/ResourceManager.cs)**  
   - `Resources.Load`/`Instantiate`/`Destroy` 래핑  
 
-- **UIManager**  
+- **[UIManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/UIManager.cs)**  
   - `@UI_Root` 생성 → 씬(`UI_Scene`), 팝업(`UI_Popup`) UI 인스턴스화  
    - Canvas 세팅, 팝업 스택 관리, `Time.timeScale` 제어  
 
-- **SceneManagerEX**  
+- **[SceneManagerEX](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SceneManagerEX.cs)**  
   - 씬 전환 전 `Managers.Clear()` → `SceneManager.LoadScene()`  
 
-- **SoundManager**  
+- **[SoundManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SoundManager.cs)**  
   - BGM/SFX 풀 관리  
 
-- **PoolManager**  
+- **[PoolManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/PoolManager.cs)**  
   - 오브젝트 풀링 지원  
 
-- **GameManager**  
+- **[GameManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/GameManager.cs)**  
   - 플레이 타이머·사망 카운트·체크포인트 관리  
 
 - **Utilities**  
-  - `Define.cs`: 전역 enum/상수  
-  - `Util.cs`: 컴포넌트 보장·계층 탐색  
-  - `Extension.cs`: `GameObject` 확장 메서드
+  - `[Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs)`: 전역 enum/상수  
+  - `[Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs)`: 컴포넌트 보장·계층 탐색  
+  - `[Extension.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Extension.cs)`: `GameObject` 확장 메서드
 
 ### UI Layer
 - **UI 계층화**  
-  - `UI_Base`  
+  - `[UI_Base](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/UI_Base.cs)`  
     - 모든 UI 컴포넌트의 공통 바인딩·초기화 로직 포함 (추상 클래스).  
 
   - `UI_Scene : UI_Base`  
