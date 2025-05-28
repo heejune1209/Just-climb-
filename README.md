@@ -29,7 +29,7 @@
 - 4-Tier 아키텍처를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
   
 ### Persistence Layer
-- **DataManager**  
+- **[DataManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataManager.cs)**  
   - 로컬 JSON(`save.json`)의 읽기/쓰기 담당.  
    - `Init()` → 파일 복사/로드  
    - `Load()` → `OnLoaded` 이벤트  
