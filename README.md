@@ -27,7 +27,7 @@
 - **UI 계층화** → `UI_Base`→`UI_Scene`/`UI_Popup`
 - **Scene 로직** → `BaseScene.Awake()` → `Init()` 가상 호출 → 자식 `MainScene/LobbyScene/StageScene.Init()` → `UIManager.ShowSceneUI<…>()`
 - 4-Tier 아키텍처를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
-- `Service Locator` 패턴을 사용하여 매니저 구조를 만들었다.
+- `Managers` 싱글톤 컨테이너에서 게임 전반 매니저들을 일괄 관리하는 'Service Locator' 패턴을 적용.
   
 ### Persistence Layer
 - **[DataManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataManager.cs)**  
