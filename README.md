@@ -28,6 +28,8 @@
 - **Scene 로직** → `BaseScene.Awake()` → `Init()` 가상 호출 → 자식 `MainScene/LobbyScene/StageScene.Init()` → `UIManager.ShowSceneUI<…>()`
 - 4-Tier 아키텍처를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
 - `Managers` 싱글톤 컨테이너에서 게임 전반 매니저들을 일괄 관리하는 'Service Locator' 패턴을 적용.
+  - 소규모 팀·단기간 개발 환경에서 별도 DI 설정 없이 전역 매니저를 일원화해 빠르게 초기화·제공하기 위해 Service Locator 패턴을 선택했으며, 의존성 주입(DI)은 설정 복잡성과 러닝 커브로 인해 보류함.
+  - 씬 간 참조나 의존성 연결을 최소화해 코드 간소화와 유지보수 효율을 확보하기 위함이며, 인스펙터 바인딩은 씬 전환 시 연결 누락 위험으로 제외함.
   
 ### Persistence Layer
 - **[DataManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataManager.cs)**  
