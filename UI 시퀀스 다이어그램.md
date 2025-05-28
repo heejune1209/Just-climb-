@@ -1,6 +1,6 @@
 
-1) 상점에서 아이템 구매 흐름
-- Player → UI_Shop → ItemManager → PlayerPrefs → UI 갱신까지의 흐름
+1) Lobby Scene에서 UI_Shop팝업이 열리고 닫히는 흐름
+- 로비 씬에서 UI_Lobby → LobbyTrigger → UI_Shop 팝업이 열리고, ESC 키로 닫히는 흐름
 ```mermaid
 sequenceDiagram
     %% 참여자 정의
@@ -10,6 +10,8 @@ sequenceDiagram
     participant UIManager  as UIManager
     participant UI_Lobby   as UI_Lobby
     participant UI_Shop    as UI_Shop
+    participant ResourceMgr  as ResourceManager
+
 
     %% 1) 로비 씬 로드 및 UI_Lobby 생성
     Note over LobbyScene, UIManager: 로비씬이 로드되면
@@ -29,6 +31,7 @@ sequenceDiagram
     %% 4) ESC 키 입력 → 팝업 닫기
     Player->>UI_Shop: ESC 키 입력
     UI_Shop->>UIManager: ClosePopupUI(this)
-    UIManager-->>UI_Shop: UI_Shop 파괴 (Destroy)
+    Note right of UIManager: 1) _popupStack.Pop()  2) Resource.Destroy(popup.go)
+    UIManager->>ResourceMgr: Destroy(UI_Shop.gameObject)
 
 ```

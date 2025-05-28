@@ -19,7 +19,9 @@
 - 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
 
 ### Game Structure
-![image](https://github.com/user-attachments/assets/aa2492bf-4dec-4723-98d1-31663a64c910)
+![image](https://github.com/user-attachments/assets/86640143-8964-4251-a8f2-a2927ace9c44)
+
+![image](https://github.com/user-attachments/assets/3c195144-73de-40e6-8450-95cbd6cc1a0c)
 ## 주요 구성 요소
 
 - **UI 계층화** → `UI_Base`→`UI_Scene`/`UI_Popup`
@@ -39,10 +41,10 @@
    - `gold`, `gems`, `selectedCharacter`  
    - `items`: `InventoryItem[]`  
    - `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`  
-   - `stageFlagPositions`  
+   - `stageFlagPositions`  등의 데이터들을 직렬화
 
 - **InventoryItem**  
-  - 아이템별 `itemId`·`count`를 저장하는 구조체
+  - 아이템별 `itemId`·`count`를 저장하는 클래스
 
 ### Domain Layer
 - **CurrencyManager**  
@@ -64,7 +66,7 @@
   - (추후) 로컬·글로벌 랭킹 관리  
 
 - **ItemDatabase**  
-  - `ItemData.asset` 목록 로드·아이템 정의 제공
+  - `ItemData.asset` 목록 로드, 아이템 정의 등의 정적 데이터 정보 제공
 
 ### Infrastructure Layer
 - **ResourceManager**  
@@ -123,19 +125,24 @@
   - **Stage Scene**: `UI_Stage`, `UI_Inventory`, `UI_Information`, `UI_Tutorial`, `UI_Result`, `UI_Warning`
 
 ### Game Systems
-- **ItemSystem**: `FeatherUse`, `WingUse`, `LampUse`, `FlagUse`  
-- **ClimbingSystem**: 벽면 그랩·이동 FSM  
-- **ObstacleSystem**: 장애물 스폰·충돌 효과  
-- **InputSystem**: 키보드·게임패드 입력 처리 (`ItemInput` 등)
+ - **ItemSystem**: `FeatherUse`, `WingUse`, `LampUse`, `FlagUse`  
+ - **ClimbingSystem**: 벽면 그랩·이동 FSM  
+ - **ObstacleSystem**: 장애물 스폰·충돌 효과  
+ - **InputSystem**: 키보드·게임패드 입력 처리 (`ItemInput` 등)
+
+[UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
 ---
     
-### Item Structure
-![Image](https://github.com/user-attachments/assets/8e673abe-ea12-49bf-bc2b-83854262cff1)
-- **Data Layer**: `ItemData.asset` (ScriptableObject)로 공통 필드(id, name, icon 등)를 정의하고, `FeatherData.asset`, `WingData.asset` 등 개별 아이템 데이터를 에셋으로 분리  
-- **Logic Layer**: `ItemData.cs`와 `IItemUse` 인터페이스를 통해 `Use()` 메서드를 추상화하고, `FeatherUse.cs`·`WingUse.cs`·`LampUse.cs`·`FlagUse.cs`에서 각 아이템 사용 효과 구현  
-- **Management**: `ItemManager.cs`가 에셋 로드, 수량·쿨타임·사용 상태를 종합 관리  
-- **UI**: `UI_Inventory.cs`가 슬롯별 아이콘·개수·쿨타임을 화면에 표시하여 플레이어 인벤토리를 시각화
+### 아이템·재화 시스템 구조
+![image](https://github.com/user-attachments/assets/3e08867c-3aa3-4872-96d4-93a4b4a64304)
+
+- **Definition Layer**: ScriptableObject 에셋(`ItemData.asset` + 개별 SO)  
+- **Logic Layer**: `ItemData.cs`+`IItemUse` 인터페이스 → 개별 `*Use.cs` 구현  
+- **Data Layer**: `SaveData`·`InventoryItem` 클래스 + `DataManager` (JSON 입출력·이벤트)  
+- **Domain Layer**: `ItemDatabase`, `ItemManager`, `CurrencyManager` (로직·이벤트)  
+- **UI Layer**: `UI_Inventory` (아이템 슬롯 UI 표시)  
+
 
 [아이템 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/%EC%95%84%EC%9D%B4%ED%85%9C%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
@@ -166,10 +173,10 @@
 - `UI_Scene`, `UI_Popup` 구조 설계 및 자동화 슬롯 생성 툴 제작
 - 이벤트 기반 구조로 UI 갱신을 분리하여 유지보수성과 확장성 강화
 
-### ✅ 아이템 시스템 설계 및 구현
+### ✅ 아이템·재화 시스템 설계 및 구현
 - ScriptableObject + 인터페이스 기반 구조로 설계
 - **신규 아이템 추가 시 코드 수정 없이 에셋 등록만으로 반영 가능**
-- 쿨타임, 수량, UI 반영을 모두 `ItemManager`에서 일괄 처리
+- **`CurrencyManager`/`ItemManager`**: `DataManager` 이벤트 구독 기반으로 골드·보석·아이템 수량 변경 시 `OnGoldChanged`·`OnItemCountChanged` 발행 → UI 자동 동기화
 
 ### ✅ 장애물 시스템 모듈화
 - 장애물 **트리거 / 스폰 / 효과**를 명확히 분리하여 구조화
@@ -179,12 +186,28 @@
 ### ✅ 클라이밍 시스템 분석 및 수정
 - 기존 FSM 흐름 분석 후 **벽면 인식 로직 및 이동 제약 조건** 수정
 - **경사면 처리 누락** 문제를 직접 해결하여 자연스러운 클라이밍 구현
+
+### ✅ 데이터 관리 및 구조 리펙토링
+- **PlayerPrefs → JSON** 전환: `DataManager`/`SaveData` 도입으로 `save.json` 기반 직렬화·역직렬화 구현
+- **스테이지 메트릭(Metric)** 확장: 플레이 시간(`stagePlayTimes`), 사망 횟수(`stageDeathCounts`), 깃발 위치(`stageFlagPositions`), 최단 기록(`stageTimes`) 등 `SaveData`에 통합
+
+### ✅ 스테이지 메트릭(Metric)·체크포인트 관리
+- **`StageManager`**: 언락 플래그·최고 보상·최단 클리어 타임·최저 사망 횟수 이벤트 기반 갱신
+- **`GameManager`**: 씬 로드/언로드 콜백으로 플레이 시간 복원·저장, 체크포인트(깃발) 위치 복원·저장
+
+### ✅ 매니저 컨테이너 & 계층형 아키텍처
+* **`Managers` 싱글톤**: Persistence/Domain/Infrastructure/UI 전 매니저(`DataManager`, `ItemManager`, `UIManager` 등) `Init()` 일괄 호출로 생명주기 집중 관리
+* **Clear/Init 패턴**: 씬 전환 시 `Managers.Clear()`로 팝업·UI 정리, `BaseScene` 상속 구조로 `Init()` 강제 실행
+* **4계층 분리**: Persistence·Domain·Infrastructure·UI 레이어 명확화.
   
 ### ✅ 캐릭터 능력치 밸런싱
 
 ---
 
 ## 🔧 **향후 개선 계획**
+
+![image](https://github.com/user-attachments/assets/807fc5e1-be00-42af-9ff8-5317de2bd149)
+
 - ⏱ 스테이지별 클리어 타임 기반 랭킹 시스템 도입
 
   - **클라이언트**
