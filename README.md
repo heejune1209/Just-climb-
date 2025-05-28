@@ -27,6 +27,7 @@
 - **UI 계층화** → `UI_Base`→`UI_Scene`/`UI_Popup`
 - **Scene 로직** → `BaseScene.Awake()` → `Init()` 가상 호출 → 자식 `MainScene/LobbyScene/StageScene.Init()` → `UIManager.ShowSceneUI<…>()`
 - 4-Tier 아키텍처를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
+- `Service Locator` 패턴을 사용하여 매니저 구조를 만들었다.
   
 ### Persistence Layer
 - **[DataManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataManager.cs)**  
@@ -89,27 +90,27 @@
   - 플레이 타이머·사망 카운트·체크포인트 관리  
 
 - **Utilities**  
-  - `[Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs)`: 전역 enum/상수  
-  - `[Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs)`: 컴포넌트 보장·계층 탐색  
-  - `[Extension.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Extension.cs)`: `GameObject` 확장 메서드
+  - [Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs): 전역 enum/상수  
+  - [Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs): 컴포넌트 보장·계층 탐색  
+  - [Extension.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Extension.cs): `GameObject` 확장 메서드
 
 ### UI Layer
 - **UI 계층화**  
-  - `[UI_Base](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/UI_Base.cs)`  
+  - [UI_Base](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/UI_Base.cs)
     - 모든 UI 컴포넌트의 공통 바인딩·초기화 로직 포함 (추상 클래스).  
 
-  - `UI_Scene : UI_Base`  
+  - [UI_Scene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Scene.cs) : UI_Base  
     - 각 씬 전용 UI 진입점. `Init()` 추상화 → `Awake()` 시 자동 호출.  
 
-  - `UI_Popup : UI_Base`  
+  - [UI_Popup](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Popup.cs) : UI_Base  
     - 팝업 UI 전용, 스택 기반 중첩·닫기, `Time.timeScale`·커서 제어.  
 -
 - **Scene–UI 호출 관계**  
-  - `BaseScene` (추상 MonoBehaviour)  
+  - [BaseScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/BaseScene.cs) (추상 MonoBehaviour)  
     - `Awake()` 에서 `Init()` 호출 → 가상 메서드 `Init()` 이 자식으로 dispatch  
     - `Clear()` 에서 팝업·씬 UI 정리  
 
-  - **MainScene**, **LobbyScene**, **StageScene**  
+  - **[MainScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/MainScene.cs)**, **[LobbyScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/LobbyScene.cs)**, **[StageScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/StageScene.cs)**  
     - `BaseScene` 상속  
     - `Init()` override 내부에서  
       ```csharp
@@ -119,7 +120,7 @@
       을 호출해 해당 씬의 UI 진입점을 띄움  
 
 - **주요 UI 컴포넌트**  
-  - **Title Scene**: `UI_Main`, `UI_Achievement`, `UI_Settings`, `SelectCharacter`  
+  - **Title Scene**: [`UI_Main`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Main.cs), `UI_Achievement`, `UI_Settings`, `SelectCharacter`  
   - **Lobby Scene**: `UI_Lobby`, `UI_Shop`, `UI_Warning`, `UI_SelectChapter`,  
     `UI_SelectStage`, `UI_GenericInfoPopup`, `UI_WorldView`, `UI_Ranking`  
   - **Stage Scene**: `UI_Stage`, `UI_Inventory`, `UI_Information`, `UI_Tutorial`, `UI_Result`, `UI_Warning`
