@@ -120,16 +120,16 @@
       을 호출해 해당 씬의 UI 진입점을 띄움  
 
 - **주요 UI 컴포넌트**  
-  - **Title Scene**: [`UI_Main`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Main.cs), `UI_Achievement`, `UI_Settings`, `SelectCharacter`  
-  - **Lobby Scene**: `UI_Lobby`, `UI_Shop`, `UI_Warning`, `UI_SelectChapter`,  
-    `UI_SelectStage`, `UI_GenericInfoPopup`, `UI_WorldView`, `UI_Ranking`  
-  - **Stage Scene**: `UI_Stage`, `UI_Inventory`, `UI_Information`, `UI_Tutorial`, `UI_Result`, `UI_Warning`
+  - **Title Scene**: [`UI_Main`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Main.cs), [`UI_Achievement`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Achievement.cs), [`UI_Settings`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Settings.cs), [`SelectCharacter`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/CharacterSelector.cs)  
+  - **Lobby Scene**: [`UI_Lobby`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Lobby.cs), [`UI_Shop`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Shop.cs), [`UI_Warning`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Warning.cs), `UI_SelectChapter`,  
+    [`UI_SelectStage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_SelectStage.cs), [`UI_GenericInfoPopup`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/GenericInfoPopup.cs), `UI_Ranking`  
+  - **Stage Scene**: [`UI_Stage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Stage.cs), [`UI_Inventory`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Inventory.cs), [`UI_Information`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Information.cs), `UI_GenericInfoPopup`, [`UI_Result`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Result.cs), `UI_Warning`
 
 ### Game Systems
- - **ItemSystem**: `FeatherUse`, `WingUse`, `LampUse`, `FlagUse`  
+ - **ItemSystem**: [`FeatherUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FeatherUse.cs), [`WingUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/WingUse.cs), [`LampUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/LampUse.cs), [`FlagUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FlagUse.cs)  
  - **ClimbingSystem**: 벽면 그랩·이동 FSM  
  - **ObstacleSystem**: 장애물 스폰·충돌 효과  
- - **InputSystem**: 키보드·게임패드 입력 처리 (`ItemInput` 등)
+ - **InputSystem**: 키보드·게임패드 입력 처리 ([`ItemInput`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemInput.cs) 등)
 
 [UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
@@ -139,7 +139,7 @@
 ![image](https://github.com/user-attachments/assets/3e08867c-3aa3-4872-96d4-93a4b4a64304)
 
 - **Definition Layer**: ScriptableObject 에셋(`ItemData.asset` + 개별 SO)  
-- **Logic Layer**: `ItemData.cs`+`IItemUse` 인터페이스 → 개별 `*Use.cs` 구현  
+- **Logic Layer**: [`ItemData.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs)+[`IItemUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs) 인터페이스 → 개별 `*Use.cs` 구현  
 - **Data Layer**: `SaveData`·`InventoryItem` 클래스 + `DataManager` (JSON 입출력·이벤트)  
 - **Domain Layer**: `ItemDatabase`, `ItemManager`, `CurrencyManager` (로직·이벤트)  
 - **UI Layer**: `UI_Inventory` (아이템 슬롯 UI 표시)  
@@ -152,19 +152,19 @@
 ### Obstacle Structure 
 ![image](https://github.com/user-attachments/assets/24ebe925-cbaf-4006-8240-513eebafee46)
 - **Core Interface & Base**  
-  `IObstacle.cs`(동작 계약), `ObstacleBase.cs`(Activate/Deactivate 공통 로직), `ObstacleTrigger.cs`(충돌 감지 → IObstacle 호출)로 모든 장애물의 기본 뼈대를 정의.
+  [`IObstacle.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/IObstacle.cs)(동작 계약), [`ObstacleBase.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleBase.cs)(Activate/Deactivate 공통 로직), [`ObstacleTrigger.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleTrigger.cs)(충돌 감지 → IObstacle 호출)로 모든 장애물의 기본 뼈대를 정의.
 
 - **Obstacle Definitions**  
   `ObstacleData.asset`(공통 속성)과 `DropperData.asset`, `RollerData.asset`, `CannonData.asset` 같은 ScriptableObject에 개별 장애물 파라미터를 저장.
 
 - **Spawner Components**  
-  `RockDropper.cs`, `RollingSpawner.cs`, `CannonShooter.cs`가 정의된 Data Asset을 읽어 실제 장애물을 씬에 스폰하는 역할.
+  [`RockDropper.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RockDropper.cs), [`RollingSpawner.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RollingSpawner.cs), [`CannonShooter.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/CannonShooter.cs)가 정의된 Data Asset을 읽어 실제 장애물을 씬에 스폰하는 역할.
 
 - **Obstacle Effects**  
-  `KnockbackZone.cs`, `JumpPad.cs`, `DeathZone.cs`, `MaterialChanger.cs` 등으로 장애물에 닿았을 때 발생할 충돌 반응이나 특수 효과를 구현.
+  [`KnockbackZone.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/KnockbackZone.cs), [`JumpPad.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/JumpPad.cs), [`DeathZone.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/DeathZone.cs), [`MaterialChanger.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/MaterialChanger.cs) 등으로 장애물에 닿았을 때 발생할 충돌 반응이나 특수 효과를 구현.
 
 - **Pooling Support**  
-  `PoolableObstacle.cs`는 Object Pooling 기능을 제공하며, `ObstacleBase`를 상속해 장애물 인스턴스를 재사용.  
+  [`PoolableObstacle.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Utils/PoolableObstacle.cs)는 Object Pooling 기능을 제공하며, `ObstacleBase`를 상속해 장애물 인스턴스를 재사용.  
 
 ---
 
