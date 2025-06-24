@@ -63,3 +63,130 @@
 ---
 
 이 TaskList를 기반으로, **하나씩 구현 → 배포 → 테스트** 순으로 진행하시면 스팀 출시를 위한 업적·랭킹·캐릭터 선택·전체 동기화 시스템 준비가 완료됩니다. 부족한 부분 있으면 언제든 알려 주세요!
+
+네, 가능합니다. Unity 쪽에서 **Steamworks.NET** 같은 Steamworks SDK 래퍼를 사용해, 게임 내 업적 달성 시 Steam 업적도 함께 언락하도록 연동할 수 있습니다.
+
+---
+
+## 1. Steam 업적 준비 (Steamworks 대시보드)
+
+1. Steamworks 파트너 사이트에 접속 → **애플리케이션 관리** → **업적**
+2. 각 업적에 **API Name**(예: `ACH_TUTORIAL_COMPLETE`, `ACH_FIRST_KILL` 등)과 **설명**, 아이콘을 등록
+3. 저장 후 **업적 목록**이 Steam 클라이언트에도 자동 반영됩니다
+
+> **Tip**: API Name 은 코드에서 호출할 때 정확히 일치시켜야 합니다.
+
+---
+
+## 2. Unity 프로젝트에 Steamworks.NET 설치
+
+1. [Steamworks.NET GitHub](https://github.com/rlabrecque/Steamworks.NET) 에서 최신 릴리즈 ZIP 다운로드
+2. Unity **패키지 매니저**(또는 Assets → Import Package → Custom Package) 로 `Steamworks.NET.unitypackage` 임포트
+3. **Plugins** 폴더에 Steam API 라이브러리가 들어옵니다.
+
+---
+
+## 3. Steam API 초기화
+
+`GameManager` 같은 전역 싱글톤 클래스의 `Awake()` 또는 초기화 파트에 추가:
+
+```csharp
+using Steamworks;
+
+public class SteamInitializer : MonoBehaviour
+{
+    private void Awake()
+    {
+        if (!Packsize.Test()) Debug.LogError("Steamworks packsize mismatch");
+        if (!DllCheck.Test())   Debug.LogError("Steamworks dll mismatch");
+
+        if (SteamAPI.RestartAppIfNecessary((AppId_t)YOUR_STEAM_APP_ID))
+        {
+            Application.Quit();
+            return;
+        }
+
+        SteamAPI.Init();  // Steam 초기화
+        DontDestroyOnLoad(gameObject);
+    }
+
+    private void Update()
+    {
+        SteamAPI.RunCallbacks();  // 콜백 처리
+    }
+
+    private void OnDestroy()
+    {
+        SteamAPI.Shutdown();
+    }
+}
+```
+
+* `YOUR_STEAM_APP_ID` 는 Steamworks 파트너 대시보드에서 받은 AppID
+
+---
+
+## 4. 업적 달성 시 Steam에도 언락
+
+기존 `AchievementManager.cs` 에서 업적을 언락하는 부분에 다음 코드를 추가합니다:
+
+```csharp
+using Steamworks;
+
+public class AchievementManager : IInitializable
+{
+    // … 기존 의존성 주입, 컨디션 체크 등 …
+
+    private void UnlockAchievement(string achievementKey)
+    {
+        // 1) 로컬 서버 동기화용 델타
+        _dataManager.GenerateDelta("achievement_unlocked", achievementKey);
+
+        // 2) Steam 업적 언락
+        if (SteamManager.Initialized)  // Steamworks.NET 초기화 확인
+        {
+            bool alreadyUnlocked;
+            SteamUserStats.GetAchievement(achievementKey, out alreadyUnlocked);
+            if (!alreadyUnlocked)
+            {
+                SteamUserStats.SetAchievement(achievementKey);
+                SteamUserStats.StoreStats();  // 변경 정보 서버로 전송
+                Debug.Log($"Steam Achievement Unlocked: {achievementKey}");
+            }
+        }
+    }
+
+    public void OnSomeGameEvent(...)
+    {
+        if (/* 언락 조건 만족 */)
+            UnlockAchievement("ACH_TUTORIAL_COMPLETE"); 
+    }
+}
+```
+
+* `SteamUserStats.GetAchievement` 로 이미 언락되었는지 체크
+* `SetAchievement` + `StoreStats` 로 Steam 서버에 저장
+
+---
+
+## 5. 인스펙터 바인딩 및 빌드 설정
+
+* **SteamInitializer**: 씬 첫 로딩 씬(메인 메뉴)에 붙여 두고,
+  `YOUR_STEAM_APP_ID` 만 인스펙터나 상수로 설정
+* **AchievementManager**: Zenject 등 DI로 바인딩
+* **플랫폼 설정**:
+
+  * **PC, Windows** 플랫폼에서만 Steamworks 초기화하도록 빌드
+  * **Editor** 에서는 `#if UNITY_STANDALONE_WIN` 등으로 분기
+
+---
+
+### 요약
+
+1. Steamworks 대시보드에 업적 정의 → `API Name` 확보
+2. Unity에 Steamworks.NET 설치 → 초기화 스크립트 추가
+3. `SetAchievement` & `StoreStats` 호출로 업적 언락
+4. 기존 델타 동기화 로직(`GenerateDelta`)과 함께 실행
+
+이렇게 하면 게임 내에서 업적을 달성하자마자, 스팀 클라이언트의 업적 창에도 바로 반영되어 뜹니다.
+
