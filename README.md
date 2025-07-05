@@ -3,7 +3,7 @@
 - 기간 : 2023.09 ~ 2023.12
 - 인원 : 4인 (기획 1, 아트1, 프로그래머 2)
 - 역할 : 메인 프로그래머
-- 도구 : Unity3D, C#, Github
+- 도구 : Unity3D, C#, ASP.NET Core Web API, Entity Framework Core, Github
 - 장르 : 어드벤처, 클라이밍, 3인칭 백뷰 
 - 플랫폼 : PC
 
@@ -11,6 +11,8 @@
 - Unity 엔진 기반 3D 백뷰 클라이밍 게임
 - 홀드를 이용한 암벽 등반과 장애물을 파훼하여 산 정상에 오르는 게임
 - 총 8개 Stage 구성
+- **실시간 랭킹 시스템**과 **온라인 데이터 동기화** 기능 포함
+- **Zenject DI 기반 모듈화 아키텍처**로 확장성과 유지보수성 확보
 
 ## 설계서
 ### Game Flow
@@ -22,15 +24,17 @@
 ![image](https://github.com/user-attachments/assets/86640143-8964-4251-a8f2-a2927ace9c44)
 
 ![image](https://github.com/user-attachments/assets/3c195144-73de-40e6-8450-95cbd6cc1a0c)
+
 ## 주요 구성 요소
 
+### 아키텍처 개선
+- **Zenject DI 컨테이너** 도입으로 기존 Service Locator 패턴에서 **의존성 주입** 방식으로 전환
 - **UI 계층화** → `UI_Base`→`UI_Scene`/`UI_Popup`
 - **Scene 로직** → `BaseScene.Awake()` → `Init()` 가상 호출 → 자식 `MainScene/LobbyScene/StageScene.Init()` → `UIManager.ShowSceneUI<…>()`
-- 4-Tier 아키텍처를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
-- `Managers` 싱글톤 컨테이너에서 게임 전반 매니저들을 일괄 관리하는 'Service Locator' 패턴을 적용.
-  - 소규모 팀·단기간 개발 환경에서 별도 DI 설정 없이 전역 매니저를 일원화해 빠르게 초기화·제공하기 위해 Service Locator 패턴을 선택했으며, 의존성 주입(DI)은 설정 복잡성과 러닝 커브로 인해 보류함.
-  - 씬 간 참조나 의존성 연결을 최소화해 코드 간소화와 유지보수 효율을 확보하기 위함이며, 인스펙터 바인딩은 씬 전환 시 연결 누락 위험으로 제외함.
-  
+- **4-Tier 아키텍처**를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
+- **ProjectInstaller**를 통한 **계층별 의존성 주입** 및 **자동 초기화** 관리
+- **메모리 누수 방지**: 모든 매니저에 `IDisposable` 구현으로 이벤트 해제 및 리소스 정리
+
 ### Persistence Layer
 - **[DataManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataManager.cs)**  
   - 로컬 JSON(`save.json`)의 읽기/쓰기 담당.  
@@ -38,13 +42,15 @@
    - `Load()` → `OnLoaded` 이벤트  
    - `Save()` → `OnSaved` 이벤트  
    - `DeleteAllData()` → 데이터 초기화  
+   - **델타 이벤트 시스템**: 데이터 변경 시 `OnDeltaGenerated` 이벤트 발생으로 실시간 동기화
 
 - **[SaveData](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/SaveData.cs)**  
   - 게임 상태를 직렬화하는 모델 클래스  
    - `gold`, `gems`, `selectedCharacter`  
    - `items`: `InventoryItem[]`  
    - `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`  
-   - `stageFlagPositions`  등의 데이터들을 직렬화
+   - `stageFlagPositions` 등의 데이터들을 직렬화
+   - **최고 기록 추적**: `bestClearTimes`, `bestDeathCounts` 추가
 
 - **[InventoryItem](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/InventoryItem.cs)**  
   - 아이템별 `itemId`·`count`를 저장하는 클래스
@@ -65,8 +71,12 @@
    - `SetCleared(stage, gems, time, deaths)`  
    - `OnStageUnlocked`, `OnBestRewardUpdated`, `OnBestTimeUpdated`, `OnBestDeathUpdated`  
 
-- **RankingManager**  
-  - (추후) 로컬·글로벌 랭킹 관리  
+- **[RankingManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/RankingManager.cs)**  
+  - **서버 기반 실시간 랭킹 시스템**
+  - 클리어 타임 및 사망 횟수 기준 정렬 지원
+  - 캐시 기반 성능 최적화
+  - `GetRankingWithMyEntry()`: Top N 랭킹과 내 기록 분리 조회
+  - 자동 기록 업데이트 (`OnBestTimeUpdated`, `OnBestDeathUpdated` 이벤트 구독)
 
 - **[ItemDatabase](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/StaticData/ItemDatabase.cs)**  
   - `ItemData.asset` 목록 로드, 아이템 정의 등의 정적 데이터 정보 제공
@@ -78,6 +88,7 @@
 - **[UIManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/UIManager.cs)**  
   - `@UI_Root` 생성 → 씬(`UI_Scene`), 팝업(`UI_Popup`) UI 인스턴스화  
    - Canvas 세팅, 팝업 스택 관리, `Time.timeScale` 제어  
+   - **Zenject DI 통합**: 런타임 UI 컴포넌트 자동 의존성 주입
 
 - **[SceneManagerEX](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SceneManagerEX.cs)**  
   - 씬 전환 전 `Managers.Clear()` → `SceneManager.LoadScene()`  
@@ -91,6 +102,21 @@
 - **[GameManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/GameManager.cs)**  
   - 플레이 타이머·사망 카운트·체크포인트 관리  
 
+- **[DataSyncManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataSyncManager.cs)**  
+  - **델타 기반 실시간 데이터 동기화**
+  - 주기적 배치 전송 (5초 간격)
+  - 실패 시 재시도 메커니즘
+  - 앱 종료 시 즉시 Flush 처리
+
+- **[OfflineCacheManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/OfflineCacheManager.cs)**  
+  - **네트워크 상태 감지 및 오프라인 캐싱**
+  - 온라인 복귀 시 자동 동기화
+  - `UI_SyncStatus`를 통한 동기화 상태 표시
+
+- **[SaveManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SaveManager.cs)**  
+  - 게임 종료 시 자동 저장 및 동기화 처리
+  - `OnApplicationPause`, `OnApplicationFocus` 이벤트 처리
+
 - **Utilities**  
   - [Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs): 전역 enum/상수  
   - [Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs): 컴포넌트 보장·계층 탐색  
@@ -100,13 +126,14 @@
 - **UI 계층화**  
   - [UI_Base](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/UI_Base.cs)
     - 모든 UI 컴포넌트의 공통 바인딩·초기화 로직 포함 (추상 클래스).  
+    - **Zenject DI 통합**: `[Inject]` 어트리뷰트로 매니저 자동 주입
 
   - [UI_Scene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Scene.cs) : UI_Base  
     - 각 씬 전용 UI 진입점. `Init()` 추상화 → `Awake()` 시 자동 호출.  
 
   - [UI_Popup](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Popup.cs) : UI_Base  
     - 팝업 UI 전용, 스택 기반 중첩·닫기, `Time.timeScale`·커서 제어.  
--
+
 - **Scene–UI 호출 관계**  
   - [BaseScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/BaseScene.cs) (추상 MonoBehaviour)  
     - `Awake()` 에서 `Init()` 호출 → 가상 메서드 `Init()` 이 자식으로 dispatch  
@@ -124,7 +151,7 @@
 - **주요 UI 컴포넌트**  
   - **Title Scene**: [`UI_Main`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Main.cs), [`UI_Achievement`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Achievement.cs), [`UI_Settings`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Settings.cs), [`SelectCharacter`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/CharacterSelector.cs)  
   - **Lobby Scene**: [`UI_Lobby`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Lobby.cs), [`UI_Shop`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Shop.cs), [`UI_Warning`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Warning.cs), `UI_SelectChapter`,  
-    [`UI_SelectStage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_SelectStage.cs), [`UI_GenericInfoPopup`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/GenericInfoPopup.cs), `UI_Ranking`  
+    [`UI_SelectStage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_SelectStage.cs), [`UI_GenericInfoPopup`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/GenericInfoPopup.cs), **[`UI_Ranking`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Ranking.cs)**  
   - **Stage Scene**: [`UI_Stage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Stage.cs), [`UI_Inventory`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Inventory.cs), [`UI_Information`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Information.cs), `UI_GenericInfoPopup`, [`UI_Result`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Result.cs), `UI_Warning`
 
 ### Game Systems
@@ -132,6 +159,12 @@
  - **ClimbingSystem**: 벽면 그랩·이동 FSM  
  - **ObstacleSystem**: 장애물 스폰·충돌 효과  
  - **InputSystem**: 키보드·게임패드 입력 처리 ([`ItemInput`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemInput.cs) 등)
+
+### Server-Side Architecture (ASP.NET Core)
+- **[RankingController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs)**: 랭킹 조회 및 기록 업데이트 API
+- **[RankingService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/RankingService.cs)**: 랭킹 비즈니스 로직 처리
+- **Entity Framework Core**: 데이터베이스 ORM 및 마이그레이션 관리
+- **로깅 시스템**: 요청/응답 추적 및 에러 처리
 
 [UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
@@ -145,7 +178,6 @@
 - **Data Layer**: `SaveData`·`InventoryItem` 클래스 + `DataManager` (JSON 입출력·이벤트)  
 - **Domain Layer**: `ItemDatabase`, `ItemManager`, `CurrencyManager` (로직·이벤트)  
 - **UI Layer**: `UI_Inventory` (아이템 슬롯 UI 표시)  
-
 
 [아이템 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/%EC%95%84%EC%9D%B4%ED%85%9C%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
@@ -170,11 +202,58 @@
 
 ---
 
+### 랭킹 시스템 구조
+![image](https://github.com/user-attachments/assets/86640143-8964-4251-a8f2-a2927ace9c44)
+
+- **클라이언트 측**
+  - `RankingManager`: 서버 통신 및 캐싱 관리
+  - `UI_Ranking`: 랭킹 UI 표시 및 정렬 옵션 제공
+  - `StageManager` 이벤트 구독을 통한 자동 기록 업데이트
+
+- **서버 측**
+  - `RankingController`: REST API 엔드포인트
+  - `RankingService`: 비즈니스 로직 및 데이터 처리
+  - **Entity Framework Core**: 데이터베이스 ORM
+
+- **주요 기능**
+  - **실시간 랭킹**: 클리어 타임 및 사망 횟수 기준 정렬
+  - **개인 기록 분리**: Top N 랭킹과 내 기록 별도 표시
+  - **캐시 최적화**: 중복 요청 방지 및 성능 향상
+  - **테스트 데이터**: 개발 및 테스트용 더미 데이터 생성
+
+---
+
 ## 주요 기여
+
+### ✅ **Zenject DI 아키텍처로 전환**
+- **Service Locator → Dependency Injection 전환**으로 의존성 관리 개선
+- **ProjectInstaller**를 통한 계층별 의존성 주입 체계 구축
+- **인터페이스 분리**: 각 매니저별 `IManager` 인터페이스 정의로 테스트 용이성 확보
+- **자동 초기화**: `IInitializable` 인터페이스로 매니저 초기화 순서 보장
+
+### ✅ **메모리 누수 방지 시스템**
+- **IDisposable 패턴**: 모든 매니저에 메모리 누수 방지 로직 구현
+- **이벤트 해제**: 매니저 간 이벤트 구독 해제 자동화
+- **리소스 정리**: HTTP 클라이언트, 세마포어 등 네이티브 리소스 정리
+- **생명주기 관리**: Zenject의 DisposableManager와 연동한 자동 정리
+
+### ✅ **실시간 랭킹 시스템 구현**
+- **서버-클라이언트 구조**: ASP.NET Core Web API 기반 백엔드
+- **다중 정렬 기준**: 클리어 타임, 사망 횟수 기준 랭킹 지원
+- **실시간 동기화**: 기록 갱신 시 자동 서버 업데이트
+- **캐시 최적화**: 중복 요청 방지 및 성능 향상
+- **UI/UX 개선**: Top N 랭킹과 내 기록 분리 표시
+
+### ✅ **온라인/오프라인 데이터 동기화**
+- **델타 이벤트 시스템**: 데이터 변경 사항만 실시간 전송
+- **배치 처리**: 5초 간격 주기적 동기화로 서버 부하 최적화
+- **오프라인 캐싱**: 네트워크 단절 시 로컬 큐잉 후 복구 시 자동 동기화
+- **UI 상태 표시**: 동기화 진행 상황 실시간 피드백
 
 ### ✅ UI/UX 시스템 제작
 - `UI_Scene`, `UI_Popup` 구조 설계 및 자동화 슬롯 생성 툴 제작
 - 이벤트 기반 구조로 UI 갱신을 분리하여 유지보수성과 확장성 강화
+- **Zenject DI 통합**: UI 컴포넌트 자동 의존성 주입
 
 ### ✅ 아이템·재화 시스템 설계 및 구현
 - ScriptableObject + 인터페이스 기반 구조로 설계
@@ -193,97 +272,101 @@
 ### ✅ 데이터 관리 및 구조 리펙토링
 - **PlayerPrefs → JSON** 전환: `DataManager`/`SaveData` 도입으로 `save.json` 기반 직렬화·역직렬화 구현
 - **스테이지 메트릭(Metric)** 확장: 플레이 시간(`stagePlayTimes`), 사망 횟수(`stageDeathCounts`), 깃발 위치(`stageFlagPositions`), 최단 기록(`stageTimes`) 등 `SaveData`에 통합
+- **델타 이벤트 시스템**: 데이터 변경 추적 및 실시간 동기화 기반 마련
 
 ### ✅ 스테이지 메트릭(Metric)·체크포인트 관리
 - **`StageManager`**: 언락 플래그·최고 보상·최단 클리어 타임·최저 사망 횟수 이벤트 기반 갱신
 - **`GameManager`**: 씬 로드/언로드 콜백으로 플레이 시간 복원·저장, 체크포인트(깃발) 위치 복원·저장
 
 ### ✅ 매니저 컨테이너 & 계층형 아키텍처
-* **`Managers` 싱글톤**: Persistence/Domain/Infrastructure/UI 전 매니저(`DataManager`, `ItemManager`, `UIManager` 등) `Init()` 일괄 호출로 생명주기 집중 관리
-* **Clear/Init 패턴**: 씬 전환 시 `Managers.Clear()`로 팝업·UI 정리, `BaseScene` 상속 구조로 `Init()` 강제 실행
+* **Zenject DI**: Persistence/Domain/Infrastructure/UI 전 매니저 의존성 주입 및 자동 초기화
+* **Clear/Init 패턴**: 씬 전환 시 자동 정리, `BaseScene` 상속 구조로 `Init()` 강제 실행
 * **4계층 분리**: Persistence·Domain·Infrastructure·UI 레이어 명확화.
   
 ### ✅ 캐릭터 능력치 밸런싱
 
 ---
 
-## 🔧 **향후 개선 계획**
+## 🔧 **현재 진행중인 작업 내용**
 
-![image](https://github.com/user-attachments/assets/807fc5e1-be00-42af-9ff8-5317de2bd149)
+### 🔐 **스팀 로그인 연동 시스템**
+스팀 세션으로 자동 인증·식별 → JWT 발급
 
-- ⏱ 스테이지별 클리어 타임 기반 랭킹 시스템 도입
-
-  - **클라이언트**
-    - `RankingManager`/`UI_Leaderboard` 구현 → 스테이지 클리어 시 `DataManager` 델타 이벤트(값이 바뀔 때마다 어떤 데이터가 어떻게 변했는지 알려주는 이벤트)로 `{ key:"ranking:stage1", value:time }` 발행
-    - `DataSyncManager` 에 델타 이벤트 전송 로직 추가 → `/api/users/{uid}/ranking` 호출
-    - `UI_SyncStatus`로 “랭킹 동기화 중/완료/실패” 표시
-    
-  - **서버 (ASP .NET Core Web API)**
-    - **RankingController** (`POST /api/users/{uid}/ranking`, `GET /api/users/{uid}/ranking?stage=`)
-    - **IUserRankingService** -> 랭킹 기록 검증·Redis Sorted Set에 저장
-    - **ConflictResolver** -> 타임스탬프·최저 기록만 허용
-
-  - **데이터베이스 & 캐시**
-    - `rankings` 테이블: (`user_id`, `stage`, `clear_time`, `recorded_at`)
-    - Redis Sorted Set (`ranking:stage1`) -> 실시간 상위 N명 조회
-    - `RedisSyncConfig.json` 으로 TTL/인덱스 설정
+- **클라이언트**
+  - **Steamworks.NET** 설치 및 초기화(`SteamAPI.Init()`)
+  - **SteamAuthManager** 작성: SteamID, AuthTicket 획득 → `/api/auth/steam` POST → JWT 저장
   
-- 🎮 **클라이밍 조작 보정 및 최적화**
-  - 현재 클라이밍 방식은 조작키와 플레이어가 바라보고 있는 방향으로 가장 가까운 홀드로 이동을 하지만,
-  - 이 부분이 클라이밍을 할때 플레이어가 원하는 홀드로 이동이 안될수 있음을 파악했음.
-  - 입력 방향과 카메라 시선 가중치 기반으로 플레이어가 의도한 홀드를 우선 선택하도록 개선
-
-- 💾 **데이터 관리 개선 (델타 이벤트 기반 오프라인→온라인 싱크)**  
-  - **클라이언트**
-    - **DataManager**
-      - 기존 JSON 저장/로드(`save.json`) 그대로 유지
-      - `OnDeltaGenerated(Delta d)` 이벤트 추가 (key, value, timestamp)
-
-    - **DataSyncManager**
-      - 델타 큐잉·주기적 배치 전송(5초)
-      - `OnApplicationPause/Quit` 시 즉시 Flush
-      - 실패 시 재큐잉 및 재시도
+- **서버 (ASP.NET Core Web API)**
+  - **AuthController**: `POST /api/auth/steam` → Valve Web API 티켓 검증 → `IUserService.GetOrCreateAsync` → JWT 발급
+  - **JWT 미들웨어** 설정 및 인증 체계 구축
+  - **IUserService** / **UserService**: SteamID 기반 유저 레코드 관리
   
-    - **OfflineCacheManager**
-      - 네트워크 상태 감지 → 싱크 일시중단/재개
-    
-    - **UI\_SyncStatus**
-      - 화면 우측 상단에 “🟢 동기화 OK / 🟡 대기 중 / 🔴 오류” 표시
+- **데이터베이스**
+  - `Migration_CreateUsersTable.sql` (SteamID를 `users.id`로 사용)
+  - `users` 테이블에 Steam 프로필 컬럼 추가
 
-  - **서버 (ASP .NET Core Web API)**
-    - **SaveController** : `POST /api/users/{uid}/state/delta` 엔드포인트 구현
-    - **AuthService**: JWT 인증·인가
-    - **ConflictResolver**: 델타 타임스탬프·버전 기반 병합
-    - **UserStateService**: DB `users`·`user_items` UPSERT 로직
+### 💾 **하이브리드 델타 동기화 완성**
+온라인/오프라인 모드에 따라 로컬 JSON ↔ 서버 DB 동기화 관리
 
-  - **데이터베이스 & 캐시**
-    - `users` 테이블: (`user_id`, `gold`, `gems`, `selected_character`, `flag_x,y,z`)
-    - `user_items` 테이블: (`user_id`, `item_type`, `count`) — UPSERT 쿼리
-    - Redis: 랭킹 외에도 “최근 델타 처리 시간” 캐시용
+- **클라이언트**
+  - **DataManager** 리팩토링: 
+    - `Load()`: 로컬 JSON 읽기 → 네트워크 연결 시 서버 GET → JSON 덮어쓰기
+    - `Save()`: 로컬 JSON 쓰기 → 온라인일 때 `DataSyncManager` 델타 큐잉
+  - **OfflineCacheManager** 강화: 네트워크 상태 감지 → 온라인 복귀 시 로컬 델타 일괄 전송
+  
+- **서버 (ASP.NET Core Web API)**
+  - **SaveController** GET/POST 엔드포인트: `/api/users/{uid}/state`, `/api/users/{uid}/state/delta`
+  - **IUserStateService.LoadStateAsync** 추가
+  - **UserStateService**: 델타 병합·UPSERT·트랜잭션·Redis 갱신
+  - **ConflictResolver**: 델타 충돌 처리 로직
+  
+- **데이터베이스 & 캐시**
+  - `Migration_CreateUsersTable.sql`, `Migration_CreateUserItemsTable.sql`
+  - `UpsertUserItem.sql` 저장 프로시저
+  - **Redis** 캐시 시스템: 고성능 데이터 접근 및 동시 접속자 처리
+  - `RedisSyncConfig.json` 설정
 
-- 🎭 **캐릭터 선택 기능 설계 개선**
-  - **클라이언트**
-    - **CharacterData** SO + `CharacterDatabase`
-    - **UI\_SelectCharacter**: 아이콘 클릭 → 프리뷰(`Managers.UI`) → 확정
-    - `DataManager` 델타 이벤트: `{ key:"character", value:selectedId }` 발행
-      
-  - **서버 (ASP .NET Core Web API)**
-    - **CharacterController** (`POST /api/users/{uid}/character`)
-    - **UserStateService.SaveCharacterAsync** → `users.selected_character` 업데이트
-      
-  - **데이터베이스**
-    - `users.selected_character` 컬럼
-    - `user_character_history` 테이블로 변경 로그 보관
+### 🏆 **업적 시스템 (+ Steam 업적 연동)**
+게임 이벤트 → 서버 UPSERT & Steam 서버에도 업적 언락
 
-- **전체 파이프라인 요약**
-  1. **클라이언트**: 로컬 JSON -> Δ(델타) 생성 -> `DataSyncManager` 주기 전송/재시도 -> UI 표시
-  2. **서버**: ASP .NET Core Web API -> 인증·검증 → `ConflictResolver` -> DB/Redis 반영
-  3. **DB/Redis**: 정규화 테이블 + 캐시 로직 → 실시간 랭킹·상태 조회
+- **클라이언트**
+  - **AchievementManager** 달성 로직: `GenerateDelta("achievement_unlocked", achId)` + Steamworks.NET `SteamUserStats.SetAchievement`, `StoreStats()`
+  - **UI_AchievementPopup** 구현: 업적 달성 시 시각적 피드백
+  
+- **서버 (ASP.NET Core Web API)**
+  - **AchievementController**: `GET /api/users/{uid}/achievements`, `POST /api/users/{uid}/achievements`
+  - **IUserAchievementService** + **UserAchievementService**: 델타 병합·UPSERT
+  
+- **데이터베이스 & 캐시**
+  - `Migration_CreateAchievementsTable.sql`
+  - `UpsertUserAchievement.sql`
+  - Redis 캐시 연동
 
----
+### 🎭 **캐릭터 선택 시스템**
+클라이언트 UI → 서버 저장 → 모든 기기에서 동기화
 
-## 기술 스택 및 개발 환경
-C#, Unity3D, Visual Studio 2022
+- **클라이언트**
+  - **CharacterSelectManager**: UI 버튼 클릭 → `GenerateDelta("selectedCharacter", charId)` 또는 `CharacterService.SetSelectedAsync` 호출
+  - **UI_CharacterSelect** 구현: 캐릭터 프리뷰 및 선택 인터페이스
+  
+- **서버 (ASP.NET Core Web API)**
+  - **CharacterController**: `GET /api/users/{uid}/character`, `PUT /api/users/{uid}/character`
+  - **IUserCharacterService** + **UserCharacterService**: 델타 병합·UPSERT
+  
+- **데이터베이스**
+  - `Migration_AddSelectedCharacterColumn.sql`
+  - 캐릭터 변경 이력 추적 테이블
+
+### 🎮 **클라이밍 조작 보정 및 최적화**
+- 현재 클라이밍 방식은 조작키와 플레이어가 바라보고 있는 방향으로 가장 가까운 홀드로 이동을 하지만,
+- 이 부분이 클라이밍을 할때 플레이어가 원하는 홀드로 이동이 안될수 있음을 파악했음.
+- 입력 방향과 카메라 시선 가중치 기반으로 플레이어가 의도한 홀드를 우선 선택하도록 개선
+
+### 🚀 **전체 파이프라인 통합 목표**
+1. **클라이언트**: 로컬 JSON → Δ(델타) 생성 → `DataSyncManager` 주기 전송/재시도 → UI 표시
+2. **서버**: ASP.NET Core Web API → 스팀 인증·검증 → `ConflictResolver` → DB/Redis 반영  
+3. **DB/Redis**: 정규화 테이블 + 캐시 로직 → 실시간 랭킹·상태 조회
+4. **Steam 연동**: 로그인 인증 + 업적 동기화로 완전한 스팀 게임 경험 제공
 
 ---
 
