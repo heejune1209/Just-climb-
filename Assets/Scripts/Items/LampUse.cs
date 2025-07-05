@@ -1,6 +1,7 @@
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using Zenject;
 
 namespace JustClimb.Items
 {
@@ -10,6 +11,9 @@ namespace JustClimb.Items
     [CreateAssetMenu(fileName = "LampUse", menuName = "Game/ItemUse/LampUse", order = 100)]
     public class LampUse : ScriptableObject, IItemUse
     {
+        [Inject] private IResourceManager _rm;
+        [Inject] private ISoundManager _sm;
+
         [Header("랜턴 이펙트 Prefab")]
         [Tooltip("플레이어 위치에 소환될 랜턴 프리팹")]
         public GameObject lanternPrefab;
@@ -48,8 +52,11 @@ namespace JustClimb.Items
             GameObject lanternInstance = null;
             if (lanternPrefab != null)
             {
-                lanternInstance = Instantiate(lanternPrefab,user.transform.position,Quaternion.identity);
+                lanternInstance = _rm.Instantiate($"Prefabs/Items/{lanternPrefab.name}",
+                    user.transform.position, Quaternion.identity, null, data._initialpoolcount);
                 lanternInstance.transform.SetParent(user.transform);
+
+                _sm.PlaySFX(3);
             }
             else
             {
@@ -70,52 +77,54 @@ namespace JustClimb.Items
         }
 
         private IEnumerator DetectAndRevert(float duration, GameObject lanternInstance)
+{
+    // (1) 렌더러별 원본(Material, enabled) 상태 저장 리스트
+    var originalStates = new List<(MeshRenderer rend, Material mat, bool wasEnabled)>();
+
+    // (2) 태그별로 처리
+    for (int i = 0; i < detectTags.Length; i++)
+    {
+        string tag = detectTags[i];
+        Material highlightMat = (i < highlightMaterials.Length) 
+            ? highlightMaterials[i] 
+            : null;
+
+        // 해당 태그를 가진 루트 오브젝트들
+        var roots = GameObject.FindGameObjectsWithTag(tag);
+        foreach (var root in roots)
         {
-            // 대상 오브젝트 그룹과 원본 재질 저장 리스트
-            var groups = new List<GameObject[]>();
-            var originals = new List<Material[]>();
-
-            // 탐지 대상별로 처리
-            for (int i = 0; i < detectTags.Length; i++)
+            // 부모+자식 모두, 비활성화된 렌더러까지 포함
+            var rends = root.GetComponentsInChildren<MeshRenderer>(true);
+            foreach (var rend in rends)
             {
-                string tag = detectTags[i];
-                var objects = GameObject.FindGameObjectsWithTag(tag);
-                groups.Add(objects);
+                // 원본 상태 저장
+                originalStates.Add((rend, rend.material, rend.enabled));
 
-                // 원본 재질 저장 및 하이라이트 적용
-                var savedMats = new Material[objects.Length];
-                for (int j = 0; j < objects.Length; j++)
-                {
-                    var renderer = objects[j].GetComponent<MeshRenderer>();
-                    if (renderer != null)
-                    {
-                        savedMats[j] = renderer.material;
-                        if (i < highlightMaterials.Length && highlightMaterials[i] != null)
-                            renderer.material = highlightMaterials[i];
-                    }
-                }
-                originals.Add(savedMats);
+                // (A) 하이라이트 재질 적용 (있을 때만)
+                if (highlightMat != null)
+                    rend.material = highlightMat;
+
+                // (B) InvisibleObstacle 태그인 경우
+                if (tag == "InvisibleObstacle" && !rend.enabled)
+                    rend.enabled = true;
             }
-
-            // 지정된 시간 대기
-            yield return new WaitForSeconds(duration);
-
-            // 원본 재질로 복원
-            for (int i = 0; i < groups.Count; i++)
-            {
-                var objects = groups[i];
-                var savedMats = originals[i];
-                for (int j = 0; j < objects.Length; j++)
-                {
-                    var renderer = objects[j].GetComponent<MeshRenderer>();
-                    if (renderer != null && savedMats[j] != null)
-                        renderer.material = savedMats[j];
-                }
-            }
-
-            // 랜턴 이펙트 제거
-            if (lanternInstance != null)
-                Destroy(lanternInstance);
         }
+    }
+
+    // (3) 지정 시간 대기
+    yield return new WaitForSeconds(duration);
+
+    // (4) 저장된 상태로 복원
+    foreach (var (rend, mat, wasEnabled) in originalStates)
+    {
+        if (rend == null) continue;
+        rend.material = mat;
+        rend.enabled  = wasEnabled;
+    }
+
+    // (5) 랜턴 이펙트 제거
+    if (lanternInstance != null)
+        Destroy(lanternInstance);
+}
     }
 }

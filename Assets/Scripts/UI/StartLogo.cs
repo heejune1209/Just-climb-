@@ -5,16 +5,19 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEngine.InputSystem;
 
-public class StartLogo : MonoBehaviour
+public class StartLogo : UI_Popup
 {
-    public Image panel; // ���� �г�
-    public Image img; // �̹���
+    public Image panel; // г
+    public Image img; // �̹���
     private InputAction skipAction;
     private bool skipLogo = false;
     private static bool gameStarted = false;
 
-    private void Start()
+    public override void Init()
     {
+        base.Init();
+        // Start logo animation as popup
+        panel.gameObject.SetActive(true);
         StartCoroutine(StartGame());
     }
 
@@ -25,10 +28,22 @@ public class StartLogo : MonoBehaviour
         skipAction.Enable();
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
+    {
+        // InputAction 정리
+        if (skipAction != null)
     {
         skipAction.performed -= _ => SkipLogo();
         skipAction.Disable();
+            skipAction.Dispose();
+            skipAction = null;
+        }
+        
+        // 컴포넌트 참조 해제
+        panel = null;
+        img = null;
+        
+        base.OnDestroy();
     }
 
     private void SkipLogo()
@@ -40,8 +55,7 @@ public class StartLogo : MonoBehaviour
     {
         if (!gameStarted)
         {
-            panel.gameObject.SetActive(true);
-
+            // panel 활성화는 Init에서 처리
             gameStarted = true;
 
             try

@@ -21,13 +21,13 @@ TagManager:
   - DeadContact
   - Knockback
   - Stone Shower
-  - InvisbleObstacle
   - Rolling
   - Rocks
   - ShopTrigger
   - StageTrigger
   - WorldTrigger
   - RankingTrigger
+  - InvisibleObstacle
   layers:
   - Default
   - TransparentFX

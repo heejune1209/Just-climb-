@@ -2,11 +2,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
 using UnityEngine.SceneManagement;
+using Zenject;
 
 // 통합 사운드 매니저: BGM과 SFX 모두 관리
-public class SoundManager : MonoBehaviour
-{    
-
+public class SoundManager : MonoBehaviour, ISoundManager, IInitializable
+{
     [Header("Audio Mixer")]
     [SerializeField] private AudioMixer audioMixer;
 
@@ -29,9 +29,29 @@ public class SoundManager : MonoBehaviour
 
     private Dictionary<string, AudioClip> _clipCache = new Dictionary<string, AudioClip>();
 
-    // Managers 컨테이너에서 AddComponent → Init() 순으로 초기화
+    /// <summary>
+    /// SoundManager 초기화 (ISoundManager.Init)
+    /// </summary>
     public void Init()
     {
+        Debug.Log("SoundManager: Init");
+    }
+
+    /// <summary>
+    /// Zenject에서 자동으로 호출됨.
+    /// Initialize()는 “주입 완료 후 호출”
+    /// </summary>
+    public void Initialize()
+    {
+        Debug.Log("SoundManager: Initialize");
+        Init();
+    }
+
+    // 이 로직은 [Inject] 필드가 아니라,
+    // 에디터에서 할당된 AudioMixer, AudioClip[] 등을 직접 사용.
+    void Awake()
+    {
+        Debug.Log("SoundManager: Awake");
         // AudioSource 세팅
         _bgmSource = gameObject.AddComponent<AudioSource>();
         _bgmSource.loop = true;
@@ -59,7 +79,36 @@ public class SoundManager : MonoBehaviour
 
     void OnDestroy()
     {
+        // 이벤트 해제
         SceneManager.sceneLoaded -= OnSceneLoaded;
+        
+        // AudioSource 정리
+        if (_bgmSource != null)
+        {
+            _bgmSource.Stop();
+            _bgmSource = null;
+        }
+        
+        if (_sfxSource != null)
+        {
+            _sfxSource.Stop();
+            _sfxSource = null;
+        }
+        
+        // Dictionary 정리
+        if (_clipCache != null)
+        {
+            _clipCache.Clear();
+            _clipCache = null;
+        }
+        
+        // 배열 참조 해제
+        bgmClips = null;
+        sfxClips = null;
+        stageBgmIndices = null;
+        
+        // AudioMixer 참조 해제
+        audioMixer = null;
     }
 
     // 씬이 바뀔 때마다 자동 호출
@@ -88,7 +137,6 @@ public class SoundManager : MonoBehaviour
                     break;
             }
         }
-        
     }
 
     void PlayRandomStageBGM()
@@ -101,6 +149,7 @@ public class SoundManager : MonoBehaviour
     // 인덱스 기반 BGM
     public void PlayBGM(int index)
     {
+        Debug.Log($"SoundManager: PlayBGM 호출 - index: {index}");
         if (index < 0 || index >= bgmClips.Length) return;
         _bgmSource.clip = bgmClips[index];
         _bgmSource.Play();
@@ -109,6 +158,7 @@ public class SoundManager : MonoBehaviour
     // 경로 기반 BGM (optional)
     public void PlayBGM(string path)
     {
+        Debug.Log($"SoundManager: PlayBGM 호출 - path: {path}");
         var clip = LoadClip(path);
         if (clip != null)
         {

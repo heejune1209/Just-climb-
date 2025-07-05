@@ -11,6 +11,12 @@ public class UI_Scene : UI_Base
     {
         // 씬 UI용 캔버스를 설정 (sort = false)
         // sortingOrder = 0 고정 → 항상 배경 레이어
-        Managers.Instance.UI.SetCanvas(gameObject, false);
+        _uiManager.SetCanvas(gameObject, false);
+    }
+
+    // 메모리 누수 방지
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
     }
 }

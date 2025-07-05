@@ -5,9 +5,15 @@ using TMPro;
 using UnityEngine.InputSystem;
 using JustClimb.Manager;   // ItemManager 네임스페이스
 using JustClimb.Items;
+using Zenject;
 
 public class UI_Shop : UI_Popup
 {
+    // DI 주입받을 매니저들
+    [Inject] private ICurrencyManager _currencyManager;
+    [Inject] private IItemManager _itemManager;
+    [Inject] private ItemDatabase _itemDatabase;
+
     // 자동 바인딩할 텍스트 요소를 식별하는 enum
     enum Texts { GemText, GoldText, FeatherCount, WingCount, LampCount, FlagCount }
 
@@ -125,10 +131,36 @@ public class UI_Shop : UI_Popup
             int amt = _exchangeAmounts[i];
             _btnExchange[i].onClick.AddListener(() => TryExchange(amt));
         }
+
+        // 4) 매니저 이벤트 구독 (DI가 완료된 시점)
+        _currencyManager.OnGoldChanged += HandleGoldChanged;
+        _currencyManager.OnGemsChanged += HandleGemsChanged;
+        _itemManager.OnItemCountChanged += OnItemCountChanged;
+
+        // 5) 초기 UI 반영
+        HandleGemsChanged(_currencyManager.Gems);
+        HandleGoldChanged(_currencyManager.Gold);
+
+        foreach (var kv in _itemDatabase.GetAllItemDefinitions())
+            OnItemCountChanged(kv.Key, _itemManager.GetItemCount(kv.Key));
     }
 
     // Awake 시 Init() 자동 호출
-    void Awake() => Init();
+    void Start() => Init();
+
+    // OnDestroy 에서 구독 해제
+    protected override void OnDestroy()
+    {
+        if (_currencyManager != null)
+        {
+            _currencyManager.OnGoldChanged -= HandleGoldChanged;
+            _currencyManager.OnGemsChanged -= HandleGemsChanged;
+        }
+        if (_itemManager != null)
+        {
+            _itemManager.OnItemCountChanged -= OnItemCountChanged;
+        }
+    }
 
     // 래핑용 핸들러 (언급된 델리게이트와 언바인딩을 위해 메서드로 분리)
     private void HandleGoldChanged(int newGold)
@@ -140,40 +172,6 @@ public class UI_Shop : UI_Popup
         OnCurrencyChanged("Gem", newGems);
     }
 
-
-    // 팝업 켜질 때 이벤트 구독 및 초기 UI 반영
-    private void OnEnable()
-    {
-        // 1) CurrencyManager 이벤트 구독
-        var currency = Managers.Instance.Currency;
-        currency.OnGoldChanged += HandleGoldChanged;
-        currency.OnGemsChanged += HandleGemsChanged;
-
-        // 2) InventoryManager(아이템) 이벤트 구독
-        var inventory = Managers.Instance.Item;
-        inventory.OnItemCountChanged += OnItemCountChanged;
-
-        // 3) 초기 UI 반영
-        HandleGemsChanged(currency.GetGems());
-        HandleGoldChanged(currency.GetGold());
-
-        OnItemCountChanged(ItemType.Feather, inventory.GetItemCount(ItemType.Feather));
-        OnItemCountChanged(ItemType.Wing, inventory.GetItemCount(ItemType.Wing));
-        OnItemCountChanged(ItemType.Lamp, inventory.GetItemCount(ItemType.Lamp));
-        OnItemCountChanged(ItemType.Flag, inventory.GetItemCount(ItemType.Flag));
-    }
-
-    private void OnDisable()
-    {
-        // 1) CurrencyManager 이벤트 해제
-        var currency = Managers.Instance.Currency;
-        currency.OnGoldChanged -= HandleGoldChanged;
-        currency.OnGemsChanged -= HandleGemsChanged;
-
-        // 2) InventoryManager 이벤트 해제
-        var inventory = Managers.Instance.Item;
-        inventory.OnItemCountChanged -= OnItemCountChanged;
-    }
 
     // 재화 변경 시 텍스트 업데이트
     void OnCurrencyChanged(string key, int cnt)
@@ -197,30 +195,30 @@ public class UI_Shop : UI_Popup
     // 아이템 설명 팝업 열기
     void ShowItemInfo(ItemType itemId)
     {
-        var data = Managers.Instance.ItemDB.Get(itemId);
-        Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>($"{itemId}Info")
-            .Setup(data.displayName, data.description, $"Price : {data.price}");
+        var data = _itemDatabase.Get(itemId);
+        _uiManager.ShowPopupUI<GenericInfoPopup>($"{itemId}Info")
+            .Setup(data.displayName, data.description, $"Price: {data.price}");
     }
 
     // 아이템 구매 시도: 골드 지불 후 아이템 추가
     void BuyItem(ItemType itemId)
     {
-        var data = Managers.Instance.ItemDB.Get(itemId);
-        if (Managers.Instance.Currency.SpendGold(data.price))
-            Managers.Instance.Item.AddItem(itemId);  // 이 key가 ScriptableObject.itemId와 100% 일치해야됨.
+        var data = _itemDatabase.Get(itemId);
+        if (_currencyManager.SpendGold(data.price))
+            _itemManager.AddItem(itemId);  // 이 key가 ScriptableObject.itemId와 100% 일치해야됨.
         else
-            Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>("EmptyGoldPanel")
-                       .Setup("Warning!", "You can't buy items because you're short of Gold.");
+            _uiManager.ShowPopupUI<GenericInfoPopup>("EmptyGoldPanel")
+                .Setup("Warning!", "You can't buy items because you're short of Gold.");
     }    
 
     // 보석 → 골드 환전 시도
     void TryExchange(int gemAmt)
     {
-        if (Managers.Instance.Currency.SpendGems(gemAmt))
-            Managers.Instance.Currency.AddGold(gemAmt * GEM_TO_GOLD_RATIO);
+        if (_currencyManager.SpendGems(gemAmt))
+            _currencyManager.AddGold(gemAmt * GEM_TO_GOLD_RATIO);
         else
-            Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>("EmptyGemPanel")
-                       .Setup("Warning!", "You don't have enough Gems.");
+            _uiManager.ShowPopupUI<GenericInfoPopup>("EmptyGemPanel")
+                .Setup("Warning!", "You don't have enough Gems.");
     }
 
     protected override void HandleEscape()

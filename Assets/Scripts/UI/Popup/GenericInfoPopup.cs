@@ -16,19 +16,33 @@ public class GenericInfoPopup : UI_Popup
 
     private Button closeButton;
 
-    void Awake()
+    /// <summary>
+    /// Zenject가 주입을 끝낸 뒤 Start() 시점에 호출.
+    /// </summary>
+    void Start()
     {
-        base.Init();  // Canvas 세팅 & ESC 처리
-        
-        // Hierarchy에서 CloseButton 이름으로 자동 바인딩
+        Init();
+    }
+
+    /// <summary>
+    /// Init 단계에서
+    /// 1) base.Init()으로 캔버스를 세팅하고,
+    /// 2) CloseButton 자동 바인딩 및 리스너 연결
+    /// </summary>
+    public override void Init()
+    {
+        base.Init();  // UI_Popup.Init() → _uiManager.SetCanvas(gameObject, true)
+
+        // "CloseButton" 이라는 자식 오브젝트를 찾아서 Button 컴포넌트 가져오기
         var go = Util.FindChild(gameObject, "CloseButton", true);
         if (go != null)
             closeButton = go.GetComponent<Button>();
 
-        // 바인딩 됐으면 리스너 추가
+        // 버튼이 있으면 클릭 시 팝업 닫기
         if (closeButton != null)
             closeButton.onClick.AddListener(ClosePopupUI);
     }
+
 
     // 넘겨주는 만큼만 보이고, 나머지는 자동 숨김.
     // ex) Setup("타이틀", "본문", "100")  

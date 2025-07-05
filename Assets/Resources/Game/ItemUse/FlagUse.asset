@@ -13,3 +13,4 @@ MonoBehaviour:
   m_Name: FlagUse
   m_EditorClassIdentifier: 
   flagPrefab: {fileID: 7260056008282260120, guid: 776154815a85c004396b6cbfea1f9422, type: 3}
+  data: {fileID: 11400000, guid: 0eb630bda10543e4fb228371e4de6fdd, type: 2}

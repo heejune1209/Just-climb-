@@ -12,8 +12,5 @@ namespace JustClimb.Obstacles.Data
 
         [Tooltip("경고등이 켜져 있는 시간 (초)")]
         public float warnTime = 1f;
-
-        [Tooltip("바위가 떨어지는 간격 (초)")]
-        public float dropInterval = 2f;
     }
 }

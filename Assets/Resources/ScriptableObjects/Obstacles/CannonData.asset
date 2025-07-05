@@ -14,9 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: OD_03
   displayName: Cannon
-  cooldown: 2
-  projectilePrefab: {fileID: 5897017304815887936, guid: 65df12b0a6e95b44d95dba07eaac5c6d, type: 3}
-  explosionPrefab: {fileID: 2433282508537954060, guid: 3ef3ae421f71c5c4e97fe12dc2fc6312, type: 3}
-  fireDirection: {x: 0, y: 0, z: 1}
-  fireRate: 2
-  projectileSpeed: 10
+  rate: 1
+  _initialpoolcount: 7
+  projectilePrefab: {fileID: 207868029589218074, guid: 8092b8f07ee1a4c4db2cc1478201c17c, type: 3}
+  explosionPrefab: {fileID: 2433282508537954060, guid: 114e800f487f2d04e86436c9cc336a28, type: 3}
+  fireDirection: {x: -0.01, y: 1.99, z: 0.32}
+  projectileSpeed: 20

@@ -24,4 +24,15 @@ public class UI_KeyEventhandler : MonoBehaviour
                 kv.Value?.Invoke();
         }
     }
+
+    // 메모리 누수 방지
+    private void OnDestroy()
+    {
+        // Dictionary 정리
+        if (_keyDownActions != null)
+        {
+            _keyDownActions.Clear();
+            _keyDownActions = null;
+        }
+    }
 }

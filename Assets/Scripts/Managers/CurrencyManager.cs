@@ -1,6 +1,8 @@
 // CurrencyManager.cs
 using System;
 using JustClimb.Manager;
+using JustClimb.Data;
+using Zenject;
 
 namespace JustClimb.Manager
 {
@@ -8,27 +10,47 @@ namespace JustClimb.Manager
     /// 재화(골드,보석) 관리 전담.
     /// DataManager의 이벤트를 구독하고, UI나 다른 로직에 OnGoldChanged/OnGemsChanged만 노출.
     /// </summary>
-    public class CurrencyManager
+    public class CurrencyManager : ICurrencyManager, IInitializable, IDisposable
     {
         public event Action<int> OnGoldChanged;
         public event Action<int> OnGemsChanged;
 
-        int _gold;
-        int _gems;
+        /// <summary>현재 골드</summary>
+        public int Gold { get; private set; }
+        /// <summary>현재 보석</summary>
+        public int Gems { get; private set; }
+
+        private readonly IDataManager _dataManager;
+
+        // 생성자 주입
+        public CurrencyManager(IDataManager dataManager)
+        {
+            _dataManager = dataManager;
+        }
 
         /// <summary>
-        /// Managers.Awake()에서 호출.
+        /// Zenject에서 자동으로 호출됨.
+        /// </summary>
+        public void Initialize()
+        {
+            Init();
+        }
+
+        /// <summary>
+        /// 실제 초기화 로직.
         /// </summary>
         public void Init()
         {
-            var data = Managers.Instance.Data;
-
             // 1) 데이터 로드 직후(OnLoaded)와 저장 직후(OnSaved)에 값 갱신
-            data.OnLoaded += UpdateCurrencies;
-            data.OnSaved += UpdateCurrencies;
+            _dataManager.OnLoaded += UpdateCurrencies;
+            _dataManager.OnSaved += UpdateCurrencies;
 
-            // 2) 현재 로드된 값으로 초기 발행
-            UpdateCurrencies(data.Current);
+            // Current가 세팅된 경우에만 최초 갱신
+            if (_dataManager.Current != null)
+                UpdateCurrencies(_dataManager.Current);
+
+            // 2) 로컬 캐시 → (온라인 시 서버 GET) 흐름 트리거
+            _dataManager.Load();
         }
 
         /// <summary>
@@ -36,55 +58,69 @@ namespace JustClimb.Manager
         /// </summary>
         void UpdateCurrencies(SaveData save)
         {
-            _gold = save.gold;
-            OnGoldChanged?.Invoke(_gold);
+            Gold = save.gold;
+            OnGoldChanged?.Invoke(Gold);
 
-            _gems = save.gems;
-            OnGemsChanged?.Invoke(_gems);
+            Gems = save.gems;
+            OnGemsChanged?.Invoke(Gems);
         }
 
         // 외부 API
-        public int GetGold() { return _gold; }
-        public int GetGems() { return _gems; }
+        public int GetGold() { return Gold; }
+        public int GetGems() { return Gems; }
 
         // 골드 추가. DataManager.Current.gold 변경 후 Save().
         public void AddGold(int amount)
         {
-            var data = Managers.Instance.Data;
-            data.Current.gold += amount;
-            data.Save();
+            _dataManager.Current.gold += amount;
+            // 로컬 JSON 저장만 (풀-덤프 델타는 발생하지 않음)
+            _dataManager.SaveLocal();
+
+            // 필드 단위 델타 생성 (키: "gold", 값: 변경된 골드)
+            _dataManager.GenerateDelta("gold", _dataManager.Current.gold);
         }
 
         // 골드 사용. 충분히 있으면 차감 후 Save() 하고 true, 아니면 false.
         public bool SpendGold(int amount)
         {
-            if (_gold < amount)
+            if (Gold < amount)
                 return false;
 
-            var data = Managers.Instance.Data;
-            data.Current.gold -= amount;
-            data.Save();
+            _dataManager.Current.gold -= amount;
+            _dataManager.SaveLocal();
+
+            _dataManager.GenerateDelta("gold", _dataManager.Current.gold);
             return true;
         }
 
         // 젬 추가. DataManager.Current.gems 변경 후 Save().
         public void AddGems(int amount)
         {
-            var data = Managers.Instance.Data;
-            data.Current.gems += amount;
-            data.Save();
+            _dataManager.Current.gems += amount;
+            _dataManager.SaveLocal();
+
+            // 필드 단위 델타 생성 (키: "gems", 값: 변경된 젬)
+            _dataManager.GenerateDelta("gems", _dataManager.Current.gems);
         }
 
         // 젬 사용. 충분히 있으면 차감 후 Save() 하고 true, 아니면 false.
         public bool SpendGems(int amount)
         {
-            if (_gems < amount)
+            if (Gems < amount)
                 return false;
 
-            var data = Managers.Instance.Data;
-            data.Current.gems -= amount;
-            data.Save();
+            _dataManager.Current.gems -= amount;
+            _dataManager.SaveLocal();
+
+            _dataManager.GenerateDelta("gems", _dataManager.Current.gems);
             return true;
+        }
+
+        // 메모리 누수 방지
+        public void Dispose()
+        {
+            _dataManager.OnLoaded -= UpdateCurrencies;
+            _dataManager.OnSaved -= UpdateCurrencies;
         }
     }
 }

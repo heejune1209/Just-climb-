@@ -1,9 +1,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 using JustClimb.Items;  
+using Zenject;
 
 // 정적 밸런스 정보는 전부 ItemDatabase가 책임
-public class ItemDatabase
+public class ItemDatabase : IInitializable
 {
     // 키 타입을 string → ItemType enum 으로 변경
     Dictionary<ItemType, ItemData> _dict;
@@ -33,6 +34,12 @@ public class ItemDatabase
                 _dict.Add(key, d);
             }
         }
+    }
+
+    // Zenject IInitializable implementation
+    public void Initialize()
+    {
+        Init();
     }
 
     // 단일 아이템 정의 조회

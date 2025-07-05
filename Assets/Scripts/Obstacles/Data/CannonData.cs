@@ -16,9 +16,6 @@ namespace JustClimb.Obstacles.Data
         [Tooltip("발사 방향")]
         public Vector3 fireDirection = Vector3.forward;
 
-        [Tooltip("발사 빈도 (초당 발사 횟수)")]
-        public float fireRate = 2f;
-
         [Tooltip("포탄 속도")]
         public float projectileSpeed = 10f;
     }

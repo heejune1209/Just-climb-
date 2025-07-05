@@ -4,10 +4,14 @@ using TMPro;
 using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
+using Zenject;
 
 public class UI_Warning : UI_Popup
 {    
-    // 자동 바인딩할 버튼
+    // DI 주입받을 매니저들
+    [Inject] private ISceneManagerEx _sceneManager;
+
+    // 자동 바인딩할 버튼 요소를 식별하는 enum
     enum Buttons
     {
         Continue,
@@ -20,13 +24,9 @@ public class UI_Warning : UI_Popup
     private Button _continueBtn, _settingsBtn, _returnBtn;
     private Button _backToLobbyBtn;
 
-
     public override void Init()
     {
         base.Init();
-
-        // 자동 바인딩
-        //Bind<Button>(typeof(Buttons));
 
         // 버튼들 자동 바인딩: hierarchy에 같은 이름이 있으면, 없으면 skip
         _continueBtn = TryBindButton(Buttons.Continue);
@@ -47,7 +47,7 @@ public class UI_Warning : UI_Popup
             _settingsBtn.gameObject.BindEvent(_ =>
             {
                 //Managers.Sound.PlaySFX(0);
-                Managers.Instance.UI.ShowPopupUI<UI_Settings>("UI_Settings");
+                _uiManager.ShowPopupUI<UI_Settings>("UI_Settings");
             });
 
         if (_returnBtn != null)
@@ -55,9 +55,9 @@ public class UI_Warning : UI_Popup
             {
                 // 이전 씬으로 돌아가기
                 ClosePopupUI();
-                
-                PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Main));
-                Managers.Instance.Scene.LoadScene(Define.Scene.Loading); 
+
+                PlayerPrefs.SetString("nextScene", _sceneManager.GetSceneName(Define.Scene.Main));
+                _sceneManager.LoadScene(Define.Scene.Loading);
             });
 
         if (_backToLobbyBtn != null)
@@ -65,9 +65,9 @@ public class UI_Warning : UI_Popup
             {
                 // 이전 씬으로 돌아가기
                 ClosePopupUI();
-                
-                PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Lobby));
-                Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
+
+                PlayerPrefs.SetString("nextScene", _sceneManager.GetSceneName(Define.Scene.Lobby));
+                _sceneManager.LoadScene(Define.Scene.Loading);
             });
     }
 

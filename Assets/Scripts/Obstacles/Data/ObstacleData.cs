@@ -12,6 +12,10 @@ namespace JustClimb.Obstacles.Data
         public string displayName;
 
         [Tooltip("이 장애물을 다시 활성화하기 전 대기 시간(초)")]
-        public float cooldown;
+        public float rate;
+
+        [Tooltip("풀링할 개수")]
+        public int _initialpoolcount;
+
     }
 }

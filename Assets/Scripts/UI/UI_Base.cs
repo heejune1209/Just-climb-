@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using UnityEngine.InputSystem;
+using Zenject;
 
 abstract public class UI_Base : MonoBehaviour
 {
@@ -14,6 +15,9 @@ abstract public class UI_Base : MonoBehaviour
     // 자식 오브젝트 자동 바인딩(Bind<T>)
     // 클릭·드래그 이벤트 연결(BindEvent)
     // 조회 편의 메서드(GetButton, GetText 등)
+
+    // DI 주입받을 매니저
+    [Inject] protected IUIManager _uiManager;
 
     // 타입별 오브젝트 배열 저장
     Dictionary<Type, UnityEngine.Object[]> _objects = new Dictionary<Type, UnityEngine.Object[]>();
@@ -108,5 +112,17 @@ abstract public class UI_Base : MonoBehaviour
         handler.AddKeyBinding(key, callback);
     }
 
-
+    // 메모리 누수 방지
+    protected virtual void OnDestroy()
+    {
+        // Dictionary 정리
+        if (_objects != null)
+        {
+            _objects.Clear();
+            _objects = null;
+        }
+        
+        // 매니저 참조 해제
+        _uiManager = null;
+    }
 }

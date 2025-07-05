@@ -1,11 +1,12 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.InputSystem;
-using static UnityEngine.UI.Image;
+using Zenject;
 
-public class PoolManager : MonoBehaviour
+public class PoolManager : MonoBehaviour, IPoolManager, IInitializable
 {
+    // DI 주입받을 매니저
+    [Inject] private ISceneManagerEx _sceneManager;
+
     // PoolManager: 여러개의 Pool 객체들을 관리. 즉 여러개의 풀 관리.
     // Manager로 부터 사용
     // ResourceManager 를 보조 하는 역할.
@@ -42,7 +43,7 @@ public class PoolManager : MonoBehaviour
             // 즉, new GameObject()가 반환한 오브젝트의 Transform 컴포넌트를 가져옵니다.
             Root.name = $"{original.name}_Root";
 
-            // count 개수의 오브젝트들을 UnityChan_Root의 자식으로. 이 5 개를 재활용할 것 👉 오브젝트 풀링 
+            // count 개수의 오브젝트들을 프리펩이름의 자식으로. 이 5 개를 재활용할 것 👉 오브젝트 풀링 
             for (int i = 0; i < count; i++)
                 Push(Create());
         }
@@ -79,7 +80,7 @@ public class PoolManager : MonoBehaviour
         // 스택이 비어있다면 새로 만들어야한다.Instantiate 필요.Create 호출.
         // 활성화 (poolable.gameObject로 접근해서 활성화)
         // 풀에서 대기 중일때의 부모로부터 원래 게임에서의 부모로 설정.
-        public Poolable Pop(Transform parent) // 풀로부터 꺼내오기 (오브젝트 활성화)
+        public Poolable Pop(Transform parent, ISceneManagerEx sceneManager) // 풀로부터 꺼내오기 (오브젝트 활성화)
         {
             Poolable poolable;
 
@@ -91,8 +92,8 @@ public class PoolManager : MonoBehaviour
             poolable.gameObject.SetActive(true);  // 활성화 (poolable.gameObject로 접근해서 활성화)
 
             // DontDestroyOnLoad 해제 용도
-            if (parent == null)
-                poolable.transform.parent = Managers.Instance.Scene.CurrentScene.transform;
+            if (parent == null && sceneManager?.CurrentScene != null)
+                poolable.transform.parent = sceneManager.CurrentScene.transform;
 
             // poolable 👉 풀에서 꺼낸 오브젝트의 Poolable
             poolable.transform.parent = parent; // 파라미터로 받은 parent 를 부모로 설정
@@ -103,7 +104,7 @@ public class PoolManager : MonoBehaviour
     }
     #endregion
 
-    // _pool 풀들을 미리 로드해와 모아둘 그 ‘Pool’
+    // _pool 풀들을 미리 로드해와 모아둘 그 'Pool'
     // 관련있는 오브젝트들을 모으는 것도 하나의 Pool 이다. (위의 Pool 클래스)
     // 풀도 여러개일 수 있다.
     // ex)
@@ -116,6 +117,14 @@ public class PoolManager : MonoBehaviour
     // 풀들을 _root(@Pool_Root)의 자식으로 묶어 정리할 것이다.
     Dictionary<string, Pool> _pool = new Dictionary<string, Pool>();
     Transform _root;
+
+    /// <summary>
+    /// Zenject에서 자동으로 호출됨.
+    /// </summary>
+    public void Initialize()
+    {
+        Init();
+    }
 
     // 풀링 할 오브젝트들을 모아서 그룹화해 정리할 @Pool_Root 오브젝트를 만든다.
     // 풀링 오브젝트들은 이 오브젝트의 자식으로 묶일 것이며
@@ -151,12 +160,12 @@ public class PoolManager : MonoBehaviour
     // 리턴한 Pool에서 Pop 호출
     // 풀 Stack(풀 마다 본인의 오브젝트들 보관하는_poolStack)에서 가장 위에 있는 오브젝트를 pop하고(후입선출) 활성화하고 그 오브젝트의 부모를 parent로 한다.
     // CreatePool(original); 👉 디폴트로 5 개 생성
-    public Poolable Pop(GameObject original, Transform parent = null)
+    public Poolable Pop(GameObject original, Transform parent = null, int count = 5)
     {
         if (_pool.ContainsKey(original.name) == false) // Key는 원본 프리팹 이름으로 저장되므로 해당 프리팹으로 만든 오브젝트풀이 있나 검색. 
-            CreatePool(original); // 없다면 새로운 풀을 만든다. 
+            CreatePool(original, count); // 없다면 새로운 풀을 만든다. 
 
-        return _pool[original.name].Pop(parent); // 풀이 없다면 여기서 런타임 에러 날 것이므로 위의 과정을 해주는 것. original.name인 풀이 아직 없다면 만들어주기.
+        return _pool[original.name].Pop(parent, _sceneManager); // 풀이 없다면 여기서 런타임 에러 날 것이므로 위의 과정을 해주는 것. original.name인 풀이 아직 없다면 만들어주기.
     }
 
     // CreatePool 풀 만들기
@@ -192,9 +201,43 @@ public class PoolManager : MonoBehaviour
     // 다른 씬에서는 해당 풀에 있는 오브젝트들을 다신 안 쓰는 경우가 생기면 이렇게 풀을 다 날려 버리는 기능이 필요할 것이다.
     public void Clear()
     {
-        foreach (Transform child in _root)
-            GameObject.Destroy(child.gameObject);
+        if (_root == null) return;
+        
+        try
+        {
+            // Transform이 파괴되었는지 체크
+            foreach (Transform child in _root)
+            {
+                if (child != null && child.gameObject != null)
+                    GameObject.Destroy(child.gameObject);
+            }
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[PoolManager] Clear 중 오류: {e.Message}");
+        }
 
         _pool.Clear();
+    }
+
+    // 메모리 누수 방지
+    private void OnDestroy()
+    {
+        try
+        {
+            // 풀 정리 (null 체크 추가)
+            if (_pool != null && _pool.Count > 0)
+                Clear();
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"[PoolManager] OnDestroy 중 오류: {e.Message}");
+        }
+        
+        // Transform 참조 해제
+        _root = null;
+        
+        // 매니저 참조 해제
+        _sceneManager = null;
     }
 }

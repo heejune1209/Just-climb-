@@ -5,6 +5,7 @@ namespace JustClimb.Data
     /// <summary>
     /// DataManager에서 데이터 변경이 발생할 때마다 생성되어
     /// DataSyncManager로 전달하는 델타 모델.
+    /// 데이터 전송·저장을 위한 순수한 DTO(데이터 전송 객체) 역할
     /// </summary>
     [Serializable]
     public class DeltaEvent

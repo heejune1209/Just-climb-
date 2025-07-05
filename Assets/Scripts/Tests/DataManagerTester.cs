@@ -1,66 +1,35 @@
+using JustClimb.Manager;
 using System;
 using System.Linq;
-using JustClimb.Manager;
 using UnityEngine;
+using Zenject;
 
 public class DataManagerTester : MonoBehaviour
 {
-    void Start()
-    {
-        //// 1) 초기화 (Init() 내부에서 Load()까지 실행됨)
-        //Managers.Instance.Data.Init();
+    //// Zenject로부터 주입받을 매니저들
+    //[Inject] private IDataManager _dataManager;
+    //[Inject] private ICurrencyManager _currencyManager;
 
-        //// 2) 강제 Load 호출 (Init 이후 재확인용)
-        //Managers.Instance.Data.Load();
+    //void Start()
+    //{
+    //    // 1) JSON 템플릿 복사 및 비동기 로드 시작
+    //    _dataManager.Init();   // public async void Init() { … } :contentReference[oaicite:0]{index=0}
 
-        //// 3) 마이그레이션 수행
-        //MigrateZeroBasedIndexes(Managers.Instance.Data.Current);
+    //    // 2) 로드 완료 시점에 호출될 이벤트 핸들러 등록
+    //    _dataManager.OnLoaded += HandleOnDataLoaded;  // event Action<SaveData> OnLoaded :contentReference[oaicite:1]{index=1}
+    //}
 
-        //// 4) 마이그레이션 후 바로 저장
-        //Managers.Instance.Data.Save();
+    //private void HandleOnDataLoaded(SaveData data)
+    //{
+    //    _dataManager.DeleteAllData();  // save.json/.bak 삭제 → 빈 SaveData로 재초기화 :contentReference[oaicite:2]{index=2}
+    //    // 3) 데이터가 메모리에 올라온 직후, 젬 100개 충전
+    //    _currencyManager.AddGems(100);  // void AddGems(int) :contentReference[oaicite:2]{index=2}
 
-        //// 5) 결과 로그
-        //Debug.Log("[Test] stagePlayTimes after migration: " +
-        //          string.Join(", ", Managers.Instance.Data.Current.stagePlayTimes));
-        //Debug.Log("[Test] stageDeathCounts after migration: " +
-        //          string.Join(", ", Managers.Instance.Data.Current.stageDeathCounts));
-        //for (int i = 0; i < Managers.Instance.Data.Current.stageFlagPositions.Length; i++)
-        //{
-        //    var p = Managers.Instance.Data.Current.stageFlagPositions[i];
-        //    Debug.Log($"[Test] stageFlagPositions[{i}] after migration: {p.x}, {p.y}, {p.z}");
-        //}
-    }
+    //    Debug.Log($"[DataManagerTester] Data initialized. Gems now: {_currencyManager.GetGems()}");
 
-    /// <summary>
-    /// 1-based 인덱스였던 Stage 데이터를 0-based로 당겨 줍니다.
-    /// (예: 기존 slot[1] → slot[0], slot[2] → slot[1], …)
-    /// </summary>
-    void MigrateZeroBasedIndexes(SaveData data)
-    {
-        // 플레이 타임
-        if (data.stagePlayTimes.Length > 1
-         && Math.Abs(data.stagePlayTimes[0]) < 1e-6f
-         && data.stagePlayTimes[1] > 0f)
-        {
-            data.stagePlayTimes = data.stagePlayTimes.Skip(1).ToArray();
-        }
+    //    // 4) 이후 중복 호출 방지
+    //    _dataManager.OnLoaded -= HandleOnDataLoaded;
+    //}
 
-        // 사망 카운트
-        if (data.stageDeathCounts.Length > 1
-         && data.stageDeathCounts[0] == 0
-         && data.stageDeathCounts[1] > 0)
-        {
-            data.stageDeathCounts = data.stageDeathCounts.Skip(1).ToArray();
-        }
 
-        // 깃발 위치
-        if (data.stageFlagPositions.Length > 1
-         && data.stageFlagPositions[0].x == 0f
-         && (data.stageFlagPositions[1].x != 0f
-          || data.stageFlagPositions[1].y != 0f
-          || data.stageFlagPositions[1].z != 0f))
-        {
-            data.stageFlagPositions = data.stageFlagPositions.Skip(1).ToArray();
-        }
-    }
 }

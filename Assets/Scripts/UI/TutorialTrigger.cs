@@ -17,4 +17,11 @@ public class TutorialTrigger : MonoBehaviour
             _uiStage?.ShowTutorial();
         }
     }
+
+    // 메모리 누수 방지
+    private void OnDestroy()
+    {
+        // 컴포넌트 참조 해제
+        _uiStage = null;
+    }
 }

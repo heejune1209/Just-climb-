@@ -14,14 +14,14 @@ public class UI_Popup : UI_Base
     {
         // 팝업용 캔버스를 설정 (sort = true)
         // 내부적으로 Canvas 컴포넌트 추가 → 오버레이 모드 → 동적 sortingOrder 적용
-        Managers.Instance.UI.SetCanvas(gameObject, true);
+        _uiManager.SetCanvas(gameObject, true);
     }
 
     // 자신을 UIManager의 팝업 스택에서 안전하게 제거
     // 팝업 전용 닫기 로직을 캡슐화
     public virtual void ClosePopupUI()  // 팝업이니까 고정 캔버스(Scene)과 다르게 닫는게 필요
     {
-        Managers.Instance.UI.ClosePopupUI(this);
+        _uiManager.ClosePopupUI(this);
     }
     // UI_Scene을 상속받은 애들은 그 안에서 팝업을 띄웠다가 닫는다면 그 팝업을 닫을때 UI매니저의 ClosePopupUI를 사용.
     // UI_Popup을 상속받은 애들은 팝업을 닫을때 UI_Popup의 ClosePopupUI를 사용.
@@ -38,9 +38,15 @@ public class UI_Popup : UI_Base
     protected virtual void HandleEscape()
     {
         if (Keyboard.current.escapeKey.wasPressedThisFrame &&
-            Managers.Instance.UI.GetTopPopup() == this)
+            _uiManager.GetTopPopup() == this)
         {
             ClosePopupUI();
         }
+    }
+
+    // 메모리 누수 방지
+    protected override void OnDestroy()
+    {
+        base.OnDestroy();
     }
 }

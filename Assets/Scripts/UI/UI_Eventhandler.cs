@@ -21,4 +21,12 @@ public class UI_EventHandler : MonoBehaviour, IPointerClickHandler, IDragHandler
     }
 
     // BindEvent에서 액션을 할당하면, 클릭·드래그 시 해당 액션이 실행됩니다 ​
+
+    // 메모리 누수 방지
+    private void OnDestroy()
+    {
+        // 이벤트 핸들러 정리
+        OnClickHandler = null;
+        OnDragHandler = null;
+    }
 }

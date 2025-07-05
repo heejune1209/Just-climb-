@@ -6,10 +6,15 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEditor;
 using UnityEngine.SceneManagement;
+using Zenject;
 
 // 메인 메뉴 UI 전체를 자동 바인딩하고 로직을 처리하는 스크립트
 public class UI_Main : UI_Scene
 {
+    // DI 주입받을 매니저들
+    [Inject] private ISceneManagerEx _sceneManager;
+    [Inject] private ISoundManager _soundManager;
+
     // 1) 바인딩할 버튼 종류
     enum Buttons
     {
@@ -64,34 +69,34 @@ public class UI_Main : UI_Scene
         // 로비 씬으로 바로 가지 않고, 로딩 씬을 통해 넘어가도록 
         GetButton((int)Buttons.StartGame).gameObject.BindEvent(_ =>
         {
-            Managers.Instance.Sound.PlaySFX(0);       // 클릭 효과음 (인덱스 0)
-            PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.Lobby));
-            Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
+            _soundManager.PlaySFX(0);       // 클릭 효과음 (인덱스 0)
+            PlayerPrefs.SetString("nextScene", _sceneManager.GetSceneName(Define.Scene.Lobby));
+            _sceneManager.LoadScene(Define.Scene.Loading);
         });
         // 설정 팝업 열기
         GetButton((int)Buttons.Settings).gameObject.BindEvent(_ =>
         {
-            Managers.Instance.Sound.PlaySFX(0);
-            Managers.Instance.UI.ShowPopupUI<UI_Settings>("UI_Settings");
+            _soundManager.PlaySFX(0);
+            _uiManager.ShowPopupUI<UI_Settings>("UI_Settings");
         });
         // 업적 씬으로 이동
         GetButton((int)Buttons.Achievements).gameObject.BindEvent(_ =>
         {
-            Managers.Instance.Sound.PlaySFX(0);
-            Managers.Instance.UI.ShowPopupUI<UI_Achievement>("UI_Achievement");
+            _soundManager.PlaySFX(0);
+            _uiManager.ShowPopupUI<UI_Achievement>("UI_Achievement");
         });
         // 캐릭터 선택 씬으로 이동
         GetButton((int)Buttons.CharacterSelect).gameObject.BindEvent(_ =>
         {
-            Managers.Instance.Sound.PlaySFX(0);
-            PlayerPrefs.SetString("nextScene", Managers.Instance.Scene.GetSceneName(Define.Scene.SelectCharacter));
-            Managers.Instance.Scene.LoadScene(Define.Scene.Loading);
+            _soundManager.PlaySFX(0);
+            PlayerPrefs.SetString("nextScene", _sceneManager.GetSceneName(Define.Scene.SelectCharacter));
+            _sceneManager.LoadScene(Define.Scene.Loading);
         });
         // 게임 종료 (에디터 플레이 중엔 에디터 재생 정지, 빌드 시엔 애플리케이션 종료)
         GetButton((int)Buttons.ExitGame).gameObject.BindEvent(_ =>
         {
 #if UNITY_EDITOR
-            Managers.Instance.Sound.PlaySFX(0);
+            _soundManager.PlaySFX(0);
             EditorApplication.isPlaying = false;
 #else
         Application.Quit();
@@ -104,12 +109,11 @@ public class UI_Main : UI_Scene
         // ESC 키 처리: 설정 팝업 닫기 또는 종료 확인 팝업 열기      
         if (Keyboard.current.escapeKey.wasPressedThisFrame)
         {
-            var settingsGO = Managers.Instance.UI.Root.transform.Find("SettingsUI");
+            var settingsGO = _uiManager.Root.transform.Find("SettingsUI");
             if (settingsGO != null && settingsGO.gameObject.activeSelf)
             {
                 settingsGO.GetComponent<UI_Settings>().ClosePopupUI();
             }
-            
         }
     }
 
@@ -126,11 +130,23 @@ public class UI_Main : UI_Scene
         }
     }
 
-    private void OnDestroy()
+    protected override void OnDestroy()
     {
         // 펄스 코루틴 종료
         if (_pulseCoroutine != null)
+        {
             StopCoroutine(_pulseCoroutine);
+            _pulseCoroutine = null;
+        }
+        
+        // 컴포넌트 참조 해제
+        _titleComponent = null;
+        
+        // 매니저 참조 해제
+        _sceneManager = null;
+        _soundManager = null;
+        
+        base.OnDestroy();
     }
 
     public void ResetData()

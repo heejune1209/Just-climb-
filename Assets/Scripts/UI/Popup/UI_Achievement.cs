@@ -3,10 +3,14 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.EventSystems;
+using Zenject;
 
 // 팝업 형태로 업적 UI를 관리하는 스크립트
 public class UI_Achievement : UI_Popup
 {
+    // DI 주입받을 매니저들
+    [Inject] private ISoundManager _soundManager;
+
     // 바인딩할 버튼
     enum Buttons
     {
@@ -14,7 +18,12 @@ public class UI_Achievement : UI_Popup
         RewardButton,       // 보상 받기
         StageTabButton,     // 스테이지 카테고리
         CharacterTabButton, // 캐릭터 카테고리
-        ItemTabButton       // 아이템 카테고리
+        ItemTabButton,      // 아이템 카테고리
+        // PrevButton,         // 이전 페이지
+        // NextButton,         // 다음 페이지
+        // FirstPageButton,    // 첫 페이지
+        // LastPageButton,     // 마지막 페이지
+        // RefreshButton       // 업적 새로고침
     }
 
     // 바인딩할 텍스트
@@ -70,24 +79,24 @@ public class UI_Achievement : UI_Popup
         _rewardBtn = GetButton((int)Buttons.RewardButton);
         _rewardBtn.onClick.AddListener(() =>
         {
-            Managers.Instance.Sound.PlaySFX(0);    // 클릭 사운드
+            _soundManager.PlaySFX(0);    // 클릭 사운드
             OnRewardPressed();
         });
 
         // 카테고리 탭 버튼
         GetButton((int)Buttons.StageTabButton).onClick.AddListener(() =>
         {
-            Managers.Instance.Sound.PlaySFX(0);
+            _soundManager.PlaySFX(0);
             SwitchCategory(Category.Stage);
         });
         GetButton((int)Buttons.CharacterTabButton).onClick.AddListener(() =>
         {
-            Managers.Instance.Sound.PlaySFX(0);
+            _soundManager.PlaySFX(0);
             SwitchCategory(Category.Character);
         });
         GetButton((int)Buttons.ItemTabButton).onClick.AddListener(() =>
         {
-            Managers.Instance.Sound.PlaySFX(0);
+            _soundManager.PlaySFX(0);
             SwitchCategory(Category.Item);
         });
 
@@ -105,9 +114,11 @@ public class UI_Achievement : UI_Popup
         // 닫기 버튼
         GetButton((int)Buttons.CloseButton).gameObject.BindEvent(_ =>
         {
-            Managers.Instance.Sound.PlaySFX(0);
+            _soundManager.PlaySFX(0);    // 클릭 사운드
             ClosePopupUI();
         });
+
+
     }
 
     // 엔트리 버튼 리스트 생성 및 바인딩
@@ -126,7 +137,7 @@ public class UI_Achievement : UI_Popup
                 int idx = i;
                 btn.onClick.AddListener(() =>
                 {
-                    Managers.Instance.Sound.PlaySFX(0);
+                    _soundManager.PlaySFX(0);
                     ShowDetail(idx);
                 });
             }

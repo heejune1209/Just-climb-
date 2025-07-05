@@ -37,12 +37,12 @@ public class UI_SelectChapter : UI_Popup
                 if (chapterIndex == 1)
                 {
                     // 1번 챕터는 바로 스테이지 UI 호출
-                    Managers.Instance.UI.ShowPopupUI<UI_SelectStage>("UI_SelectStage");
+                    _uiManager.ShowPopupUI<UI_SelectStage>("UI_SelectStage");
                 }
                 else
                 {
                     // 2~6번 챕터는 업데이트 예정 팝업
-                    Managers.Instance.UI
+                    _uiManager
                         .ShowPopupUI<GenericInfoPopup>("UI_UpdatedLater")
                         .Setup
                         (

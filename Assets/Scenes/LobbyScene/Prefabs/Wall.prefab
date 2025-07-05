@@ -32,6 +32,7 @@ Transform:
   - {fileID: 7002140562137194398}
   - {fileID: 2981128373599287271}
   - {fileID: 8074646126970981082}
+  - {fileID: 5915544517173765611}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1825163622671095845
@@ -139,6 +140,59 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 9.999999, y: 2.220446e-16, z: 10}
   m_Center: {x: -0.00000047683716, y: 0, z: 0}
+--- !u!1 &4505563760838827078
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5915544517173765611}
+  - component: {fileID: 8537615823107858238}
+  m_Layer: 0
+  m_Name: Vaild Area
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5915544517173765611
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4505563760838827078}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 112.10135, y: 33.400005, z: -5.3211517}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 5430244321434328145}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &8537615823107858238
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4505563760838827078}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 250, y: 100, z: 200}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &6962029333997177069
 GameObject:
   m_ObjectHideFlags: 0

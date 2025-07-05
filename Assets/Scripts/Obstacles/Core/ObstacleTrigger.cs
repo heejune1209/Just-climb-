@@ -5,7 +5,7 @@ namespace JustClimb.Obstacles.Core
 {
     /// <summary>
     /// 플레이어가 트리거 영역에 진입/이탈할 때
-    /// IObstacle 구현체들을 Activate/Deactivate 합니다.
+    /// IObstacle 구현체들을 Activate/Deactivate한다.
     /// </summary>
     [RequireComponent(typeof(Collider))]
     public class ObstacleTrigger : MonoBehaviour
@@ -41,6 +41,13 @@ namespace JustClimb.Obstacles.Core
             // 플레이어가 나가면 모두 비활성화
             foreach (var obs in _obstacles)
                 obs.Deactivate();
+        }
+
+        // 메모리 누수 방지
+        private void OnDestroy()
+        {
+            // 배열 참조 해제
+            _obstacles = null;
         }
     }
 }

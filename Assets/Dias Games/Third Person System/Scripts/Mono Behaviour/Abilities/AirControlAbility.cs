@@ -12,11 +12,17 @@ namespace DiasGames.Abilities
         [SerializeField] private string animFallState = "Air.Falling";
         [SerializeField] private string animHardLandState = "Air.Hard Land";
         [Header("Jump parameters")]
+        // 플레이어가 바닥에서 얼마나 높이 점프할지 결정 (점프 순간 부여되는 초기 속도를 계산할 때 사용)
         [SerializeField] private float jumpHeight = 1.2f;
+        // 공중에 떠 있을 때 플레이어가 이동할 수 있는 속도
         [SerializeField] private float speedOnAir = 6f;
+        // 공중에서의 입력 반응도 (0~1). 값이 클수록 키 입력에 더 즉각적으로 반응
         [SerializeField] private float airControl = 0.5f;
+
         [Header("Landing")]
+        // 이 높이 이상에서 착지하면 ‘하드 랜딩’ 효과(파티클, 카메라 흔들림 등)를 발생시킬 기준 높이
         [SerializeField] private float heightForHardLand = 3f;
+        // 이 높이 이상에서 착지하면 플레이어 즉사 처리할 기준 높이
         [SerializeField] private float heightForKillOnLand = 7f;
         [Header("Sound FX")]
         [SerializeField] private AudioClip jumpEffort;

@@ -1,12 +1,16 @@
+using DiasGames.Abilities; // Locomotion 네임스페이스가 여기라 가정
 using System.Collections;
 using UnityEngine;
-using DiasGames.Abilities; // Locomotion 네임스페이스가 여기라 가정
+using Zenject;
 
 namespace JustClimb.Items
 {
     [CreateAssetMenu(fileName = "FeatherUse", menuName = "Game/ItemUse/FeatherUse")]
     public class FeatherUse : ScriptableObject, IItemUse
     {
+        [Inject] private IResourceManager _resourceManager;
+        [Inject] private ISoundManager _soundmanager;
+
         [Header("Feather Buff Settings")]
         [Tooltip("이동 속도 배수")]
         public float speedMultiplier = 1.5f;
@@ -50,12 +54,14 @@ namespace JustClimb.Items
             GameObject effectInstance = null;
             if (featherEffectPrefab != null)
             {
-                effectInstance = Instantiate(
-                    featherEffectPrefab,
+                effectInstance = _resourceManager.Instantiate(
+                    $"Prefabs/Items/{featherEffectPrefab.name}",
                     user.transform.position,
-                    Quaternion.identity
+                    Quaternion.identity, null, data._initialpoolcount
                 );
                 effectInstance.transform.SetParent(user.transform);
+
+                _soundmanager.PlaySFX(2);
             }
 
             // 버프 적용과 종료 처리를 코루틴으로

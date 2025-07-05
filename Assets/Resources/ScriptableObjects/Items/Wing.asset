@@ -19,3 +19,4 @@ MonoBehaviour:
   description: Strong leather climbing shoes.Jumping power increases when used.
   buffDuration: 10
   cooldownDuration: 20
+  _initialpoolcount: 1

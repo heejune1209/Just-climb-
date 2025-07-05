@@ -1,12 +1,17 @@
-using UnityEngine;
-using System.Collections;
 using DiasGames.Abilities;
+using System.Collections;
+using System.Resources;
+using UnityEngine;
+using Zenject;
 
 namespace JustClimb.Items
 {
     [CreateAssetMenu(fileName = "WingUse", menuName = "Game/ItemUse/WingUse", order = 100)]
     public class WingUse : ScriptableObject, IItemUse
     {
+        [Inject] private IResourceManager _resourceManager;
+        [Inject] private ISoundManager _soundmanager;
+
         [Header("날개 사용 설정")]
         [SerializeField] private float _boostMultiplier = 1.5f;
 
@@ -45,8 +50,14 @@ namespace JustClimb.Items
                 GameObject effectInstance = null;
                 if (_wingEffectPrefab != null)
                 {
-                    effectInstance = Instantiate(_wingEffectPrefab, user.transform.position, Quaternion.identity);
+                    effectInstance = _resourceManager.Instantiate(
+                    $"Prefabs/Items/{_wingEffectPrefab.name}",
+                    user.transform.position,
+                    Quaternion.identity, null, data._initialpoolcount
+                );
                     effectInstance.transform.SetParent(user.transform);
+
+                    _soundmanager.PlaySFX(2);
                 }
 
                 // 이펙트 제거를 위한 코루틴 실행

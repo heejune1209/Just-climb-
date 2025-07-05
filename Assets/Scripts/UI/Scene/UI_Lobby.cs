@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
+using Zenject;
 
 public class UI_Lobby : UI_Scene
 {
@@ -38,25 +39,25 @@ public class UI_Lobby : UI_Scene
     {
         // 1) 플레이어가 영역 안에 있고 E 키를 눌렀다면, 해당 팝업이 열려 있지 않은 경우에만
         if (!string.IsNullOrEmpty(_currentArea) &&
-            !Managers.Instance.UI.IsPopupOpen<UI_Shop>() &&
-            !Managers.Instance.UI.IsPopupOpen<GenericInfoPopup>() &&
-            !Managers.Instance.UI.IsPopupOpen<UI_SelectChapter>() &&
-            !Managers.Instance.UI.IsPopupOpen<UI_Ranking>() &&
+            !_uiManager.IsPopupOpen<UI_Shop>() &&
+            !_uiManager.IsPopupOpen<GenericInfoPopup>() &&
+            !_uiManager.IsPopupOpen<UI_SelectChapter>() &&
+            !_uiManager.IsPopupOpen<UI_Ranking>() &&
             Keyboard.current.eKey.wasPressedThisFrame)
         {
             switch (_currentArea)
             {
                 case "Shop":
-                    Managers.Instance.UI.ShowPopupUI<UI_Shop>("UI_Shop");
+                    _uiManager.ShowPopupUI<UI_Shop>("UI_Shop");
                     break;
                 case "WorldView":
-                    Managers.Instance.UI.ShowPopupUI<GenericInfoPopup>("UI_Worldview");
+                    _uiManager.ShowPopupUI<GenericInfoPopup>("UI_Worldview");
                     break;
                 case "SelectStage":
-                    Managers.Instance.UI.ShowPopupUI<UI_SelectChapter>("UI_SelectChapter");
+                    _uiManager.ShowPopupUI<UI_SelectChapter>("UI_SelectChapter");
                     break;
                 case "Ranking":
-                    Managers.Instance.UI.ShowPopupUI<UI_Ranking>("UI_Ranking");
+                    _uiManager.ShowPopupUI<UI_Ranking>("UI_Ranking");
                     break;
             }
             _promptText.gameObject.SetActive(false);
@@ -64,9 +65,9 @@ public class UI_Lobby : UI_Scene
 
         // 2) ESC 키: 다른 팝업(월드뷰, 상점, 스테이지, 랭킹 등)이 전부 닫혀 있을 때만
         if (Keyboard.current.escapeKey.wasPressedThisFrame &&
-            Managers.Instance.UI.GetTopPopup() == null)
+            _uiManager.GetTopPopup() == null)
         {
-            Managers.Instance.UI.ShowPopupUI<UI_Warning>("UI_Warning");
+            _uiManager.ShowPopupUI<UI_Warning>("UI_Warning");
         }
     }
 
@@ -83,5 +84,15 @@ public class UI_Lobby : UI_Scene
     {
         _currentArea = null;
         _promptText.gameObject.SetActive(false);
+    }
+
+    // 메모리 누수 방지
+    protected override void OnDestroy()
+    {
+        // 컴포넌트 참조 해제
+        _promptText = null;
+        _currentArea = null;
+        
+        base.OnDestroy();
     }
 }

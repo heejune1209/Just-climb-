@@ -1,0 +1,8 @@
+C:\Users\user\Just_Climb\Server\Database\bin\Debug\Database.dacpac
+C:\Users\user\Just_Climb\Server\Database\obj\Debug\Database.sqlproj.AssemblyReference.cache
+C:\Users\user\Just_Climb\Server\Database\obj\Debug\Model.xml
+C:\Users\user\Just_Climb\Server\Database\obj\Debug\refactor.xml
+C:\Users\user\Just_Climb\Server\Database\obj\Debug\postdeploy.sql
+C:\Users\user\Just_Climb\Server\Database\obj\Debug\predeploy.sql
+C:\Users\user\Just_Climb\Server\Database\obj\Debug\Database.dll
+C:\Users\user\Just_Climb\Server\Database\obj\Debug\Database.pdb

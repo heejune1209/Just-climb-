@@ -1,0 +1,152 @@
+[
+  {
+    "ContainingType": "Server.Controllers.DatabaseController",
+    "Method": "RecreateDatabase",
+    "RelativePath": "api/Database/recreate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.DatabaseController",
+    "Method": "ResetData",
+    "RelativePath": "api/Database/reset-data",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.DatabaseController",
+    "Method": "GetDatabaseStatus",
+    "RelativePath": "api/Database/status",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.DatabaseController",
+    "Method": "DeleteUserData",
+    "RelativePath": "api/Database/users/{userId}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.RankingController",
+    "Method": "GetRanking",
+    "RelativePath": "api/Ranking",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "StageNumber",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "SortType",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "Page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "PageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Server.Models.RankingResponseDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Server.Controllers.RankingController",
+    "Method": "UpdateUserRecord",
+    "RelativePath": "api/Ranking/{userId}/record",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "Server.Models.UpdateRecordRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.SaveController",
+    "Method": "GetState",
+    "RelativePath": "api/users/{userId}/state",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.SaveController",
+    "Method": "PostDelta",
+    "RelativePath": "api/users/{userId}/state/delta",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "request",
+        "Type": "Server.Models.SaveRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: OD_01
   displayName: RockDrop
-  cooldown: 0.9
+  rate: 1
+  _initialpoolcount: 7
   rockPrefab: {fileID: 5897017304815887936, guid: 3efdc3de93fd3be4cbed6e3879400f4a, type: 3}
   warnTime: 0.45
-  dropInterval: 0.9

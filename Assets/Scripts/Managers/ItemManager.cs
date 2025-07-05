@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using JustClimb.Items;
+using JustClimb.Data;
+using Zenject;
 
 namespace JustClimb.Manager
 {
@@ -9,8 +11,14 @@ namespace JustClimb.Manager
     /// 아이템 정의·사용 로직·카운트 관리 전담.
     /// JSON 저장·로드는 DataManager, 도메인 로직은 여기서 처리.
     /// </summary>
-    public class ItemManager : MonoBehaviour
+    public class ItemManager : MonoBehaviour, IItemManager, IInitializable
     {
+        // DI 주입받을 매니저들
+        [Inject] private IDataManager _dataManager;
+        [Inject] private IResourceManager _resourceManager;
+        [Inject] private ItemDatabase _itemDatabase;
+        [Inject] private DiContainer _container;
+
         // --- SO 기반 사용 로직 매핑 ---
         Dictionary<ItemType, IItemUse> _itemUseDict;
 
@@ -21,16 +29,34 @@ namespace JustClimb.Manager
         // 아이템 수량 변경 이벤트 (itemId, newCount)
         public event Action<ItemType, int> OnItemCountChanged;
 
+        // 메모리 누수 방지를 위해 핸들러를 필드로 보관
+        private Action<SaveData> _onDataLoadedHandler;
         /// <summary>
-        /// Managers.Awake()에서 호출합니다.
+        /// Zenject에서 자동으로 호출됨.
+        /// </summary>
+        public void Initialize()
+        {
+            Init();
+        }
+
+        /// <summary>
+        /// 실제 초기화 로직.
         /// </summary>
         public void Init()
         {
             // 1) SO 로직 로드
             LoadItemUses();
 
+            // 1) DataManager.OnLoaded 핸들러 생성 & 구독
+            _onDataLoadedHandler = save =>
+            {
+                foreach (var type in _itemDatabase.GetAllItemDefinitions().Keys)
+                    OnItemCountChanged?.Invoke(type, GetItemCount(type));
+            };
+            _dataManager.OnLoaded += _onDataLoadedHandler;
+
             // 2) 초기 상태 발행
-            foreach (var type in Managers.Instance.ItemDB.GetAllItemDefinitions().Keys)
+            foreach (var type in _itemDatabase.GetAllItemDefinitions().Keys)
                 OnItemCountChanged?.Invoke(type, GetItemCount(type));
         }
 
@@ -40,8 +66,12 @@ namespace JustClimb.Manager
         void LoadItemUses()
         {
             _itemUseDict = new Dictionary<ItemType, IItemUse>();
-            var sos = Managers.Instance.Resource.LoadAll<ScriptableObject>("Game/ItemUse");
+            var sos = _resourceManager.LoadAll<ScriptableObject>("Game/ItemUse");
             foreach (var so in sos)
+            {
+                // 컨테이너에 이 SO에도 [Inject] 수행해 달라고 요청
+                _container.Inject(so);
+
                 if (so is IItemUse logic)
                 {
                     var name = so.name.Replace("Use", "");
@@ -51,6 +81,8 @@ namespace JustClimb.Manager
                         _itemUseDict.Add(type, logic);
                     }
                 }
+            }
+                
         }
 
         // =====================
@@ -60,6 +92,8 @@ namespace JustClimb.Manager
         // 현재 아이템 보유 개수 조회
         public int GetItemCount(ItemType itemId)
         {
+            if (_dataManager.Current == null)
+                return 0;
             return GetItemCountInternal(itemId);
         }
 
@@ -68,14 +102,17 @@ namespace JustClimb.Manager
         {
             int newCount = GetItemCount(itemId) + amount;
             SetItemCountInternal(itemId, newCount);
-            Managers.Instance.Data.Save();
+            _dataManager.SaveLocal();
             OnItemCountChanged?.Invoke(itemId, newCount);
+
+            // 서버 호환 아이템 리스트 델타 생성
+            GenerateItemsDelta();
         }
 
         // 아이템 사용 시도
         public bool UseItem(ItemType itemId, GameObject user)
         {
-            var data = Managers.Instance.ItemDB.Get(itemId);
+            var data = _itemDatabase.Get(itemId);
 
             // 쿨다운 체크
             if (_nextAvailableTime.TryGetValue(itemId, out var ready)
@@ -108,8 +145,11 @@ namespace JustClimb.Manager
         {
             int newCount = Mathf.Max(0, GetItemCount(itemId) - amount);
             SetItemCountInternal(itemId, newCount);
-            Managers.Instance.Data.Save();
+            _dataManager.SaveLocal();
             OnItemCountChanged?.Invoke(itemId, newCount);
+
+            // 서버 호환 아이템 리스트 델타 생성
+            GenerateItemsDelta();
         }
 
         // 버프 남은 시간 조회
@@ -122,7 +162,7 @@ namespace JustClimb.Manager
         // 버프 총 지속 시간 조회
         public float GetBuffDuration(ItemType itemId)
         {
-            return Managers.Instance.ItemDB.Get(itemId).buffDuration;
+            return _itemDatabase.Get(itemId).buffDuration;
         }
 
         // 쿨다운 남은 시간 조회
@@ -135,45 +175,85 @@ namespace JustClimb.Manager
         // 총 쿨다운 길이 조회
         public float GetCooldownDuration(ItemType itemId)
         {
-            return Managers.Instance.ItemDB.Get(itemId).cooldownDuration;
+            return _itemDatabase.Get(itemId).cooldownDuration;
         }
 
         // 모든 아이템 ID 목록
         public IEnumerable<ItemType> GetAllItemIds()
         {
-            return Managers.Instance.ItemDB.GetAllItemDefinitions().Keys;
+            return _itemDatabase.GetAllItemDefinitions().Keys;
         }
 
         // =====================
         // 내부 저장·로드 헬퍼
         // =====================
 
-        // DataManager.Current.items에서 해당 아이템 개수 읽기
+        /// <summary>
+        /// DataManager.Current.items는 이제 List<InventoryItem> 입니다.
+        /// 저장된 리스트에서 해당 아이템 찾기
+        /// </summary>
         int GetItemCountInternal(ItemType itemId)
         {
-            var arr = Managers.Instance.Data.Current.items;
-            var inv = Array.Find(arr, x => x.itemId == itemId);
+            // DataManager.Current가 null이면 빈 리스트 취급
+            var list = _dataManager.Current?.items;
+            if (list == null)
+                return 0;
+
+            var inv = list.Find(x => x.itemId == itemId);
             return inv != null ? inv.count : 0;
         }
 
-        // DataManager.Current.items에 해당 아이템 개수 쓰기
+        /// <summary>
+        /// DataManager.Current.items 리스트에 아이템 수량 쓰기
+        /// </summary>
         void SetItemCountInternal(ItemType itemId, int count)
         {
-            var dm = Managers.Instance.Data;
-            var list = new List<InventoryItem>(dm.Current.items);
+            var list = _dataManager.Current.items;              // List<InventoryItem> 사용
             int idx = list.FindIndex(x => x.itemId == itemId);
+
             if (idx < 0)
             {
+                // 새로 추가
                 if (count > 0)
                     list.Add(new InventoryItem(itemId, count));
             }
             else
             {
-                if (count > 0) list[idx].count = count;
-                else list.RemoveAt(idx);
+                if (count > 0)
+                    list[idx].count = count;                   // 기존 개수 업데이트
+                else
+                    list.RemoveAt(idx);                        // 수량 0 → 제거
             }
+        }
 
-            dm.Current.items = list.ToArray();
+        /// <summary>
+        /// 서버 호환 아이템 델타 생성
+        /// InventoryItem(enum) → InventoryItemDto(string) 변환
+        /// </summary>
+        private void GenerateItemsDelta()
+        {
+            var items = _dataManager.Current.items;
+            var serverItems = new List<object>();
+            
+            foreach (var item in items)
+            {
+                serverItems.Add(new {
+                    itemId = item.itemId.ToString(),  // enum을 문자열로 변환
+                    count = item.count
+                });
+            }
+            
+            _dataManager.GenerateDelta("items", serverItems);
+        }
+
+        // 메모리 누수 방지: MonoBehaviour OnDestroy 에서 이벤트 해제
+        private void OnDestroy()
+        {
+            if (_dataManager != null && _onDataLoadedHandler != null)
+                _dataManager.OnLoaded -= _onDataLoadedHandler;
+
+            // 외부 구독자들이 남아있을 수 있으니 이벤트 자체를 초기화
+            OnItemCountChanged = null;
         }
     }
 }

@@ -39,5 +39,11 @@ namespace JustClimb.Obstacles.Effects
                 health.Damage(health.CurrentHP);
             }
         }
+
+        // 메모리 누수 방지 (참조하는 외부 컴포넌트가 없으므로 기본 구현)
+        private void OnDestroy()
+        {
+            // 이 클래스는 별도의 메모리 정리가 필요하지 않음
+        }
     }
 }

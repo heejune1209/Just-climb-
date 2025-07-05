@@ -20,3 +20,4 @@ MonoBehaviour:
     the current location within the stage when used.
   buffDuration: 0
   cooldownDuration: 60
+  _initialpoolcount: 1

@@ -29,6 +29,9 @@ namespace JustClimb.Items
         public float buffDuration;    // 새로 추가
         [Tooltip("0이면 즉시 재사용 가능")]
         public float cooldownDuration;   // 쿨타임(초)
+
+        [Tooltip("풀링할 개수")]
+        public int _initialpoolcount = 1;
     }
 }
 

@@ -1,5 +1,6 @@
-using UnityEngine;
 using JustClimb.Obstacles.Core;
+using UnityEngine;
+using Zenject;
 
 namespace JustClimb.Obstacles.Core
 {
@@ -9,6 +10,7 @@ namespace JustClimb.Obstacles.Core
     [RequireComponent(typeof(Collider))]
     public abstract class ObstacleBase : MonoBehaviour, IObstacle
     {
+
         // 에디터에서 Collider를 추가하면 자동으로 isTrigger를 켜줌.
         private void Reset()
         {
@@ -44,6 +46,12 @@ namespace JustClimb.Obstacles.Core
         public virtual void Deactivate()
         {
             // 기본 동작 없음
+        }
+
+        // 메모리 누수 방지 (가상 메서드로 자식 클래스에서 오버라이드 가능)
+        protected virtual void OnDestroy()
+        {
+            // 기본적으로 추가 정리 없음
         }
     }
 }

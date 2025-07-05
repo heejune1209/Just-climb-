@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Zenject;
 
 public enum TriggerMode
 {
@@ -11,6 +12,10 @@ public enum TriggerMode
 [RequireComponent(typeof(Collider))]
 public class ZoneTrigger : MonoBehaviour
 {
+    // DI 주입받을 매니저들
+    [Inject] private IUIManager _uiManager;
+    [Inject] private IGameManager _gameManager;
+
     [Header("이 트리거의 역할")]
     public TriggerMode mode;
 
@@ -52,7 +57,7 @@ public class ZoneTrigger : MonoBehaviour
 
     void ShowResult()
     {
-        var popup = Managers.Instance.UI.ShowPopupUI<UI_Result>("UI_Result");
-        popup.ShowResult(Managers.Instance.Game.ElapsedTime());
+        var popup = _uiManager.ShowPopupUI<UI_Result>("UI_Result");
+        popup.ShowResult(_gameManager.ElapsedTime());
     }
 }

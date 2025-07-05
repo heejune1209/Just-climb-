@@ -1,0 +1,6 @@
+﻿{
+  "RedisSyncConfig": {
+    // 델타 캐시 보관 시간 (시간 단위)
+    "CacheDurationHours": 24
+  }
+}

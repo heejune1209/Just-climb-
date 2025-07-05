@@ -408,12 +408,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 113871900}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 891.5126, y: 514.7345, z: -3.3116455}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 1210217152}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &113871903
 MonoBehaviour:
@@ -3236,6 +3236,71 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1206296693}
   m_Mesh: {fileID: -8678823145569952518, guid: bacae38bd950c9f429d787935f26b7c7, type: 3}
+--- !u!1 &1210217150
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1210217152}
+  - component: {fileID: 1210217151}
+  m_Layer: 0
+  m_Name: SceneContext
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1210217151
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210217150}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 89715ad69b973a14899afa2c6730b30b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _scriptableObjectInstallers: []
+  _monoInstallers:
+  - {fileID: 1300455073}
+  _installerPrefabs: []
+  _autoRun: 1
+  OnPreInstall:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPostInstall:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPreResolve:
+    m_PersistentCalls:
+      m_Calls: []
+  OnPostResolve:
+    m_PersistentCalls:
+      m_Calls: []
+  _parentNewObjectsUnderSceneContext: 1
+  _contractNames: []
+  _parentContractNames: []
+--- !u!4 &1210217152
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1210217150}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 113871902}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1226740412
 GameObject:
   m_ObjectHideFlags: 0
@@ -3611,6 +3676,50 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4842261278804744, guid: 7b334da03ed3b2c418b694b966f8d1f3, type: 3}
   m_PrefabInstance: {fileID: 1286755749}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1300455072
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1300455074}
+  - component: {fileID: 1300455073}
+  m_Layer: 0
+  m_Name: LobbySceneInstaller
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1300455073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300455072}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a30549bc51218dd4b816b452b09944b9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1300455074
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1300455072}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -8.640541, y: 8.223309, z: -0.13031834}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1313577972 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 6092006379817239324, guid: b2b28950d9be586429639f403b76fc2e, type: 3}
@@ -9010,6 +9119,7 @@ MonoBehaviour:
   maxStepHeight: 0.5
   stepCheckDistance: 0.5
   footHeightOffset: 0.1
+  maxGroundSlopeAngle: 45
 --- !u!137 &3091138251109035404
 SkinnedMeshRenderer:
   m_ObjectHideFlags: 0
@@ -16739,13 +16849,14 @@ GameObject:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1210217152}
   - {fileID: 1019432904}
   - {fileID: 7606841757112336274}
   - {fileID: 493618081}
-  - {fileID: 113871902}
   - {fileID: 543450652245435794}
   - {fileID: 543450652084947110}
   - {fileID: 331099157}
   - {fileID: 8503137916925417887}
   - {fileID: 686878268}
   - {fileID: 1234661135}
+  - {fileID: 1300455074}

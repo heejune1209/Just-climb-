@@ -40,7 +40,7 @@ public class UI_Information : UI_Popup
     private Color selectedTextColor = new Color(0, 0, 0, 1);  // Color.black
     private Color defaultTextColor = new Color(1, 1, 1, 1);  // Color.white
 
-    void Awake()
+    private void Start()
     {
         Init();  // Awake 단계에서 바인딩이 되면 Update 때 null 방지
     }

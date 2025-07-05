@@ -2,9 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Zenject;
 
-public class SceneManagerEx
+public class SceneManagerEx : ISceneManagerEx
 {
+    // DI 주입받을 매니저들 (선택적)
+    [Inject(Optional = true)] private IUIManager _uiManager;
+    [Inject] private IPoolManager _poolManager;
 
     public BaseScene CurrentScene { get { return GameObject.FindAnyObjectByType<BaseScene>(); } }
 
@@ -18,11 +22,12 @@ public class SceneManagerEx
 
     public void LoadScene(Define.Scene type)
     {
-        // 1) 씬 UI만 지우기
-        Managers.Instance.UI.ClearSceneUI();
+        // 1) 씬 UI만 지우기 (UIManager가 있을 때만)
+        _uiManager?.ClearSceneUI();
 
         // 2) 팝업만 지우기 + 풀 등 전역 정리
-        Managers.Clear();
+        _uiManager?.ClearPopupUI();
+        _poolManager.Clear();
 
         SceneManager.LoadScene(GetSceneName(type)); // SceneManager는 UnityEngine의 SceneManager
     }

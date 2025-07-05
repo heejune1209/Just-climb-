@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   id: OD_02
   displayName: RollingStone
-  cooldown: 0.5
-  stonePrefab: {fileID: 1850647314002815841, guid: 84f79058a24d1f346aafc0ac621e0d60, type: 3}
+  rate: 5
+  _initialpoolcount: 7
+  stonePrefab: {fileID: 5784065999696573457, guid: af322df27ac726d428f7f214a5475d44, type: 3}
   direction: {x: 0, y: 0, z: 1}
-  force: 65
-  rollRate: 0.5
+  force: 5

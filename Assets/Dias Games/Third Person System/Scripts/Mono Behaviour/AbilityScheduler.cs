@@ -16,7 +16,7 @@ namespace DiasGames
         public AbstractCombat CurrentCombat { get; private set; }
 
         public CharacterActions characterActions = new CharacterActions();
-        
+
         // Observers
         public event Action OnUpdatedAbilities = null;
         public event Action<AbstractAbility> OnAbilityStopped = null;
@@ -30,7 +30,7 @@ namespace DiasGames
 
             foreach (AbstractAbility ability in CharAbilities)
                 ability.SetActionReference(ref characterActions);
-            
+
             foreach (AbstractCombat combat in CharCombats)
                 combat.SetActionReference(ref characterActions);
         }
@@ -55,6 +55,13 @@ namespace DiasGames
 
             // Tells any observer that it has updated.
             OnUpdatedAbilities?.Invoke();
+
+            //// ===== 추가: 한 프레임용 선택 입력 플래그 자동 리셋 =====
+            //// ClimbAbility 등에서 selectNext/selectPrev/confirmSelect를 사용한 뒤
+            //// 다음 프레임에는 false로 초기화해 불필요한 재입력을 방지합니다.
+            //characterActions.selectNext = false;
+            //characterActions.selectPrev = false;
+            //characterActions.confirmSelect = false;
         }
 
         /// <summary>
@@ -88,7 +95,7 @@ namespace DiasGames
                 // Stops the current ability
                 if (CurrentAbility != null)
                     CurrentAbility.StopAbility();
-                
+
                 // Starts the new Ability
                 nextAbility.StartAbility();
 
@@ -97,7 +104,7 @@ namespace DiasGames
                 CurrentAbility.abilityStopped += AbilityHasStopped;
                 OnAbilityStarted?.Invoke(CurrentAbility);
 
-                if(CurrentCombat != null)
+                if (CurrentCombat != null)
                     CurrentCombat.SetCurrentAbility(CurrentAbility);
             }
         }
@@ -143,7 +150,7 @@ namespace DiasGames
                 return;
             }
 
-            foreach(AbstractCombat combat in CharCombats)
+            foreach (AbstractCombat combat in CharCombats)
             {
                 if (combat.CombatReadyToRun())
                 {

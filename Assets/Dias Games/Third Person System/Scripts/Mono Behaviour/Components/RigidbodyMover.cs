@@ -57,6 +57,12 @@ namespace DiasGames.Components
 
         private bool _hasAnimator;
 
+        // ↓↓ 여기에 추가 ↓↓
+        [Header("Ground Settings")]
+        [Tooltip("지면으로 인식할 최대 경사각도(도 단위)")]
+        [SerializeField] private float maxGroundSlopeAngle = 45f; // 새로 추가된 파라미터
+        private float minGroundDot;                                   // 내부 계산용 dot 값
+
         private void Awake()
         {
             _mainCamera = Camera.main.gameObject;
@@ -67,6 +73,9 @@ namespace DiasGames.Components
             _initialCapsuleRadius = _capsule.radius;
 
             Physics.gravity = new Vector3(0, Gravity, 0);
+
+            // ↓↓ 새로 추가된 코드: 경사각 → dot 값으로 변환
+            minGroundDot = Mathf.Cos(maxGroundSlopeAngle * Mathf.Deg2Rad);
         }
 
         private void Start()
@@ -105,8 +114,23 @@ namespace DiasGames.Components
             // set sphere position, with offset
             Vector3 spherePosition = transform.position + Vector3.up * GroundedRadius * 2;
             RaycastHit groundHit;
-            Grounded = Physics.SphereCast(spherePosition, GroundedRadius, Vector3.down, out groundHit,
-                GroundedCheckDistance + GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
+            //Grounded = Physics.SphereCast(spherePosition, GroundedRadius, Vector3.down, out groundHit,
+            //    GroundedCheckDistance + GroundedRadius, GroundLayers, QueryTriggerInteraction.Ignore);
+            // ↓↓ 변경된 로직: 히트 여부 + 법선(dot) 체크
+            bool hit = Physics.SphereCast(
+                spherePosition,
+                GroundedRadius,
+                Vector3.down,
+                out groundHit,
+                GroundedCheckDistance + GroundedRadius,
+                GroundLayers,
+                QueryTriggerInteraction.Ignore);
+
+            // 법선 벡터가 완전히 수직(0) 또는 바닥(1) 사이에 있는지 확인
+            if (hit && Vector3.Dot(groundHit.normal, Vector3.up) >= minGroundDot)
+                Grounded = true;
+            else
+                Grounded = false;
         }
 
         public Collider GetGroundCollider()

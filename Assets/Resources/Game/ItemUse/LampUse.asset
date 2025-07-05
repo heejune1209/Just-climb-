@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   lanternPrefab: {fileID: 8281317467746911677, guid: 728dc2a973a10074581616862642dad6, type: 3}
   detectTags:
-  - InvisbleObstacle
+  - InvisibleObstacle
   - DeadContact
   - Knockback
   - Invisble

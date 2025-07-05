@@ -48,6 +48,11 @@ namespace JustClimb.Obstacles.Effects
                     mats[i] = highlightMaterial;
                 rend.materials = mats;
             }
+
+            var mesh = GetComponentInChildren<MeshRenderer>();
+            if(mesh.enabled == false)
+                mesh.enabled = true;
+
             // duration 후에 원복
             StartCoroutine(RevertAfter());
         }
@@ -60,6 +65,23 @@ namespace JustClimb.Obstacles.Effects
             {
                 kv.Key.materials = kv.Value;
             }
+        }
+
+        // 메모리 누수 방지
+        protected override void OnDestroy()
+        {
+            // 코루틴 정리
+            StopAllCoroutines();
+            
+            // Dictionary 정리
+            if (_originals != null)
+            {
+                _originals.Clear();
+                _originals = null;
+            }
+            
+            // 컴포넌트 참조 해제
+            highlightMaterial = null;
         }
     }
 }

@@ -1,13 +1,16 @@
-using UnityEngine;
-using System.Collections;
 using JustClimb.Obstacles.Core;
 using JustClimb.Obstacles.Data;
+using System.Collections;
+using UnityEngine;
+using Zenject;
 
 namespace JustClimb.Obstacles.Spawners
 {
     [RequireComponent(typeof(ObstacleTrigger))]
     public class RollingSpawner : ObstacleBase
     {
+        [Inject] private IResourceManager _resourceManager;
+
         [Header("Roller 설정 데이터")]
         [Tooltip("에디터에서 할당할 RollerData SO")]
         public RollerData data;
@@ -40,16 +43,15 @@ namespace JustClimb.Obstacles.Spawners
         private IEnumerator RollRoutine()
         {
             // 1초당 rollRate 회 생성 → 간격 계산
-            float interval = 1f / data.rollRate;
+            float interval = 1f * data.rate;
             WaitForSeconds wait = new WaitForSeconds(interval);
 
             while (true)
             {
                 // 1) 풀링 지원 리소스 매니저로 프리팹 인스턴스화
-                GameObject stone = Managers.Instance.Resource.Instantiate(
-                    $"Prefabs/{data.stonePrefab.name}",
-                    spawnPoint
-                );
+                var stone = _resourceManager.Instantiate(
+                    $"Prefabs/Obstacles/{data.stonePrefab.name}",
+                    spawnPoint.position, spawnPoint.rotation, null, data._initialpoolcount);
 
                 // 2) Rigidbody에 임펄스 추가
                 Rigidbody rb = stone.GetComponent<Rigidbody>();
@@ -61,7 +63,7 @@ namespace JustClimb.Obstacles.Spawners
         }
 
         // 씬 뷰에서 방향·힘 시각화
-        private void OnDrawGizmosSelected()
+        private void OnDrawGizmos()
         {
             if (spawnPoint == null || data == null) return;
             Gizmos.color = Color.cyan;
@@ -69,6 +71,24 @@ namespace JustClimb.Obstacles.Spawners
             Vector3 end = start + data.direction.normalized * data.force;
             Gizmos.DrawLine(start, end);
             Gizmos.DrawWireSphere(end, 0.1f);
+        }
+
+        // 메모리 누수 방지
+        protected override void OnDestroy()
+        {
+            // 코루틴 정리
+            if (_rollRoutine != null)
+            {
+                StopCoroutine(_rollRoutine);
+                _rollRoutine = null;
+            }
+            
+            // 컴포넌트 참조 해제
+            data = null;
+            spawnPoint = null;
+            
+            // 매니저 참조 해제
+            _resourceManager = null;
         }
     }
 }

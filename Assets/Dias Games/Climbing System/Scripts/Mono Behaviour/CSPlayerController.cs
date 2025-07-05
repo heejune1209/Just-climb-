@@ -14,8 +14,8 @@ namespace DiasGames.Controller
         private AbilityScheduler _scheduler = null;
         private Health _health = null;
         private IMover _mover;
-        private ICapsule _capsule;       
-               
+        private ICapsule _capsule;
+
         public float Visibletime = 1f;
         private const float _threshold = 0.01f;
         [SerializeField] private bool hideCursor = true;
@@ -65,7 +65,7 @@ namespace DiasGames.Controller
             _cinemachineTargetYaw = CinemachineCameraTarget.transform.eulerAngles.y;
 
         }
-        
+
 
         private void OnEnable()
         {
@@ -101,35 +101,7 @@ namespace DiasGames.Controller
             LegacyInput();
 #endif
         }
-        void OnCollisionStay(Collision collision)
-        {
-            if (collision.gameObject.CompareTag("Invisble") || collision.gameObject.CompareTag("InvisbleObstacle"))
-            {
-                MeshRenderer meshRenderer = collision.gameObject.GetComponent<MeshRenderer>();
-                if (meshRenderer != null)
-                {
-                    meshRenderer.enabled = true;
-                }
-            }
-        }
-         
-        void OnCollisionExit(Collision collision)
-        {
-            if (collision.gameObject.CompareTag("Invisble") || collision.gameObject.CompareTag("InvisbleObstacle"))
-            {
-                MeshRenderer meshRenderer = collision.gameObject.GetComponent<MeshRenderer>();
-                if (meshRenderer != null)
-                {
-                    StartCoroutine(DisableSnd(meshRenderer, Visibletime));
-                }
-            }
-        }
 
-        IEnumerator DisableSnd(MeshRenderer meshRenderer, float seconds)
-        {
-            yield return new WaitForSeconds(seconds);
-            meshRenderer.enabled = false;
-        }
 
         private void LateUpdate()
         {
@@ -145,7 +117,7 @@ namespace DiasGames.Controller
             _mover.DisableGravity();
             _mover.StopMovement();
             _capsule.DisableCollision();
-           
+
         }
 
         private void CameraRotation()
@@ -181,6 +153,11 @@ namespace DiasGames.Controller
             _scheduler.characterActions.suicide = Suicide;
             // weapon
             _scheduler.characterActions.zoom = Zoom;
+
+            //// ===== 선택 모드 입력 연동 =====
+            //_scheduler.characterActions.selectNext = SelectNext;
+            //_scheduler.characterActions.selectPrev = SelectPrev;
+            //_scheduler.characterActions.confirmSelect = ConfirmSelect;
         }
 
         #region Input receiver
@@ -189,16 +166,20 @@ namespace DiasGames.Controller
         public Vector2 Move = Vector2.zero;
         public Vector2 Look = Vector2.zero;
         public bool Jump = false;
-        public bool Walk = false;       
+        public bool Walk = false;
         public bool Zoom = false;
         public bool Drop = false;
         public bool Suicide = false;
         public bool Enter = false;
 
+        public bool SelectNext = false;
+        public bool SelectPrev = false;
+        public bool ConfirmSelect = false;
+
         public void ResetActions()
         {
-            Jump = false;            
-            
+            Jump = false;
+
             Drop = false;
         }
 
@@ -211,7 +192,7 @@ namespace DiasGames.Controller
             Look.y = Input.GetAxis("Mouse Y");
 
             Walk = Input.GetButton("Walk");
-            Jump = Input.GetButtonDown("Jump");            
+            Jump = Input.GetButtonDown("Jump");
             Zoom = Input.GetButtonDown("Zoom");
 
             // special actions for climbing
@@ -240,12 +221,12 @@ namespace DiasGames.Controller
         public void OnWalk(bool value)
         {
             Walk = value;
-        }        
+        }
 
         public void OnZoom(bool value)
         {
             Zoom = value;
-        }       
+        }
         public void OnDrop(bool value)
         {
             Drop = value;
@@ -279,30 +260,30 @@ namespace DiasGames.Controller
         private void OnWalk(InputValue value)
         {
             OnWalk(value.isPressed);
-        }      
+        }
 
         private void OnZoom(InputValue value)
         {
             OnZoom(value.isPressed);
         }
-        
-        
+
+
         private void OnDrop(InputValue value)
         {
             OnDrop(value.isPressed);
         }
-        
+
         private void OnInformation(InputValue value)
-        {           
-            
+        {
+
 
         }
         private void OnSuicide(InputValue value)
         {
-            
-            if (value.isPressed)
+            // 기능 추가: 사망한 상태에서는 더 이상 자살 불가
+            if (value.isPressed && _health != null && _health.CurrentHP > 0)
             {
-                _health.Damage(_health.CurrentHP); 
+                _health.Damage(_health.CurrentHP);
             }
         }
         private void OnEnter(InputValue value)
@@ -314,7 +295,21 @@ namespace DiasGames.Controller
             //    tutori.TutorialPanel.SetActive(false);
             //}
         }
-        
+        //public void OnSelectNext(InputValue value)
+        //{
+        //    SelectNext = value.isPressed;
+        //}
+
+        //public void OnSelectPrev(InputValue value)
+        //{
+        //    SelectPrev = value.isPressed;
+        //}
+
+        //public void OnConfirmSelect(InputValue value)
+        //{
+        //    ConfirmSelect = value.isPressed;
+        //}
+
 
 #endif
 

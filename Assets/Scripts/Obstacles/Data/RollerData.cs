@@ -16,7 +16,5 @@ namespace JustClimb.Obstacles.Data
         [Tooltip("굴러가는 힘 (임펄스)")]
         public float force = 10f;
 
-        [Tooltip("굴러가는 빈도 (초당 스폰 횟수)")]
-        public float rollRate = 2f;
     }
 }

@@ -1,13 +1,17 @@
-using UnityEngine;
-using System.Collections;
 using JustClimb.Obstacles.Core;
 using JustClimb.Obstacles.Data;
+using System.Collections;
+using UnityEngine;
+using Zenject;
 
 namespace JustClimb.Obstacles.Spawners
 {
     [RequireComponent(typeof(ObstacleTrigger))]
     public class RockDropper : ObstacleBase
     {
+        [Inject] private IResourceManager _resourceManager;
+        [Inject] private ISoundManager _soundmanager;
+
         [Header("Dropper 설정 데이터")]
         [Tooltip("에디터에서 할당할 DropperData SO")]
         public DropperData data;
@@ -54,16 +58,37 @@ namespace JustClimb.Obstacles.Spawners
             }
 
             // 2) 바위 낙하 반복
-            WaitForSeconds interval = new WaitForSeconds(data.dropInterval);
+            WaitForSeconds interval = new WaitForSeconds(data.rate);
             while (true)
             {
-                // 풀링을 지원하는 ResourceManager로 프리팹 인스턴스화
-                Managers.Instance.Resource.Instantiate(
-                    $"Prefabs/{data.rockPrefab.name}",
-                    dropPoint
-                );
+                // 풀링+위치·회전 지정 오버로드 사용
+                _resourceManager.Instantiate(
+                $"Prefabs/Obstacles/{data.rockPrefab.name}",
+                dropPoint.position,
+                dropPoint.rotation, null, data._initialpoolcount);
+                _soundmanager.PlaySFX(5);
+
                 yield return interval;
             }
+        }
+
+        // 메모리 누수 방지
+        protected override void OnDestroy()
+        {
+            // 코루틴 정리
+            if (_dropRoutine != null)
+            {
+                StopCoroutine(_dropRoutine);
+                _dropRoutine = null;
+            }
+            
+            // 컴포넌트 참조 해제
+            data = null;
+            dropPoint = null;
+            
+            // 매니저 참조 해제
+            _resourceManager = null;
+            _soundmanager = null;
         }
     }
 }

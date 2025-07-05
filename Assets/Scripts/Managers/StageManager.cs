@@ -1,137 +1,193 @@
 using System;
 using System.Collections.Generic;
-using JustClimb.Manager;
+using JustClimb.Data;
 using UnityEngine;
+using Zenject;
 
 namespace JustClimb.Manager
 {
     // 스테이지의 언락 여부, 보상, 최단 클리어 타임, 최저 사망 횟수 관리를 담당.
     // JSON 로드 직후와 SetCleared 호출 후에 DispatchAll을 통해 초기/갱신된 상태를 이벤트로 발행.
-    public class StageManager
+    public class StageManager : IStageManager, IInitializable
     {
-        public event Action<int> OnStageUnlocked;       // 스테이지 언락(클리어) 시 발생 (stageNum)
-        public event Action<int, int> OnBestRewardUpdated;   // 최고 보상(gem) 갱신 시 발생 (stageNum, bestReward)
-        public event Action<int, float> OnBestTimeUpdated;     // 최단 클리어 타임 갱신 시 발생 (stageNum, bestTime)
-        public event Action<int, int> OnBestDeathUpdated;  // 스테이지의 최소 사망 횟수(death best) 기록이 갱신될때 호출되는 이벤트 (stageNum, bestDeathCount)
+        // ✅ 유지되는 이벤트들 (best 기록만)
+        public event Action<int, int> OnBestRewardUpdated;
+        public event Action<int, float> OnBestTimeUpdated;
+        public event Action<int, int> OnBestDeathUpdated;
 
-        // Managers.Awake() 직후 호출.
-        // OnLoaded 구독 + 즉시 DispatchAll 호출.
+        public event Action<int> OnStageUnlocked;
+
+        readonly IDataManager _dataManager;
+        readonly ICurrencyManager _currencyManager;
+
+        // Zenject 생성자 주입
+        [Inject]
+        public StageManager(IDataManager dataManager, ICurrencyManager currencyManager)
+        {
+            _dataManager = dataManager;
+            _currencyManager = currencyManager;
+        }
+
+        // Zenject IInitializable
+        public void Initialize()
+        {
+            Init();
+        }
+
+        // 실제 초기화 로직: 로드 직후/Init 직후에 상태 발행
         public void Init()
         {
-            var dataMgr = Managers.Instance.Data;
-            // JSON 파일 로드 완료 시 DispatchAll 실행
-            dataMgr.OnLoaded += (SaveData saveData) => DispatchAll();
+            _dataManager.OnLoaded += data => DispatchAll();
 
-            // Init 호출 직후에도 한 번 상태를 발행하여 UI를 초기화
-            DispatchAll();
+            // 이미 Current가 설정된 경우(동기 로드 시나리오)만 즉시 호출
+            if (_dataManager.Current != null)
+            {
+                DispatchAll();
+            }
         }
 
-        // 현재 메모리에 로드된 SaveData를 반환
-        private SaveData Current
+        // 편의 프로퍼티: 현재 메모리에 로드된 SaveData
+        SaveData Current => _dataManager.Current;
+
+        // 조회 API
+
+        // 해당 스테이지에서 획득한 최고 보상 개수 (gem)
+        public int GetBestReward(int stageNum)
         {
-            get { return Managers.Instance.Data.Current; }
+            var list = Current?.bestGemRewards;
+            if (list == null || list.Count < stageNum)
+                return 0;
+            return list[stageNum - 1];
         }
-
+        // 해당 스테이지의 최단 클리어 타임(초)
+        public float GetBestTime(int stageNum)
+        {
+            var list = Current?.bestClearTimes;
+            if (list == null || list.Count < stageNum)
+                return float.MaxValue;
+            return list[stageNum - 1];
+        }
+        // 해당 스테이지의 최소 사망 횟수
+        public int GetBestDeath(int stageNum)
+        {
+            // Current가 null이거나 리스트가 null/충분치 않으면 기본값 반환
+            var list = Current?.bestDeathCounts;
+            if (list == null || list.Count < stageNum)
+                return int.MaxValue;
+            return list[stageNum - 1];
+        }
 
         // 해당 스테이지가 언락(클리어)되었는지
         public bool IsUnlocked(int stageNum)
         {
-            var arr = Current.stageClears;
-            return stageNum == 1
-                || (stageNum - 1 < arr.Length && arr[stageNum - 1]);
-        }
-        // 해당 스테이지에서 획득한 최고 보상 개수 (gem)
-        public int GetBestReward(int stageNum)
-        {
-            var arr = Current.stageRewards;
-            return (stageNum - 1 < arr.Length)
-                ? arr[stageNum - 1]
-                : 0;
+            if (stageNum == 1) return true;
+            var clears = Current.stageClears;
+            int prev = stageNum - 2;
+            return prev >= 0 && prev < clears.Count && clears[prev];
         }
 
-        // 해당 스테이지의 최단 클리어 타임(초)
-        public float GetBestTime(int stageNum)
-        {
-            var arr = Current.stageTimes;
-            return (stageNum - 1 < arr.Length)
-                ? arr[stageNum - 1]
-                : float.MaxValue;
-        }
-
-        // 스테이지 클리어 처리: 플래그, 보상, 기록 업데이트 및 저장
+        /// <summary>
+        /// 스테이지 클리어 시 호출 (개선된 버전)
+        /// 1) current 값을 사용하여 best 기록과 비교
+        /// 2) 더 좋은 기록일 때만 best 갱신
+        /// 3) current 값은 초기화
+        /// 4) 보상 차액 지급
+        /// </summary>
         public void SetCleared(int stageNum, int gemCount, float clearTime, int deathCount)
         {
-            // 1) 클리어 플래그
-            var clears = new List<bool>(Current.stageClears);
-            while (clears.Count < stageNum) clears.Add(false);
-            if (!clears[stageNum - 1])
+            int idx = stageNum - 1;
+            var sd = _dataManager.Current;
+
+            // 보상 차액만 지급
+            // 이전까지 지급된 최고 보상
+            while (sd.bestGemRewards.Count <= idx) sd.bestGemRewards.Add(0);
+            int prevBest = sd.bestGemRewards[idx];
+            int delta = Math.Max(0, gemCount - prevBest);
+            if (delta > 0)
             {
-                clears[stageNum - 1] = true;
-                Current.stageClears = clears.ToArray();
+                _currencyManager.AddGems(delta);
+            }
+
+            // 언락 처리
+            while (sd.stageClears.Count <= idx) sd.stageClears.Add(false);
+            if (!sd.stageClears[idx])
+            {
+                sd.stageClears[idx] = true;
                 OnStageUnlocked?.Invoke(stageNum);
             }
 
-            // 2) 최고 보상
-            var rewards = new List<int>(Current.stageRewards);
-            while (rewards.Count < stageNum) rewards.Add(0);
-            if (gemCount > rewards[stageNum - 1])
+            // ✅ best 기록 조건부 갱신 (개선된 로직)
+            // 보석 개수 (더 많이 획득했을 때)
+            if (gemCount > prevBest)
             {
-                rewards[stageNum - 1] = gemCount;
-                Current.stageRewards = rewards.ToArray();
+                sd.bestGemRewards[idx] = gemCount;
                 OnBestRewardUpdated?.Invoke(stageNum, gemCount);
             }
 
-            // 3) 최단 클리어 타임
-            var times = new List<float>(Current.stageTimes);
-            while (times.Count < stageNum) times.Add(float.MaxValue);
-            if (clearTime < times[stageNum - 1])
+            // 클리어 타임 (더 빨리 클리어했을 때)
+            while (sd.bestClearTimes.Count <= idx) sd.bestClearTimes.Add(float.MaxValue);
+            if (clearTime < sd.bestClearTimes[idx])
             {
-                times[stageNum - 1] = clearTime;
-                Current.stageTimes = times.ToArray();
+                sd.bestClearTimes[idx] = clearTime;
                 OnBestTimeUpdated?.Invoke(stageNum, clearTime);
             }
 
-            // 4) 최저 사망 횟수(death best) 갱신
-            var deaths = new List<int>(Current.stageDeathCounts);
-            while (deaths.Count < stageNum) 
-                deaths.Add(int.MaxValue);
-            
-            if (deathCount < deaths[stageNum - 1])
+            // 사망 횟수 (더 적게 죽었을 때)
+            while (sd.bestDeathCounts.Count <= idx) sd.bestDeathCounts.Add(int.MaxValue);
+            if (deathCount < sd.bestDeathCounts[idx])
             {
-                deaths[stageNum - 1] = deathCount;
-                Current.stageDeathCounts = deaths.ToArray();
+                sd.bestDeathCounts[idx] = deathCount;
                 OnBestDeathUpdated?.Invoke(stageNum, deathCount);
             }
 
-            // JSON 저장
-            Managers.Instance.Data.Save();
+            // 깃발 초기화
+            while (sd.stageFlagPositions.Count <= idx) sd.stageFlagPositions.Add(default);
+            sd.stageFlagPositions[idx] = default(SerializableVector3);
+
+            // 저장 
+            _dataManager.SaveLocal();
+
+            // 기능 추가: 스테이지 관련 델타 생성 (개선된 버전)
+            // 전체 stageClears 리스트 델타
+            _dataManager.GenerateDelta("stageClears", sd.stageClears);
+            // 이번 스테이지 best 기록 델타 (갱신된 경우에만)
+            _dataManager.GenerateDelta($"bestGemRewards_{stageNum}", sd.bestGemRewards[idx]);
+            _dataManager.GenerateDelta($"bestClearTimes_{stageNum}", sd.bestClearTimes[idx]);
+            _dataManager.GenerateDelta($"bestDeathCounts_{stageNum}", sd.bestDeathCounts[idx]);
+            
+            // 깃발 위치 초기화 델타
+            _dataManager.GenerateDelta($"stageFlagPositions_{stageNum}", sd.stageFlagPositions[idx]);
+            
+            Debug.Log($"[StageManager] 스테이지 {stageNum} 클리어 완료 - 깃발 위치 초기화됨");
         }
 
-        // JSON 로드 직후와 Init 직후에 호출되어
-        // 저장된 모든 스테이지 데이터를 이벤트로 발행.
+        // Load 직후 & Initialize 직후 저장된 모든 스테이지 상태를 이벤트로 발행
         void DispatchAll()
         {
             var sd = Current;
+            for (int i = 0; i < sd.stageClears.Count; i++)
+            {
+                if (sd.stageClears[i]) OnStageUnlocked?.Invoke(i + 1);
+                
+                // best 이벤트만 발행
+                if (i < sd.bestGemRewards.Count) OnBestRewardUpdated?.Invoke(i + 1, sd.bestGemRewards[i]);
+                if (i < sd.bestClearTimes.Count) OnBestTimeUpdated?.Invoke(i + 1, sd.bestClearTimes[i]);
+                if (i < sd.bestDeathCounts.Count) OnBestDeathUpdated?.Invoke(i + 1, sd.bestDeathCounts[i]);
+            }
+        }
 
-            // 언락
-            for (int i = 0; i < sd.stageClears.Length; i++)
-                if (sd.stageClears[i])
-                    OnStageUnlocked?.Invoke(i + 1);
-
-            // 보상
-            for (int i = 0; i < sd.stageRewards.Length; i++)
-                if (sd.stageRewards[i] > 0)
-                    OnBestRewardUpdated?.Invoke(i + 1, sd.stageRewards[i]);
-
-            // 시간
-            for (int i = 0; i < sd.stageTimes.Length; i++)
-                if (sd.stageTimes[i] < float.MaxValue)
-                    OnBestTimeUpdated?.Invoke(i + 1, sd.stageTimes[i]);
-
-            // 최저 사망 횟수 이벤트
-            for (int i = 0; i < sd.stageDeathCounts.Length; i++)
-                if (sd.stageDeathCounts[i] < int.MaxValue)
-                    OnBestDeathUpdated?.Invoke(i + 1, sd.stageDeathCounts[i]);
+        // 메모리 누수 방지 (Zenject 싱글톤용 IDisposable 구현)
+        public void Dispose()
+        {
+            // DataManager 이벤트 해제
+            if (_dataManager != null)
+                _dataManager.OnLoaded -= data => DispatchAll();
+            
+            // 외부 구독자들이 남아있을 수 있으니 이벤트 초기화
+            OnBestRewardUpdated = null;
+            OnBestTimeUpdated = null;
+            OnBestDeathUpdated = null;
+            OnStageUnlocked = null;
         }
     }
 }

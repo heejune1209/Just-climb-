@@ -103,6 +103,33 @@
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
+                },
+                {
+                    "name": "SelectNext",
+                    "type": "Button",
+                    "id": "d07dcb61-8e55-4630-8064-4b8a0d6d2c9a",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SelectPrev",
+                    "type": "Button",
+                    "id": "a1d6fbd1-0871-4d05-95a9-ef56cf987ede",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "Press(behavior=2)",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "ConfirmSelect",
+                    "type": "Button",
+                    "id": "60213d13-a733-46e3-b097-79c5b32f3eaa",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
                 }
             ],
             "bindings": [
@@ -323,6 +350,39 @@
                     "processors": "",
                     "groups": "Keyboard Scheme",
                     "action": "Enter",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "abb71947-18b1-4a5d-a702-f387b862dc43",
+                    "path": "<Keyboard>/rightArrow",
+                    "interactions": "Press(behavior=2)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectNext",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "2276da4e-197b-4821-ae1c-caf503f87850",
+                    "path": "<Keyboard>/leftArrow",
+                    "interactions": "Press",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectPrev",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "59d192a2-6513-442d-a9fb-0ec58cb44992",
+                    "path": "<Keyboard>/space",
+                    "interactions": "Press(behavior=2)",
+                    "processors": "",
+                    "groups": "",
+                    "action": "ConfirmSelect",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
