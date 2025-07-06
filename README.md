@@ -300,9 +300,10 @@
   - **JWT 미들웨어** 설정 및 인증 체계 구축
   - **IUserService** / **UserService**: SteamID 기반 유저 레코드 관리
   
-- **데이터베이스**
-  - `Migration_CreateUsersTable.sql` (SteamID를 `users.id`로 사용)
-  - `users` 테이블에 Steam 프로필 컬럼 추가
+- **데이터베이스 (Entity Framework Core)**
+  - **User Entity** 모델 정의 (SteamID를 Primary Key로 사용)
+  - `Add-Migration CreateUsersTable` → Steam 프로필 정보 포함
+  - **DbContext** 설정 및 의존성 주입
 
 ### 💾 **하이브리드 델타 동기화 완성**
 온라인/오프라인 모드에 따라 로컬 JSON ↔ 서버 DB 동기화 관리
@@ -319,9 +320,10 @@
   - **UserStateService**: 델타 병합·UPSERT·트랜잭션·Redis 갱신
   - **ConflictResolver**: 델타 충돌 처리 로직
   
-- **데이터베이스 & 캐시**
-  - `Migration_CreateUsersTable.sql`, `Migration_CreateUserItemsTable.sql`
-  - `UpsertUserItem.sql` 저장 프로시저
+- **데이터베이스 & 캐시 (Entity Framework Core)**
+  - **Entity 모델**: User, UserItem 엔티티 정의
+  - `Add-Migration CreateUserItems` → 사용자 아이템 테이블 생성
+  - **Repository 패턴**: EF Core 기반 UPSERT 로직 구현
   - **Redis** 캐시 시스템: 고성능 데이터 접근 및 동시 접속자 처리
   - `RedisSyncConfig.json` 설정
 
@@ -336,9 +338,10 @@
   - **AchievementController**: `GET /api/users/{uid}/achievements`, `POST /api/users/{uid}/achievements`
   - **IUserAchievementService** + **UserAchievementService**: 델타 병합·UPSERT
   
-- **데이터베이스 & 캐시**
-  - `Migration_CreateAchievementsTable.sql`
-  - `UpsertUserAchievement.sql`
+- **데이터베이스 & 캐시 (Entity Framework Core)**
+  - **Achievement Entity** 모델 정의
+  - `Add-Migration CreateAchievements` → 업적 테이블 생성
+  - **Repository 패턴**: EF Core 기반 업적 UPSERT 로직
   - Redis 캐시 연동
 
 ### 🎭 **캐릭터 선택 시스템**
@@ -352,9 +355,10 @@
   - **CharacterController**: `GET /api/users/{uid}/character`, `PUT /api/users/{uid}/character`
   - **IUserCharacterService** + **UserCharacterService**: 델타 병합·UPSERT
   
-- **데이터베이스**
-  - `Migration_AddSelectedCharacterColumn.sql`
-  - 캐릭터 변경 이력 추적 테이블
+- **데이터베이스 (Entity Framework Core)**
+  - `Add-Migration AddSelectedCharacterColumn` → User 엔티티에 SelectedCharacter 속성 추가
+  - **CharacterHistory Entity**: 캐릭터 변경 이력 추적을 위한 엔티티 모델
+  - **Repository 패턴**: EF Core 기반 캐릭터 데이터 관리
 
 
 ### 🚀 **전체 파이프라인 통합 목표**
