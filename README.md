@@ -305,28 +305,6 @@
   - `Add-Migration CreateUsersTable` → Steam 프로필 정보 포함
   - **DbContext** 설정 및 의존성 주입
 
-### 💾 **하이브리드 델타 동기화 완성**
-온라인/오프라인 모드에 따라 로컬 JSON ↔ 서버 DB 동기화 관리
-
-- **클라이언트**
-  - **DataManager** 리팩토링: 
-    - `Load()`: 로컬 JSON 읽기 → 네트워크 연결 시 서버 GET → JSON 덮어쓰기
-    - `Save()`: 로컬 JSON 쓰기 → 온라인일 때 `DataSyncManager` 델타 큐잉
-  - **OfflineCacheManager** 강화: 네트워크 상태 감지 → 온라인 복귀 시 로컬 델타 일괄 전송
-  
-- **서버 (ASP.NET Core Web API)**
-  - **SaveController** GET/POST 엔드포인트: `/api/users/{uid}/state`, `/api/users/{uid}/state/delta`
-  - **IUserStateService.LoadStateAsync** 추가
-  - **UserStateService**: 델타 병합·UPSERT·트랜잭션·Redis 갱신
-  - **ConflictResolver**: 델타 충돌 처리 로직
-  
-- **데이터베이스 & 캐시 (Entity Framework Core)**
-  - **Entity 모델**: User, UserItem 엔티티 정의
-  - `Add-Migration CreateUserItems` → 사용자 아이템 테이블 생성
-  - **Repository 패턴**: EF Core 기반 UPSERT 로직 구현
-  - **Redis** 캐시 시스템: 고성능 데이터 접근 및 동시 접속자 처리
-  - `RedisSyncConfig.json` 설정
-
 ### 🏆 **업적 시스템 (+ Steam 업적 연동)**
 게임 이벤트 → 서버 UPSERT & Steam 서버에도 업적 언락
 
