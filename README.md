@@ -203,7 +203,6 @@
 ---
 
 ### 랭킹 시스템 구조
-![image](https://github.com/user-attachments/assets/86640143-8964-4251-a8f2-a2927ace9c44)
 
 - **클라이언트 측**
   - `RankingManager`: 서버 통신 및 캐싱 관리
