@@ -22,6 +22,7 @@ namespace JustClimb.Manager
         private ServerConfig _serverConfig;
         private string _endpointFormat;
         private string _userId;
+        private SteamAuthManager _steamAuthManager;  // Steam 인증 매니저
 
         // 전송 대기 중인 Δ 큐
         // readonly는 런타임 시 (runtime)에 초기화 가능
@@ -30,10 +31,22 @@ namespace JustClimb.Manager
 
         // Zenject 의존성 주입
         [Inject]
-        public void Construct([Inject(Id="UserId")] string userId)
+        public void Construct([Inject(Id="UserId")] string userId, SteamAuthManager steamAuthManager)
         {
             _userId = userId;
+            _steamAuthManager = steamAuthManager;
             Debug.Log($"[DataSyncManager] UserId 주입: {_userId}");
+        }
+
+        /// <summary>
+        /// UnityWebRequest에 JWT 토큰 헤더 추가
+        /// </summary>
+        private void AddAuthorizationHeader(UnityWebRequest request)
+        {
+            if (_steamAuthManager != null && _steamAuthManager.HasValidToken())
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {_steamAuthManager.JwtToken}");
+            }
         }
 
         /// <summary>
@@ -131,6 +144,9 @@ namespace JustClimb.Manager
             www.uploadHandler = new UploadHandlerRaw(bytes);
             www.downloadHandler = new DownloadHandlerBuffer();
             www.SetRequestHeader("Content-Type", "application/json");
+            
+            // JWT 토큰 헤더 추가
+            AddAuthorizationHeader(www);
 
             yield return www.SendWebRequest();
 
@@ -181,6 +197,9 @@ namespace JustClimb.Manager
                 downloadHandler = new DownloadHandlerBuffer()
             };
             req.SetRequestHeader("Content-Type", "application/json");
+            
+            // JWT 토큰 헤더 추가
+            AddAuthorizationHeader(req);
 
             // SendWebRequest를 블록킹 호출
             var op = req.SendWebRequest();
@@ -229,6 +248,7 @@ namespace JustClimb.Manager
             _serverConfig = null;
             _endpointFormat = null;
             _userId = null;
+            _steamAuthManager = null;
         }
     }
 }

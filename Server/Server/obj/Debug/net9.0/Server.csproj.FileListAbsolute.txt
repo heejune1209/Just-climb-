@@ -165,3 +165,4 @@ C:\Users\user\Just_Climb\Server\Server\obj\Debug\net9.0\Server.pdb
 C:\Users\user\Just_Climb\Server\Server\obj\Debug\net9.0\Server.genruntimeconfig.cache
 C:\Users\user\Just_Climb\Server\Server\obj\Debug\net9.0\ref\Server.dll
 C:\Users\user\Just_Climb\Server\Server\obj\Debug\net9.0\staticwebassets.upToDateCheck.txt
+C:\Users\user\Just_Climb\Server\Server\bin\Debug\net9.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll

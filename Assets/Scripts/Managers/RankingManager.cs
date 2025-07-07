@@ -27,6 +27,7 @@ namespace JustClimb.Manager
         private readonly IDataManager _dataManager;
         private readonly IStageManager _stageManager;
         private readonly string _userId;
+        private readonly SteamAuthManager _steamAuthManager;  // Steam 인증 매니저
 
         // 캐시된 랭킹 데이터 (스테이지 → 정렬타입 → 응답)
         private Dictionary<int, Dictionary<RankingSortType, RankingResponseDto>> _cachedRankings
@@ -37,11 +38,12 @@ namespace JustClimb.Manager
         private string _baseUrl;
 
         // 생성자 주입
-        public RankingManager(IDataManager dataManager, IStageManager stageManager, [Inject(Id="UserId")] string userId)
+        public RankingManager(IDataManager dataManager, IStageManager stageManager, [Inject(Id="UserId")] string userId, SteamAuthManager steamAuthManager)
         {
             _dataManager = dataManager;
             _stageManager = stageManager;
             _userId = userId;
+            _steamAuthManager = steamAuthManager;
 
             // 서버 설정 로드
             _serverConfig = Resources.Load<ServerConfig>("ServerConfig");
@@ -53,6 +55,17 @@ namespace JustClimb.Manager
             else
             {
                 _baseUrl = $"{_serverConfig.GetBaseUrl()}/api/ranking";
+            }
+        }
+
+        /// <summary>
+        /// UnityWebRequest에 JWT 토큰 헤더 추가
+        /// </summary>
+        private void AddAuthorizationHeader(UnityWebRequest request)
+        {
+            if (_steamAuthManager != null && _steamAuthManager.HasValidToken())
+            {
+                request.SetRequestHeader("Authorization", $"Bearer {_steamAuthManager.JwtToken}");
             }
         }
 
@@ -97,6 +110,9 @@ namespace JustClimb.Manager
 
         private IEnumerator HandleDataLoadedCoroutine(SaveData sd)
         {
+            // Steam 닉네임 가져오기
+            string displayName = GetPlayerDisplayName();
+            
             int maxStage = Mathf.Max(sd.bestClearTimes.Count, sd.bestDeathCounts.Count);
             for (int i = 1; i <= maxStage; i++)
             {
@@ -107,7 +123,7 @@ namespace JustClimb.Manager
                         StageNumber = i,
                         ClearTime = sd.bestClearTimes[i-1],
                         DeathCount = i <= sd.bestDeathCounts.Count ? sd.bestDeathCounts[i-1] : 0,
-                        DisplayName = "You"
+                        DisplayName = displayName
                     };
                     yield return UpdateUserRecordCoroutine(request);
                 }
@@ -129,12 +145,15 @@ namespace JustClimb.Manager
 
             if (clearTime > 0)
             {
+                // Steam 닉네임 가져오기
+                string displayName = GetPlayerDisplayName();
+                
                 var request = new UpdateRecordRequestDto
                 {
                     StageNumber = stageNum,
                     ClearTime = clearTime,
                     DeathCount = deathCount,
-                    DisplayName = "You"
+                    DisplayName = displayName
                 };
 
                 // 메인 스레드에서 코루틴으로 업데이트
@@ -147,6 +166,32 @@ namespace JustClimb.Manager
                     }
                 });
             }
+        }
+
+        /// <summary>
+        /// 플레이어 표시 이름 가져오기 (Steam 닉네임 우선)
+        /// </summary>
+        private string GetPlayerDisplayName()
+        {
+            // Steam 인증 매니저에서 닉네임 가져오기
+            if (_steamAuthManager != null && _steamAuthManager.IsSteamInitialized)
+            {
+                string steamDisplayName = _steamAuthManager.GetSteamDisplayName();
+                if (!string.IsNullOrEmpty(steamDisplayName) && steamDisplayName != "Unknown Player")
+                {
+                    return steamDisplayName;
+                }
+            }
+            
+            // PlayerPrefs에서 저장된 닉네임 확인
+            string savedDisplayName = PlayerPrefs.GetString("SteamDisplayName", "");
+            if (!string.IsNullOrEmpty(savedDisplayName))
+            {
+                return savedDisplayName;
+            }
+            
+            // 기본값
+            return "Player";
         }
 
         /// <summary>
@@ -217,6 +262,10 @@ namespace JustClimb.Manager
             Debug.Log($"[RankingManager] 현재 UserId: {_userId}");
             
             using var request = UnityWebRequest.Get(url);
+            
+            // JWT 토큰 헤더 추가
+            AddAuthorizationHeader(request);
+            
             yield return request.SendWebRequest();
 
             Debug.Log($"[RankingManager] 서버 응답 - Result: {request.result}, ResponseCode: {request.responseCode}");
@@ -293,6 +342,9 @@ namespace JustClimb.Manager
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
+            
+            // JWT 토큰 헤더 추가
+            AddAuthorizationHeader(request);
 
             yield return request.SendWebRequest();
 

@@ -1,5 +1,21 @@
 [
   {
+    "ContainingType": "Server.Controllers.AuthController",
+    "Method": "AuthenticateWithSteam",
+    "RelativePath": "api/Auth/steam",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "Server.Controllers.SteamAuthRequest",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Server.Controllers.DatabaseController",
     "Method": "RecreateDatabase",
     "RelativePath": "api/Database/recreate",

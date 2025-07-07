@@ -1,4 +1,7 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Server.Config;
 using Server.Database;
 using Server.Services;
@@ -36,7 +39,35 @@ namespace Server
 
             builder.Services.AddScoped<IUserStateService, UserStateService>();
             builder.Services.AddScoped<IRankingService, RankingService>();
+            builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddSingleton<ConflictResolver>();
+            
+            // HttpClient 등록 (Steam Web API 호출용)
+            builder.Services.AddHttpClient();
+            
+            // JWT 인증 설정
+            var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+            var secretKey = jwtSettings["SecretKey"];
+            var issuer = jwtSettings["Issuer"];
+            var audience = jwtSettings["Audience"];
+            
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = issuer,
+                        ValidAudience = audience,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey)),
+                        ClockSkew = TimeSpan.Zero
+                    };
+                });
+            
+            builder.Services.AddAuthorization();
 
 
             // JSON 설정 파일 추가
@@ -61,6 +92,8 @@ namespace Server
             // CORS 미들웨어 추가
             app.UseCors("AllowUnity");
 
+            // 인증 및 인가 미들웨어 추가
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

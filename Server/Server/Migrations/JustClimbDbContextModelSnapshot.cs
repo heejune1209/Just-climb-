@@ -25,7 +25,8 @@ namespace Server.Migrations
             modelBuilder.Entity("Server.Models.User", b =>
                 {
                     b.Property<string>("Id")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("id");
 
                     b.Property<string>("BestClearTimesJson")
@@ -42,6 +43,10 @@ namespace Server.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("best_gem_rewards_json");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
 
                     b.Property<string>("CurrentDeathCountsJson")
                         .IsRequired()
@@ -76,9 +81,23 @@ namespace Server.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("stage_flag_positions_json");
 
+                    b.Property<string>("SteamAvatarUrl")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("steam_avatar_url");
+
+                    b.Property<string>("SteamDisplayName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("steam_display_name");
+
                     b.Property<bool>("TutorialDisplayed")
                         .HasColumnType("bit")
                         .HasColumnName("tutorial_displayed");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
 
                     b.Property<int>("Version")
                         .HasColumnType("int")
@@ -92,7 +111,7 @@ namespace Server.Migrations
             modelBuilder.Entity("Server.Models.UserItem", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("user_id");
 
                     b.Property<string>("ItemId")

@@ -35,15 +35,17 @@ public class DataManager : IDataManager, IInitializable
     readonly string _serverUrl;
     readonly string _userId;        // 스팀ID나 자체 유저ID
     readonly ServerConfig _serverConfig;
+    readonly SteamAuthManager _steamAuthManager;  // Steam 인증 매니저
 
     // 파일 접근 동기화를 위한 세마포어
     private readonly SemaphoreSlim _fileSemaphore = new SemaphoreSlim(1, 1);
 
     [Inject]
-    public DataManager(IDataSyncManager syncMgr, [Inject(Id = "UserId")] string userId)
+    public DataManager(IDataSyncManager syncMgr, [Inject(Id = "UserId")] string userId, SteamAuthManager steamAuthManager)
     {
         _syncMgr = syncMgr;
         _userId = userId;
+        _steamAuthManager = steamAuthManager;
         _syncCtx = SynchronizationContext.Current;
         _filePath = Path.Combine(Application.persistentDataPath, "save.json");
 
@@ -78,6 +80,17 @@ public class DataManager : IDataManager, IInitializable
     public void Load()
     {
         var loadTask = LoadAsync();
+    }
+
+    /// <summary>
+    /// HTTP 요청에 JWT 토큰 헤더 추가
+    /// </summary>
+    private void AddAuthorizationHeader(HttpRequestMessage request)
+    {
+        if (_steamAuthManager != null && _steamAuthManager.HasValidToken())
+        {
+            request.Headers.Add("Authorization", $"Bearer {_steamAuthManager.JwtToken}");
+        }
     }
 
     /// <summary>
@@ -123,20 +136,36 @@ public class DataManager : IDataManager, IInitializable
             try
             {
                 var url = $"{_serverUrl}/{_userId}/state";
-                var json = await _http.GetStringAsync(url);
-                var serverData = JsonConvert.DeserializeObject<SaveData>(json) ?? new SaveData();
+                
+                // JWT 토큰을 포함한 HTTP 요청 생성
+                using (var request = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    AddAuthorizationHeader(request);
+                    
+                    var response = await _http.SendAsync(request);
+                    var json = await response.Content.ReadAsStringAsync();
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var serverData = JsonConvert.DeserializeObject<SaveData>(json) ?? new SaveData();
 
-                // 덮어쓰기 + 로컬 저장 (파일 접근 동기화)
-                await _fileSemaphore.WaitAsync();
-                try
-                {
-                    await File.WriteAllTextAsync(_filePath, json);
-                    Current = serverData;
-                    _syncCtx.Post(_ => OnLoaded?.Invoke(Current), null);
-                }
-                finally
-                {
-                    _fileSemaphore.Release();
+                        // 덮어쓰기 + 로컬 저장 (파일 접근 동기화)
+                        await _fileSemaphore.WaitAsync();
+                        try
+                        {
+                            await File.WriteAllTextAsync(_filePath, json);
+                            Current = serverData;
+                            _syncCtx.Post(_ => OnLoaded?.Invoke(Current), null);
+                        }
+                        finally
+                        {
+                            _fileSemaphore.Release();
+                        }
+                    }
+                    else
+                    {
+                        Debug.LogWarning($"[DataManager] 서버 로드 실패: {response.StatusCode} - {json}");
+                    }
                 }
             }
             catch (Exception e)

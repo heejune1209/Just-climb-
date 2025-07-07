@@ -4,11 +4,11 @@ using System.Collections.Generic;
 namespace Server.Models
 {
     /// <summary>
-    /// 사용자 상태를 표현하는 엔티티입니다.
+    /// 사용자 상태를 표현하는 엔티티입니다. (Steam 인증 지원)
     /// </summary>
     public class User
     {
-        /// <summary>사용자 식별자 (Primary Key)</summary>
+        /// <summary>Steam ID (Primary Key)</summary>
         public string Id { get; set; } = string.Empty;
 
         /// <summary>아이템 목록</summary>
@@ -19,6 +19,14 @@ namespace Server.Models
         public int Gems { get; set; }
         public string SelectedCharacter { get; set; } = "Default";
         public bool TutorialDisplayed { get; set; }
+
+        // Steam 프로필 정보
+        public string? SteamDisplayName { get; set; }
+        public string? SteamAvatarUrl { get; set; }
+
+        // 타임스탬프
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
         // JSON 직렬화된 리스트를 저장할 컬럼들
         public string StageClearsJson { get; set; } = "[]";
@@ -79,11 +87,15 @@ namespace Server.Database
             {
                 entity.ToTable("users");
                 entity.HasKey(u => u.Id);
-                entity.Property(u => u.Id).HasColumnName("id");
+                entity.Property(u => u.Id).HasColumnName("id").HasMaxLength(50);
                 entity.Property(u => u.Gold).HasColumnName("gold");
                 entity.Property(u => u.Gems).HasColumnName("gems");
                 entity.Property(u => u.SelectedCharacter).HasColumnName("selected_character");
                 entity.Property(u => u.TutorialDisplayed).HasColumnName("tutorial_displayed");
+                entity.Property(u => u.SteamDisplayName).HasColumnName("steam_display_name").HasMaxLength(100);
+                entity.Property(u => u.SteamAvatarUrl).HasColumnName("steam_avatar_url").HasMaxLength(255);
+                entity.Property(u => u.CreatedAt).HasColumnName("created_at");
+                entity.Property(u => u.UpdatedAt).HasColumnName("updated_at");
                 entity.Property(u => u.StageClearsJson).HasColumnName("stage_clears_json");
                 entity.Property(u => u.StageFlagPositionsJson).HasColumnName("stage_flag_positions_json");
                 entity.Property(u => u.BestGemRewardsJson).HasColumnName("best_gem_rewards_json");
