@@ -3,7 +3,7 @@
 - 기간 : 2023.09 ~ 2023.12
 - 인원 : 4인 (기획 1, 아트1, 프로그래머 2)
 - 역할 : 메인 프로그래머
-- 도구 : Unity3D, C#, ASP.NET Core Web API, Entity Framework Core, Github
+- 도구 : Unity3D, C#, ASP.NET Core Web API, Entity Framework Core, Steamworks.NET, Redis, Github
 - 장르 : 어드벤처, 클라이밍, 3인칭 백뷰 
 - 플랫폼 : PC
 
@@ -15,6 +15,7 @@
 - 홀드를 이용한 암벽 등반과 장애물을 파훼하여 산 정상에 오르는 게임
 - 총 8개 Stage 구성
 - **실시간 랭킹 시스템**과 **온라인 데이터 동기화** 기능 포함
+- **Steam 연동 시스템**: 로그인 인증, 업적 동기화, 프로필 연동
 - **Zenject DI 기반 모듈화 아키텍처**로 확장성과 유지보수성 확보
 
 ## 설계서
@@ -83,6 +84,16 @@
 
 - **[ItemDatabase](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/StaticData/ItemDatabase.cs)**  
   - `ItemData.asset` 목록 로드, 아이템 정의 등의 정적 데이터 정보 제공
+
+- **AchievementManager**  
+  - 이벤트 기반 업적 달성 시스템
+  - Steam 업적 연동 (`SteamUserStats.SetAchievement`)
+  - 델타 이벤트 생성 및 서버 동기화
+
+- **SteamAuthManager**  
+  - Steam 로그인 인증 및 세션 관리
+  - JWT 토큰 발급 및 저장
+  - Steam 프로필 정보 동기화
 
 ### Infrastructure Layer
 - **[ResourceManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/ResourceManager.cs)**  
@@ -166,7 +177,11 @@
 ### Server-Side Architecture (ASP.NET Core)
 - **[RankingController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs)**: 랭킹 조회 및 기록 업데이트 API
 - **[RankingService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/RankingService.cs)**: 랭킹 비즈니스 로직 처리
+- **AuthController**: Steam 로그인 인증 및 JWT 토큰 발급
+- **AchievementController**: 업적 시스템 API 및 Steam 업적 연동
+- **UserService**: Steam 기반 사용자 관리 및 프로필 동기화
 - **Entity Framework Core**: 데이터베이스 ORM 및 마이그레이션 관리
+- **Redis 캐시**: 업적 및 사용자 데이터 캐시 시스템
 - **로깅 시스템**: 요청/응답 추적 및 에러 처리
 
 [UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
@@ -287,43 +302,23 @@
   
 ### ✅ 캐릭터 능력치 밸런싱
 
+### ✅ **스팀 로그인 연동 시스템 구현**
+- **Steamworks.NET 통합**: SteamAPI 초기화 및 인증 티켓 생성
+- **JWT 기반 인증**: 스팀 세션 검증 후 JWT 토큰 발급
+- **자동 사용자 생성**: SteamID 기반 사용자 레코드 관리
+- **Valve Web API 연동**: 서버 측 티켓 검증 시스템
+- **완전한 스팀 통합**: 스팀 프로필 정보 동기화 및 세션 관리
+
+### ✅ **업적 시스템 구현**
+- **이벤트 기반 업적 달성**: 게임 이벤트 자동 감지 및 업적 언락
+- **Steam 업적 연동**: 게임 내 업적과 Steam 업적 동시 달성
+- **실시간 동기화**: 델타 이벤트 시스템으로 서버 업적 상태 실시간 업데이트
+- **시각적 피드백**: UI_AchievementPopup을 통한 업적 달성 알림
+- **캐시 최적화**: Redis 캐시 연동으로 성능 향상
+
 ---
 
 ## 🔧 **현재 진행중인 작업 내용**
-
-### 🔐 **스팀 로그인 연동 시스템**
-스팀 세션으로 자동 인증·식별 → JWT 발급
-
-- **클라이언트**
-  - **Steamworks.NET** 설치 및 초기화(`SteamAPI.Init()`)
-  - **SteamAuthManager** 작성: SteamID, AuthTicket 획득 → `/api/auth/steam` POST → JWT 저장
-  
-- **서버 (ASP.NET Core Web API)**
-  - **AuthController**: `POST /api/auth/steam` → Valve Web API 티켓 검증 → `IUserService.GetOrCreateAsync` → JWT 발급
-  - **JWT 미들웨어** 설정 및 인증 체계 구축
-  - **IUserService** / **UserService**: SteamID 기반 유저 레코드 관리
-  
-- **데이터베이스 (Entity Framework Core)**
-  - **User Entity** 모델 정의 (SteamID를 Primary Key로 사용)
-  - `Add-Migration CreateUsersTable` → Steam 프로필 정보 포함
-  - **DbContext** 설정 및 의존성 주입
-
-### 🏆 **업적 시스템 (+ Steam 업적 연동)**
-게임 이벤트 → 서버 UPSERT & Steam 서버에도 업적 언락
-
-- **클라이언트**
-  - **AchievementManager** 달성 로직: `GenerateDelta("achievement_unlocked", achId)` + Steamworks.NET `SteamUserStats.SetAchievement`, `StoreStats()`
-  - **UI_AchievementPopup** 구현: 업적 달성 시 시각적 피드백
-  
-- **서버 (ASP.NET Core Web API)**
-  - **AchievementController**: `GET /api/users/{uid}/achievements`, `POST /api/users/{uid}/achievements`
-  - **IUserAchievementService** + **UserAchievementService**: 델타 병합·UPSERT
-  
-- **데이터베이스 & 캐시 (Entity Framework Core)**
-  - **Achievement Entity** 모델 정의
-  - `Add-Migration CreateAchievements` → 업적 테이블 생성
-  - **Repository 패턴**: EF Core 기반 업적 UPSERT 로직
-  - Redis 캐시 연동
 
 ### 🎭 **캐릭터 선택 시스템**
 클라이언트 UI → 서버 저장 → 모든 기기에서 동기화
@@ -342,11 +337,11 @@
   - **Repository 패턴**: EF Core 기반 캐릭터 데이터 관리
 
 
-### 🚀 **전체 파이프라인 통합 목표**
-1. **클라이언트**: 로컬 JSON → Δ(델타) 생성 → `DataSyncManager` 주기 전송/재시도 → UI 표시
-2. **서버**: ASP.NET Core Web API → 스팀 인증·검증 → `ConflictResolver` → DB/Redis 반영  
-3. **DB/Redis**: 정규화 테이블 + 캐시 로직 → 실시간 랭킹·상태 조회
-4. **Steam 연동**: 로그인 인증 + 업적 동기화로 완전한 스팀 게임 경험 제공
+### 🚀 **향후 개발 계획**
+1. **캐릭터 선택 시스템 완성**: 클라이언트 UI → 서버 저장 → 모든 기기에서 동기화
+2. **성능 최적화**: 실시간 동기화 및 캐시 시스템 개선
+3. **추가 업적 컨텐츠**: 더 다양한 업적 조건 및 보상 시스템
+4. **Steam Workshop 연동**: 사용자 생성 컨텐츠 지원 검토
 
 ---
 
