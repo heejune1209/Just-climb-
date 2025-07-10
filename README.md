@@ -35,8 +35,14 @@ graph TB
             UI_Stage[UI_Stage]
             UI_Achievement[UI_Achievement]
             UI_Popup[UI_Popup]
-            SelectCharacter[SelectCharacter]
-            UI_Ranking[UI_Ranking]
+            UI_RankingEntry[UI_RankingEntry]
+            UI_SyncStatus[UI_SyncStatus]
+            UI_Base[UI_Base]
+            CharacterSelector[CharacterSelector]
+            StartLogo[StartLogo]
+            TextColorChange[TextColorChange]
+            TutorialTrigger[TutorialTrigger]
+            UI_Components[UI Components]
         end
         
         subgraph "Infrastructure Layer"
@@ -46,6 +52,11 @@ graph TB
             GameManager[GameManager]
             PoolManager[PoolManager]
             SoundManager[SoundManager]
+            BaseScene[BaseScene]
+            MainScene[MainScene]
+            LobbyScene[LobbyScene]
+            StageScene[StageScene]
+            SteamManager[SteamManager<br/>Steamworks.NET]
         end
         
         subgraph "Domain Layer"
@@ -55,12 +66,29 @@ graph TB
             RankingManager[RankingManager]
             AchievementManager[AchievementManager<br/>🆕 Steam Integration]
             SteamAuthManager[SteamAuthManager<br/>🆕 Steam Auth]
+            ItemDatabase[ItemDatabase]
+        end
+        
+        subgraph "Game Systems"
+            ClimbingSystem[ClimbingSystem]
+            ObstacleSystem[ObstacleSystem]
+            ItemSystem[ItemSystem]
+            InputSystem[InputSystem]
+            ObstacleCore[Obstacle Core<br/>IObstacle, ObstacleBase]
+            ObstacleSpawners[Obstacle Spawners<br/>RockDropper, RollingSpawner]
+            ObstacleEffects[Obstacle Effects<br/>KnockbackZone, JumpPad]
+            ItemUses[Item Uses<br/>FeatherUse, WingUse, LampUse]
+            ItemData[ItemData & IItemUse]
+            ItemInput[ItemInput]
         end
         
         subgraph "Persistence Layer"
             DataManager[DataManager]
             SaveData[SaveData]
             InventoryItem[InventoryItem]
+            DeltaEvent[DeltaEvent]
+            ServerConfig[ServerConfig]
+            AchievementIDs[AchievementIDs]
         end
         
         subgraph "Sync Layer"
@@ -71,6 +99,10 @@ graph TB
         
         subgraph "DI System"
             ProjectInstaller[ProjectInstaller<br/>🆕 Zenject DI]
+            MainSceneInstaller[MainSceneInstaller]
+            LobbySceneInstaller[LobbySceneInstaller]
+            StageSceneInstaller[StageSceneInstaller]
+            CharacterSelectInstaller[CharacterSelectInstaller]
             UserIdProvider[UserIdProvider]
         end
     end
@@ -127,7 +159,15 @@ graph TB
     UI_Lobby --> UIManager
     UI_Stage --> UIManager
     UI_Achievement --> AchievementManager
-    UI_Ranking --> RankingManager
+    UI_RankingEntry --> RankingManager
+    UI_SyncStatus --> DataSyncManager
+    CharacterSelector --> SteamAuthManager
+    UI_Base --> UIManager
+    
+    MainScene --> UIManager
+    LobbyScene --> UIManager
+    StageScene --> UIManager
+    BaseScene --> SceneManagerEX
     
     UIManager --> ResourceManager
     GameManager --> StageManager
@@ -135,10 +175,28 @@ graph TB
     RankingManager --> DataSyncManager
     AchievementManager --> DataSyncManager
     SteamAuthManager --> DataSyncManager
+    SteamManager --> SteamAuthManager
+    
+    ItemManager --> ItemSystem
+    ItemSystem --> ItemUses
+    ItemUses --> ItemData
+    ItemInput --> ItemManager
+    
+    ObstacleSystem --> ObstacleCore
+    ObstacleCore --> ObstacleSpawners
+    ObstacleCore --> ObstacleEffects
     
     DataManager --> SaveData
+    DataManager --> DeltaEvent
+    DataManager --> ServerConfig
+    AchievementManager --> AchievementIDs
     DataSyncManager --> OfflineCacheManager
+    
     ProjectInstaller --> UserIdProvider
+    ProjectInstaller --> MainSceneInstaller
+    ProjectInstaller --> LobbySceneInstaller
+    ProjectInstaller --> StageSceneInstaller
+    ProjectInstaller --> CharacterSelectInstaller
     
     DataSyncManager -.->|HTTP API| AuthController
     RankingManager -.->|HTTP API| RankingController
@@ -163,35 +221,53 @@ graph TB
     
     AuthController -.->|Validate Ticket| SteamWebAPI
     SteamAuthManager -.->|Steam SDK| SteamworksNET
+    SteamManager -.->|Steam SDK| SteamworksNET
     AchievementManager -.->|Steam SDK| SteamworksNET
     AchievementService -.->|Cache| RedisCache
     
-    %% 스타일링
-    classDef newComponent fill:#90EE90,stroke:#228B22,stroke-width:2px
-    classDef uiLayer fill:#FFB6C1,stroke:#FF1493,stroke-width:2px
-    classDef infraLayer fill:#87CEEB,stroke:#4682B4,stroke-width:2px
-    classDef domainLayer fill:#DDA0DD,stroke:#8B008B,stroke-width:2px
-    classDef persistLayer fill:#F0E68C,stroke:#DAA520,stroke-width:2px
-    classDef serverLayer fill:#98FB98,stroke:#32CD32,stroke-width:2px
-    classDef dbLayer fill:#F4A460,stroke:#D2691E,stroke-width:2px
-    classDef externalLayer fill:#FFE4B5,stroke:#FF8C00,stroke-width:2px
+    %% 스타일링 - 밝은 배경에 검은 글자
+    classDef newComponent fill:#90EE90,stroke:#228B22,stroke-width:2px,color:#000000
+    classDef uiLayer fill:#FFE4E1,stroke:#DC143C,stroke-width:2px,color:#000000
+    classDef infraLayer fill:#E0F6FF,stroke:#4682B4,stroke-width:2px,color:#000000
+    classDef domainLayer fill:#F0E6FF,stroke:#8B008B,stroke-width:2px,color:#000000
+    classDef gameSystem fill:#E6F3FF,stroke:#4169E1,stroke-width:2px,color:#000000
+    classDef persistLayer fill:#FFFACD,stroke:#DAA520,stroke-width:2px,color:#000000
+    classDef syncLayer fill:#F0FFF0,stroke:#32CD32,stroke-width:2px,color:#000000
+    classDef diSystem fill:#FFF0F5,stroke:#FF69B4,stroke-width:2px,color:#000000
+    classDef serverLayer fill:#E6FFE6,stroke:#32CD32,stroke-width:2px,color:#000000
+    classDef dbLayer fill:#FFEFD5,stroke:#D2691E,stroke-width:2px,color:#000000
+    classDef externalLayer fill:#FFF8DC,stroke:#FF8C00,stroke-width:2px,color:#000000
     
     class AchievementManager,SteamAuthManager,DataSyncManager,OfflineCacheManager,AuthController,AchievementController,UserService,AchievementService,UserStateService,JustClimbDbContext,AchievementSeeder,AchievementsTable,UserAchievementsTable,UserAchievementProgressTable,SteamWebAPI,SteamworksNET,RedisCache,ProjectInstaller newComponent
     
-    class UI_Main,UI_Lobby,UI_Stage,UI_Achievement,UI_Popup,SelectCharacter,UI_Ranking uiLayer
-    class UIManager,ResourceManager,SceneManagerEX,GameManager,PoolManager,SoundManager infraLayer
-    class CurrencyManager,ItemManager,StageManager,RankingManager,AchievementManager,SteamAuthManager domainLayer
-    class DataManager,SaveData,InventoryItem persistLayer
-    class AuthController,AchievementController,RankingController,SaveController,DatabaseController,UserService,AchievementService,RankingService,UserStateService serverLayer
+    class UI_Main,UI_Lobby,UI_Stage,UI_Achievement,UI_Popup,UI_RankingEntry,UI_SyncStatus,UI_Base,CharacterSelector,StartLogo,TextColorChange,TutorialTrigger,UI_Components uiLayer
+    
+    class UIManager,ResourceManager,SceneManagerEX,GameManager,PoolManager,SoundManager,BaseScene,MainScene,LobbyScene,StageScene,SteamManager infraLayer
+    
+    class CurrencyManager,ItemManager,StageManager,RankingManager,AchievementManager,SteamAuthManager,ItemDatabase domainLayer
+    
+    class ClimbingSystem,ObstacleSystem,ItemSystem,InputSystem,ObstacleCore,ObstacleSpawners,ObstacleEffects,ItemUses,ItemData,ItemInput gameSystem
+    
+    class DataManager,SaveData,InventoryItem,DeltaEvent,ServerConfig,AchievementIDs persistLayer
+    
+    class DataSyncManager,OfflineCacheManager,SaveManager syncLayer
+    
+    class ProjectInstaller,MainSceneInstaller,LobbySceneInstaller,StageSceneInstaller,CharacterSelectInstaller,UserIdProvider diSystem
+    
+    class AuthController,AchievementController,RankingController,SaveController,DatabaseController,UserService,AchievementService,RankingService,UserStateService,User,Achievement,DTOs,SaveDataServer,JustClimbDbContext,AchievementSeeder serverLayer
+    
     class UsersTable,UserItemsTable,UserStageRecordsTable,AchievementsTable,UserAchievementsTable,UserAchievementProgressTable dbLayer
+    
     class SteamWebAPI,SteamworksNET,RedisCache externalLayer
 ```
 
 **주요 변경사항:**
-- 🆕 **Steam 연동**: SteamAuthManager, Steam Web API 인증
-- 🆕 **업적 시스템**: AchievementManager, Steam 업적 동기화
-- 🆕 **DI 아키텍처**: Zenject 기반 의존성 주입
-- 🆕 **실시간 동기화**: DataSyncManager, 오프라인 캐시 지원
+- 🆕 **Steam 연동**: SteamAuthManager, Steam Web API 인증, SteamManager 통합
+- 🆕 **업적 시스템**: AchievementManager, Steam 업적 동기화, AchievementIDs 관리
+- 🆕 **DI 아키텍처**: Zenject 기반 의존성 주입, 모든 Scene별 Installer 분리
+- 🆕 **실시간 동기화**: DataSyncManager, 오프라인 캐시 지원, DeltaEvent 시스템
+- 🆕 **게임 시스템**: 아이템·장애물·클라이밍 시스템을 별도 레이어로 분리
+- 🆕 **UI 시스템**: 모든 UI 컴포넌트 계층화 (Base, Scene, Popup, Components)
 - 🆕 **서버 확장**: 6개 테이블 구조, Redis 캐시 최적화
 
 ## 주요 구성 요소
