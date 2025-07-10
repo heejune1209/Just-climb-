@@ -8,7 +8,6 @@
 - 플랫폼 : PC
 
 ---
-프로젝트 리펙토링으로 인해 설명 업데이트 예정
 
 ## 프로젝트 설명
 - Unity 엔진 기반 3D 백뷰 클라이밍 게임
@@ -24,10 +23,176 @@
 - 씬 전환 기반 구조로 타이틀 → 로비 → 스테이지 → 결과로 이어지는 흐름
 - 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
 
-### Game Structure
-![image](https://github.com/user-attachments/assets/86640143-8964-4251-a8f2-a2927ace9c44)
+### 리팩토링된 아키텍처 구조 (Steam 연동 + DI 적용)
 
-![image](https://github.com/user-attachments/assets/3c195144-73de-40e6-8450-95cbd6cc1a0c)
+```mermaid
+graph TB
+    %% 클라이언트 사이드 (Unity)
+    subgraph "🎮 Unity Client"
+        subgraph "UI Layer"
+            UI_Main[UI_Main]
+            UI_Lobby[UI_Lobby]
+            UI_Stage[UI_Stage]
+            UI_Achievement[UI_Achievement]
+            UI_Popup[UI_Popup]
+            SelectCharacter[SelectCharacter]
+            UI_Ranking[UI_Ranking]
+        end
+        
+        subgraph "Infrastructure Layer"
+            UIManager[UIManager]
+            ResourceManager[ResourceManager]
+            SceneManagerEX[SceneManagerEX]
+            GameManager[GameManager]
+            PoolManager[PoolManager]
+            SoundManager[SoundManager]
+        end
+        
+        subgraph "Domain Layer"
+            CurrencyManager[CurrencyManager]
+            ItemManager[ItemManager]
+            StageManager[StageManager]
+            RankingManager[RankingManager]
+            AchievementManager[AchievementManager<br/>🆕 Steam Integration]
+            SteamAuthManager[SteamAuthManager<br/>🆕 Steam Auth]
+        end
+        
+        subgraph "Persistence Layer"
+            DataManager[DataManager]
+            SaveData[SaveData]
+            InventoryItem[InventoryItem]
+        end
+        
+        subgraph "Sync Layer"
+            DataSyncManager[DataSyncManager<br/>🆕 Real-time Sync]
+            OfflineCacheManager[OfflineCacheManager<br/>🆕 Offline Cache]
+            SaveManager[SaveManager]
+        end
+        
+        subgraph "DI System"
+            ProjectInstaller[ProjectInstaller<br/>🆕 Zenject DI]
+            UserIdProvider[UserIdProvider]
+        end
+    end
+    
+    %% 서버 사이드 (ASP.NET Core)
+    subgraph "🌐 ASP.NET Core Server"
+        subgraph "Controllers"
+            AuthController[AuthController<br/>🆕 Steam Auth]
+            AchievementController[AchievementController<br/>🆕 Achievements]
+            RankingController[RankingController]
+            SaveController[SaveController]
+            DatabaseController[DatabaseController]
+        end
+        
+        subgraph "Services"
+            UserService[UserService<br/>🆕 User Management]
+            AchievementService[AchievementService<br/>🆕 Achievement Logic]
+            RankingService[RankingService]
+            UserStateService[UserStateService<br/>🆕 State Management]
+        end
+        
+        subgraph "Models & DTOs"
+            User[User Model]
+            Achievement[Achievement Model]
+            DTOs[DTOs]
+            SaveDataServer[SaveData]
+        end
+        
+        subgraph "Database Context"
+            JustClimbDbContext[JustClimbDbContext<br/>🆕 EF Core]
+            AchievementSeeder[AchievementSeeder]
+        end
+    end
+    
+    %% 데이터베이스
+    subgraph "🗄️ Database"
+        UsersTable[(users)]
+        UserItemsTable[(user_items)]
+        UserStageRecordsTable[(user_stage_records)]
+        AchievementsTable[(achievements<br/>🆕)]
+        UserAchievementsTable[(user_achievements<br/>🆕)]
+        UserAchievementProgressTable[(user_achievement_progress<br/>🆕)]
+    end
+    
+    %% 외부 시스템
+    subgraph "🔗 External Systems"
+        SteamWebAPI[Steam Web API<br/>🆕 Ticket Validation]
+        SteamworksNET[Steamworks.NET<br/>🆕 Steam Integration]
+        RedisCache[Redis Cache<br/>🆕 Performance]
+    end
+    
+    %% 연결 관계
+    UI_Main --> UIManager
+    UI_Lobby --> UIManager
+    UI_Stage --> UIManager
+    UI_Achievement --> AchievementManager
+    UI_Ranking --> RankingManager
+    
+    UIManager --> ResourceManager
+    GameManager --> StageManager
+    StageManager --> DataManager
+    RankingManager --> DataSyncManager
+    AchievementManager --> DataSyncManager
+    SteamAuthManager --> DataSyncManager
+    
+    DataManager --> SaveData
+    DataSyncManager --> OfflineCacheManager
+    ProjectInstaller --> UserIdProvider
+    
+    DataSyncManager -.->|HTTP API| AuthController
+    RankingManager -.->|HTTP API| RankingController
+    AchievementManager -.->|HTTP API| AchievementController
+    
+    AuthController --> UserService
+    AchievementController --> AchievementService
+    RankingController --> RankingService
+    SaveController --> UserStateService
+    
+    UserService --> JustClimbDbContext
+    AchievementService --> JustClimbDbContext
+    RankingService --> JustClimbDbContext
+    UserStateService --> JustClimbDbContext
+    
+    JustClimbDbContext --> UsersTable
+    JustClimbDbContext --> UserItemsTable
+    JustClimbDbContext --> UserStageRecordsTable
+    JustClimbDbContext --> AchievementsTable
+    JustClimbDbContext --> UserAchievementsTable
+    JustClimbDbContext --> UserAchievementProgressTable
+    
+    AuthController -.->|Validate Ticket| SteamWebAPI
+    SteamAuthManager -.->|Steam SDK| SteamworksNET
+    AchievementManager -.->|Steam SDK| SteamworksNET
+    AchievementService -.->|Cache| RedisCache
+    
+    %% 스타일링
+    classDef newComponent fill:#90EE90,stroke:#228B22,stroke-width:2px
+    classDef uiLayer fill:#FFB6C1,stroke:#FF1493,stroke-width:2px
+    classDef infraLayer fill:#87CEEB,stroke:#4682B4,stroke-width:2px
+    classDef domainLayer fill:#DDA0DD,stroke:#8B008B,stroke-width:2px
+    classDef persistLayer fill:#F0E68C,stroke:#DAA520,stroke-width:2px
+    classDef serverLayer fill:#98FB98,stroke:#32CD32,stroke-width:2px
+    classDef dbLayer fill:#F4A460,stroke:#D2691E,stroke-width:2px
+    classDef externalLayer fill:#FFE4B5,stroke:#FF8C00,stroke-width:2px
+    
+    class AchievementManager,SteamAuthManager,DataSyncManager,OfflineCacheManager,AuthController,AchievementController,UserService,AchievementService,UserStateService,JustClimbDbContext,AchievementSeeder,AchievementsTable,UserAchievementsTable,UserAchievementProgressTable,SteamWebAPI,SteamworksNET,RedisCache,ProjectInstaller newComponent
+    
+    class UI_Main,UI_Lobby,UI_Stage,UI_Achievement,UI_Popup,SelectCharacter,UI_Ranking uiLayer
+    class UIManager,ResourceManager,SceneManagerEX,GameManager,PoolManager,SoundManager infraLayer
+    class CurrencyManager,ItemManager,StageManager,RankingManager,AchievementManager,SteamAuthManager domainLayer
+    class DataManager,SaveData,InventoryItem persistLayer
+    class AuthController,AchievementController,RankingController,SaveController,DatabaseController,UserService,AchievementService,RankingService,UserStateService serverLayer
+    class UsersTable,UserItemsTable,UserStageRecordsTable,AchievementsTable,UserAchievementsTable,UserAchievementProgressTable dbLayer
+    class SteamWebAPI,SteamworksNET,RedisCache externalLayer
+```
+
+**주요 변경사항:**
+- 🆕 **Steam 연동**: SteamAuthManager, Steam Web API 인증
+- 🆕 **업적 시스템**: AchievementManager, Steam 업적 동기화
+- 🆕 **DI 아키텍처**: Zenject 기반 의존성 주입
+- 🆕 **실시간 동기화**: DataSyncManager, 오프라인 캐시 지원
+- 🆕 **서버 확장**: 6개 테이블 구조, Redis 캐시 최적화
 
 ## 주요 구성 요소
 
@@ -237,6 +402,48 @@
   - **개인 기록 분리**: Top N 랭킹과 내 기록 별도 표시
   - **캐시 최적화**: 중복 요청 방지 및 성능 향상
   - **테스트 데이터**: 개발 및 테스트용 더미 데이터 생성
+
+---
+
+### Steam 연동 시스템 구조
+
+Steam 플랫폼과의 완전한 통합을 위한 3단계 인증 시스템:
+
+1. **클라이언트 (Unity + Steamworks.NET)**
+   - `SteamAPI.Init()`: Steam 클라이언트 초기화
+   - `SteamAuthManager`: Steam 인증 티켓 생성 및 JWT 토큰 관리
+   - `AchievementManager`: Steam 업적과 게임 내 업적 동시 처리
+
+2. **서버 (ASP.NET Core)**
+   - `AuthController`: Steam Web API로 티켓 검증 후 JWT 발급
+   - `AchievementController`: 업적 달성 로직 및 Steam 업적 동기화
+   - `UserService`: Steam 프로필 정보 동기화 및 사용자 관리
+
+3. **Steam Web API**
+   - `AuthenticateUserTicket`: 인증 티켓 유효성 검증
+   - Steam 프로필 정보 조회 및 업적 상태 동기화
+
+**인증 플로우:**
+```
+Unity Client → Steam Ticket → Server Validation → JWT Token → Authenticated Session
+```
+
+### 데이터베이스 구조 (Entity Framework Core)
+
+서버 측 데이터베이스는 6개의 정규화된 테이블로 구성되어 있습니다:
+
+- **users**: Steam 기반 사용자 관리 (Steam ID를 Primary Key로 사용)
+- **user_items**: 사용자별 아이템 보유 현황
+- **user_stage_records**: 스테이지 클리어 기록 및 랭킹 데이터
+- **achievements**: 업적 정의 및 메타데이터
+- **user_achievements**: 사용자별 업적 달성 상태
+- **user_achievement_progress**: 업적 진행도 누적 통계
+
+**주요 특징:**
+- **Steam 통합**: SteamID 기반 인증으로 여러 기기에서 데이터 동기화
+- **실시간 랭킹**: 인덱스 최적화로 빠른 랭킹 조회
+- **업적 시스템**: Steam 업적과 게임 내 업적 동시 관리
+- **Redis 캐시**: 자주 조회되는 데이터 캐시로 성능 향상
 
 ---
 
