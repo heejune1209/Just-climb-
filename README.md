@@ -473,7 +473,7 @@ graph TB
 - **로깅 시스템**: Serilog 기반 구조화된 로그 관리
 - **CORS & Middleware**: 클라이언트-서버 간 안전한 통신
 
-[UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
+[UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md#1-%EC%94%AC-%EC%B4%88%EA%B8%B0%ED%99%94-%EB%B0%8F-ui-%EB%A1%9C%EB%93%9C-%ED%94%8C%EB%A1%9C%EC%9A%B0-basescene--zenject-di)
 
 ---
     
