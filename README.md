@@ -478,13 +478,91 @@ graph TB
 ---
     
 ### 아이템·재화 시스템 구조
-![image](https://github.com/user-attachments/assets/3e08867c-3aa3-4872-96d4-93a4b4a64304)
 
-- **Definition Layer**: ScriptableObject 에셋(`ItemData.asset` + 개별 SO)  
-- **Logic Layer**: [`ItemData.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs)+[`IItemUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs) 인터페이스 → 개별 `(아이템 이름)Use.cs` 구현  
-- **Data Layer**: `SaveData`·`InventoryItem` 클래스 + `DataManager` (JSON 입출력·이벤트)  
-- **Domain Layer**: `ItemDatabase`, `ItemManager`, `CurrencyManager` (로직·이벤트)  
-- **UI Layer**: `UI_Inventory` (아이템 슬롯 UI 표시)  
+```mermaid
+graph TB
+    subgraph "Definition Layer (ScriptableObject Assets)"
+        ItemDataSO["ItemData.asset<br/>(Base ScriptableObject)"]
+        FeatherSO["FeatherData.asset"]
+        WingSO["WingData.asset"] 
+        LampSO["LampData.asset"]
+        FlagSO["FlagData.asset"]
+        
+        ItemDataSO --> FeatherSO
+        ItemDataSO --> WingSO
+        ItemDataSO --> LampSO
+        ItemDataSO --> FlagSO
+    end
+    
+    subgraph "Logic Layer (Interfaces & Implementations)"
+        ItemDataCS["ItemData.cs<br/>(ScriptableObject Class)"]
+        IItemUse["IItemUse.cs<br/>(Interface)"]
+        
+        FeatherUse["FeatherUse.cs"]
+        WingUse["WingUse.cs"]
+        LampUse["LampUse.cs"]
+        FlagUse["FlagUse.cs"]
+        
+        ItemDataCS -.-> IItemUse
+        IItemUse --> FeatherUse
+        IItemUse --> WingUse
+        IItemUse --> LampUse
+        IItemUse --> FlagUse
+    end
+    
+    subgraph "Data Layer (Persistence & State)"
+        DataManager["DataManager.cs<br/>(JSON I/O + Events)"]
+        SaveData["SaveData.cs<br/>(Serializable Data Model)"]
+        InventoryItem["InventoryItem.cs<br/>(ItemId + Count)"]
+        
+        DataManager --> SaveData
+        SaveData --> InventoryItem
+    end
+    
+    subgraph "Domain Layer (Business Logic)"
+        ItemDatabase["ItemDatabase.cs<br/>(Asset Database API)"]
+        ItemManager["ItemManager.cs<br/>(Item Operations & Buffs)"]
+        CurrencyManager["CurrencyManager.cs<br/>(Gold & Gems Management)"]
+        
+        ItemDatabase --> ItemManager
+        ItemManager --> CurrencyManager
+    end
+    
+    subgraph "UI Layer (Presentation)"
+        UIInventory["UI_Inventory.cs<br/>(Slot Display & Interaction)"]
+    end
+    
+    %% Cross-layer connections
+    FeatherSO -.-> ItemDataCS
+    WingSO -.-> ItemDataCS
+    LampSO -.-> ItemDataCS
+    FlagSO -.-> ItemDataCS
+    
+    ItemDataCS --> ItemDatabase
+    InventoryItem --> ItemManager
+    DataManager --> ItemManager
+    
+    ItemManager --> UIInventory
+    CurrencyManager --> UIInventory
+    
+    %% Styling
+    classDef definitionStyle fill:#ffebee,stroke:#d32f2f,color:#000
+    classDef logicStyle fill:#e3f2fd,stroke:#1976d2,color:#000
+    classDef dataStyle fill:#fff3e0,stroke:#f57c00,color:#000
+    classDef domainStyle fill:#e8f5e8,stroke:#388e3c,color:#000
+    classDef uiStyle fill:#f3e5f5,stroke:#7b1fa2,color:#000
+    
+    class ItemDataSO,FeatherSO,WingSO,LampSO,FlagSO definitionStyle
+    class ItemDataCS,IItemUse,FeatherUse,WingUse,LampUse,FlagUse logicStyle
+    class DataManager,SaveData,InventoryItem dataStyle
+    class ItemDatabase,ItemManager,CurrencyManager domainStyle
+    class UIInventory uiStyle
+```
+- **Definition Layer**: `ItemData.asset` (베이스 ScriptableObject) → 개별 아이템 에셋들 (`FeatherData.asset`, `WingData.asset`, `LampData.asset`, `FlagData.asset`)
+- **Logic Layer**: [`ItemData.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs) (ScriptableObject 클래스) + [`IItemUse.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs) 인터페이스 → 구현체들 (`FeatherUse.cs`, `WingUse.cs`, `LampUse.cs`, `FlagUse.cs`)  
+- **Data Layer**: `DataManager.cs` (JSON I/O + 이벤트 시스템), `SaveData.cs` (직렬화 데이터 모델), `InventoryItem.cs` (ItemId + Count 구조체)
+- **Domain Layer**: `ItemDatabase.cs` (에셋 데이터베이스 API), `ItemManager.cs` (아이템 연산 + 버프 시스템), `CurrencyManager.cs` (골드/젬 관리)
+- **UI Layer**: `UI_Inventory.cs` (슬롯 표시 + 상호작용 처리)  
 
 [아이템 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/%EC%95%84%EC%9D%B4%ED%85%9C%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
