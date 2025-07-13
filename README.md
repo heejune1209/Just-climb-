@@ -446,6 +446,7 @@ graph TB
 ### 업적 시스템 구조
 
 - **클라이언트 측**
+  - `AchievementIntegration`: 정적 Facade 클래스로 모든 게임 시스템과 업적 시스템 간 인터페이스 제공
   - `AchievementManager`: Steam API 연동 및 업적 조건 체크
   - `UI_Achievement`: 업적 목록 표시 및 보상 수령 UI
   - **Steam API Integration**: Steamworks.NET을 통한 실시간 업적 해제
@@ -456,6 +457,7 @@ graph TB
   - **Database**: 사용자별 업적 진행도 및 보상 상태 저장
 
 - **주요 기능**
+  - **Facade Pattern**: `AchievementIntegration`을 통한 느슨한 결합 및 통합된 이벤트 처리
   - **이중 동기화**: Steam API와 서버 DB에 동시 업적 해제
   - **실시간 이벤트**: 게임플레이 중 조건 달성 시 즉시 업적 해제
   - **진행도 추적**: 클라이언트와 서버 양쪽에서 업적 진행 상태 관리
