@@ -261,44 +261,42 @@ graph TB
     class SteamWebAPI,SteamworksNET,RedisCache externalLayer
 ```
 
-**주요 변경사항:**
-- 🆕 **Steam 연동**: SteamAuthManager, Steam Web API 인증, SteamManager 통합
-- 🆕 **업적 시스템**: AchievementManager, Steam 업적 동기화, AchievementIDs 관리
-- 🆕 **DI 아키텍처**: Zenject 기반 의존성 주입, 모든 Scene별 Installer 분리
-- 🆕 **실시간 동기화**: DataSyncManager, 오프라인 캐시 지원, DeltaEvent 시스템
-- 🆕 **게임 시스템**: 아이템·장애물·클라이밍 시스템을 별도 레이어로 분리
-- 🆕 **UI 시스템**: 모든 UI 컴포넌트 계층화 (Base, Scene, Popup, Components)
-- 🆕 **서버 확장**: 6개 테이블 구조, Redis 캐시 최적화
+**아키텍처 특징:**
+
+### 🏗️ **Zenject DI 기반 6-Layer 모듈화 아키텍처**
+- **Service Locator → Dependency Injection 전환**: 강한 의존성 관리 및 테스트 용이성 확보
+- **계층별 자동 의존성 주입**: ProjectInstaller를 통한 초기화 순서 보장 및 Scene별 Installer 분리
+- **UI 시스템**: 모든 UI 컴포넌트 계층화 (Base, Scene, Popup, Components)
+- **6-Layer 분리**: UI → Infrastructure → Domain → Game Systems → Persistence → Sync Layer 명확한 책임 분리
+- **Steam 플랫폼 완전 통합**: SteamAuthManager, AchievementManager, SteamManager를 통한 Steam 연동
+- **이벤트 기반 실시간 동기화**: DeltaEvent 시스템으로 변경사항만 서버 전송, 오프라인 캐시 지원
+- **메모리 및 성능 최적화**: IDisposable 패턴, 오브젝트 풀링, Redis 캐시로 메모리 누수 방지 및 성능 향상
 
 ## 주요 구성 요소
 
-### 아키텍처 개선
-- **Zenject DI 컨테이너** 도입으로 기존 Service Locator 패턴에서 **의존성 주입** 방식으로 전환
-- **UI 계층화** → `UI_Base`→`UI_Scene`/`UI_Popup`
-- **Scene 로직** → `BaseScene.Awake()` → `Init()` 가상 호출 → 자식 `MainScene/LobbyScene/StageScene.Init()` → `UIManager.ShowSceneUI<…>()`
-- **4-Tier 아키텍처**를 통해 **Persistence → Domain → Infrastructure → UI** 명확한 책임 분리
-- **ProjectInstaller**를 통한 **계층별 의존성 주입** 및 **자동 초기화** 관리
-- **메모리 누수 방지**: 모든 매니저에 `IDisposable` 구현으로 이벤트 해제 및 리소스 정리
-
 ### Persistence Layer
 - **[DataManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataManager.cs)**  
-  - 로컬 JSON(`save.json`)의 읽기/쓰기 담당.  
-   - `Init()` → 파일 복사/로드  
-   - `Load()` → `OnLoaded` 이벤트  
-   - `Save()` → `OnSaved` 이벤트  
-   - `DeleteAllData()` → 데이터 초기화  
-   - **델타 이벤트 시스템**: 데이터 변경 시 `OnDeltaGenerated` 이벤트 발생으로 실시간 동기화
+  - 로컬 JSON(`save.json`) 읽기/쓰기 및 델타 이벤트 시스템 관리
+  - `Init()` → 파일 복사/로드, `Load()` → `OnLoaded` 이벤트, `Save()` → `OnSaved` 이벤트
+  - **델타 이벤트 시스템**: 데이터 변경 시 `OnDeltaGenerated` 이벤트 발생으로 실시간 동기화
+  - `GenerateDelta(key, value)`: 특정 필드 변경사항 추적
 
 - **[SaveData](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/SaveData.cs)**  
-  - 게임 상태를 직렬화하는 모델 클래스  
-   - `gold`, `gems`, `selectedCharacter`  
-   - `items`: `InventoryItem[]`  
-   - `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`  
-   - `stageFlagPositions` 등의 데이터들을 직렬화
-   - **최고 기록 추적**: `bestClearTimes`, `bestDeathCounts` 추가
+  - 게임 상태 직렬화 모델: `gold`, `gems`, `selectedCharacter`, `items`(InventoryItem[])
+  - 스테이지 데이터: `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`, `stageFlagPositions`
+  - **최고 기록 추적**: `bestClearTimes`, `bestDeathCounts` 추가
 
 - **[InventoryItem](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/InventoryItem.cs)**  
-  - 아이템별 `itemId`·`count`를 저장하는 클래스
+  - 아이템별 `itemId`·`count` 저장 클래스
+
+- **[DeltaEvent](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/DeltaEvent.cs)**  
+  - 데이터 변경사항 추적을 위한 델타 이벤트 모델
+
+- **[ServerConfig](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/ServerConfig.cs)**  
+  - 서버 URL, API 키 등 설정 관리 ScriptableObject
+
+- **[AchievementIDs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/AchievementIDs.cs)**  
+  - Steam 업적 ID 상수 정의 및 관리
 
 ### Domain Layer
 - **[CurrencyManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/CurrencyManager.cs)**  
@@ -326,55 +324,49 @@ graph TB
 - **[ItemDatabase](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/StaticData/ItemDatabase.cs)**  
   - `ItemData.asset` 목록 로드, 아이템 정의 등의 정적 데이터 정보 제공
 
-- **AchievementManager**  
-  - 이벤트 기반 업적 달성 시스템
-  - Steam 업적 연동 (`SteamUserStats.SetAchievement`)
-  - 델타 이벤트 생성 및 서버 동기화
+- **[AchievementManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/AchievementManager.cs)**  
+  - **이벤트 기반 업적 달성 시스템**: 스테이지 클리어, 아이템 사용, 캐릭터 해제 등 게임 이벤트 감지
+  - **Steam 업적 연동**: `SteamUserStats.SetAchievement()`, `StoreStats()` 호출로 Steam 업적 동시 달성
+  - **서버 동기화**: 델타 이벤트 생성으로 업적 달성 상태 실시간 서버 전송
+  - **진행도 추적**: 누적 통계 기반 업적 진행률 관리 및 디버그 출력
 
-- **SteamAuthManager**  
-  - Steam 로그인 인증 및 세션 관리
-  - JWT 토큰 발급 및 저장
-  - Steam 프로필 정보 동기화
+- **[SteamAuthManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SteamAuthManager.cs)**  
+  - **Steam 인증 플로우**: `SteamUser.GetAuthSessionTicket()` → 서버 검증 → JWT 토큰 수신/저장
+  - **자동 로그인 시도**: 게임 시작 시 Steam 세션 확인 후 자동 인증 처리
+  - **사용자 ID 관리**: Steam ID 기반 사용자 식별 및 프로필 정보 동기화
+  - **이벤트 시스템**: `OnAuthenticationSuccess`, `OnAuthenticationFailed` 이벤트 제공
 
 ### Infrastructure Layer
 - **[ResourceManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/ResourceManager.cs)**  
-  - `Resources.Load`/`Instantiate`/`Destroy` 래핑  
+  - Unity Resources 시스템 래핑: `Load`/`Instantiate`/`Destroy` 통합 관리
 
 - **[UIManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/UIManager.cs)**  
-  - `@UI_Root` 생성 → 씬(`UI_Scene`), 팝업(`UI_Popup`) UI 인스턴스화  
-   - Canvas 세팅, 팝업 스택 관리, `Time.timeScale` 제어  
-   - **Zenject DI 통합**: 런타임 UI 컴포넌트 자동 의존성 주입
+  - UI 생명주기 관리: `@UI_Root` 생성 → 씬(`UI_Scene`), 팝업(`UI_Popup`) 인스턴스화
+  - Canvas 세팅, 팝업 스택 관리, `Time.timeScale` 제어
+  - **Zenject DI 통합**: 런타임 UI 컴포넌트 자동 의존성 주입
 
 - **[SceneManagerEX](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SceneManagerEX.cs)**  
-  - 씬 전환 전 `Managers.Clear()` → `SceneManager.LoadScene()`  
+  - 씬 전환 최적화: 전환 전 `Managers.Clear()` → `SceneManager.LoadScene()` 안전한 씬 로드
 
 - **[SoundManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SoundManager.cs)**  
-  - BGM/SFX 풀 관리  
+  - 오디오 시스템: BGM/SFX 풀 관리, 볼륨 제어, 사운드 리소스 최적화
 
 - **[PoolManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/PoolManager.cs)**  
-  - 오브젝트 풀링 지원  
+  - 오브젝트 풀링: GameObject 재사용으로 메모리 할당/해제 최적화
 
 - **[GameManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/GameManager.cs)**  
-  - 플레이 타이머·사망 카운트·체크포인트 관리  
+  - 게임플레이 상태 관리: 플레이 타이머, 사망 카운트, 체크포인트(깃발) 위치 저장/복원
 
-- **[DataSyncManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataSyncManager.cs)**  
-  - **델타 기반 실시간 데이터 동기화**
-  - 주기적 배치 전송 (5초 간격)
-  - 실패 시 재시도 메커니즘
-  - 앱 종료 시 즉시 Flush 처리
+- **씬 관리 시스템**
+  - [BaseScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/BaseScene.cs): 씬 초기화 추상화 (`Awake()` → `Init()` 가상 호출)
+  - [MainScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/MainScene.cs), [LobbyScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/LobbyScene.cs), [StageScene](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Scenes/StageScene.cs): `BaseScene` 상속으로 자동 UI 로드
 
-- **[OfflineCacheManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/OfflineCacheManager.cs)**  
-  - **네트워크 상태 감지 및 오프라인 캐싱**
-  - 온라인 복귀 시 자동 동기화
-  - `UI_SyncStatus`를 통한 동기화 상태 표시
-
-- **[SaveManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SaveManager.cs)**  
-  - 게임 종료 시 자동 저장 및 동기화 처리
-  - `OnApplicationPause`, `OnApplicationFocus` 이벤트 처리
+- **[SteamManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Steamworks.NET/SteamManager.cs)**  
+  - Steamworks.NET 초기화 및 Steam 클라이언트 연동 관리
 
 - **Utilities**  
-  - [Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs): 전역 enum/상수  
-  - [Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs): 컴포넌트 보장·계층 탐색  
+  - [Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs): 전역 enum/상수
+  - [Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs): 컴포넌트 보장·계층 탐색
   - [Extension.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Extension.cs): `GameObject` 확장 메서드
 
 ### UI Layer
@@ -404,26 +396,82 @@ graph TB
       을 호출해 해당 씬의 UI 진입점을 띄움  
 
 - **주요 UI 컴포넌트**  
-  - **Title Scene**: [`UI_Main`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Main.cs), [`UI_Achievement`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Achievement.cs), [`UI_Settings`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Settings.cs), [`SelectCharacter`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/CharacterSelector.cs)  
-  - **Lobby Scene**: [`UI_Lobby`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Lobby.cs), [`UI_Shop`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Shop.cs), [`UI_Warning`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Warning.cs), `UI_SelectChapter`,  
-    [`UI_SelectStage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_SelectStage.cs), [`UI_GenericInfoPopup`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/GenericInfoPopup.cs), **[`UI_Ranking`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Ranking.cs)**  
+  - **Title Scene**: [`UI_Main`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Main.cs), [`UI_Achievement`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Achievement.cs), [`UI_Settings`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Settings.cs), [`CharacterSelector`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/CharacterSelector.cs)
+  - **Lobby Scene**: [`UI_Lobby`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Lobby.cs), [`UI_Shop`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Shop.cs), [`UI_Warning`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Warning.cs), `UI_SelectChapter`, [`UI_SelectStage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_SelectStage.cs), [`UI_GenericInfoPopup`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/GenericInfoPopup.cs), [`UI_Ranking`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Ranking.cs)
   - **Stage Scene**: [`UI_Stage`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Stage.cs), [`UI_Inventory`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Scene/UI_Inventory.cs), [`UI_Information`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Information.cs), `UI_GenericInfoPopup`, [`UI_Result`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Result.cs), `UI_Warning`
 
-### Game Systems
- - **ItemSystem**: [`FeatherUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FeatherUse.cs), [`WingUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/WingUse.cs), [`LampUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/LampUse.cs), [`FlagUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FlagUse.cs)  
- - **ClimbingSystem**: 벽면 그랩·이동 FSM  
- - **ObstacleSystem**: 장애물 스폰·충돌 효과  
- - **InputSystem**: 키보드·게임패드 입력 처리 ([`ItemInput`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemInput.cs) 등)
+- **추가 UI 컴포넌트**
+  - [`UI_RankingEntry`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/UI_RankingEntry.cs): 랭킹 목록 엔트리 UI
+  - [`UI_SyncStatus`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/UI_SyncStatus.cs): 데이터 동기화 상태 표시 UI
+  - [`StartLogo`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/StartLogo.cs): 게임 시작 로고 애니메이션
+  - [`TextColorChange`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/TextColorChange.cs): 텍스트 색상 변경 효과
+  - [`TutorialTrigger`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/TutorialTrigger.cs): 튜토리얼 트리거 시스템
+
+### Game Systems Layer
+- **아이템 시스템**
+  - [`ItemData`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs) & [`IItemUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs): ScriptableObject + 인터페이스 기반 확장 구조
+  - **아이템 구현체**: [`FeatherUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FeatherUse.cs)(깃털 - 낙하 감속), [`WingUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/WingUse.cs)(날개 - 2단 점프), [`LampUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/LampUse.cs)(램프 - 시야 확장), [`FlagUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FlagUse.cs)(깃발 - 체크포인트)
+  - [`ItemInput`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemInput.cs): 아이템 사용 입력 처리
+
+- **장애물 시스템**
+  - **Core**: [`IObstacle`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/IObstacle.cs), [`ObstacleBase`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleBase.cs), [`ObstacleTrigger`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleTrigger.cs) - 기본 뼈대 정의
+  - **Spawners**: [`RockDropper`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RockDropper.cs), [`RollingSpawner`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RollingSpawner.cs), [`CannonShooter`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/CannonShooter.cs) - 장애물 생성
+  - **Effects**: [`KnockbackZone`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/KnockbackZone.cs), [`JumpPad`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/JumpPad.cs), [`DeathZone`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/DeathZone.cs) - 충돌 반응
+  - **Utils**: [`PoolableObstacle`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Utils/PoolableObstacle.cs) - 오브젝트 풀링 지원
+
+- **클라이밍 시스템**: FSM 기반 벽면 그랩·이동 로직 (Dias Games Asset 활용)
+
+### Sync Layer
+- **[DataSyncManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataSyncManager.cs)**  
+  - **델타 기반 실시간 동기화**: 변경사항만 추적하여 서버 전송으로 네트워크 부하 최소화
+  - **배치 처리**: 5초 간격 주기적 전송, 실패 시 재시도 메커니즘
+  - **즉시 Flush**: 앱 종료(`OnApplicationPause`/`OnApplicationFocus`) 시 남은 데이터 즉시 전송
+
+- **[OfflineCacheManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/OfflineCacheManager.cs)**  
+  - **네트워크 상태 감지**: 온라인/오프라인 상태 모니터링
+  - **오프라인 캐싱**: 네트워크 단절 시 로컬 큐에 데이터 저장
+  - **자동 동기화**: 온라인 복귀 시 캐시된 데이터 자동 서버 전송
+
+- **[SaveManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SaveManager.cs)**  
+  - **자동 저장**: 게임 종료, 백그라운드 전환 시 자동 저장 및 동기화
+  - **생명주기 관리**: `OnApplicationPause`, `OnApplicationFocus` 이벤트 처리
+
+### DI System Layer
+- **[ProjectInstaller](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/ProjectInstaller.cs)**  
+  - **전역 의존성 주입**: 모든 매니저의 Zenject DI 바인딩 및 초기화 순서 관리
+  - **UserIdProvider**: Steam ID 기반 동적 사용자 ID 관리 및 인증 성공 시 자동 업데이트
+
+- **Scene별 Installer**
+  - [`MainSceneInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/MainSceneInstaller.cs): 메인 씬 전용 의존성
+  - [`LobbySceneInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/LobbySceneInstaller.cs): 로비 씬 전용 의존성
+  - [`StageSceneInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/StageSceneInstaller.cs): 스테이지 씬 전용 의존성
+  - [`CharacterSelectInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/CharacterSelectInstaller.cs): 캐릭터 선택 전용 의존성
 
 ### Server-Side Architecture (ASP.NET Core)
-- **[RankingController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs)**: 랭킹 조회 및 기록 업데이트 API
-- **[RankingService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/RankingService.cs)**: 랭킹 비즈니스 로직 처리
-- **AuthController**: Steam 로그인 인증 및 JWT 토큰 발급
-- **AchievementController**: 업적 시스템 API 및 Steam 업적 연동
-- **UserService**: Steam 기반 사용자 관리 및 프로필 동기화
-- **Entity Framework Core**: 데이터베이스 ORM 및 마이그레이션 관리
-- **Redis 캐시**: 업적 및 사용자 데이터 캐시 시스템
-- **로깅 시스템**: 요청/응답 추적 및 에러 처리
+
+**Controllers (API Layer)**
+- **[AuthController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/AuthController.cs)**: Steam Web API 티켓 검증 → JWT 토큰 발급 (`POST /api/auth/steam`)
+- **[RankingController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs)**: 실시간 랭킹 조회 및 기록 업데이트 API
+- **[AchievementController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/AchievementController.cs)**: 업적 달성/조회 API, Steam 업적 동기화
+- **[SaveController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/SaveController.cs)**: 게임 데이터 저장/로드 API
+- **[DatabaseController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/DatabaseController.cs)**: 데이터베이스 관리 API
+
+**Services (Business Logic)**
+- **[UserService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/UserService.cs)**: Steam 기반 사용자 생성/관리, 프로필 동기화
+- **[RankingService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/RankingService.cs)**: 랭킹 계산, 정렬, 캐시 관리 비즈니스 로직
+- **[AchievementService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/AchievementService.cs)**: 업적 달성 로직, 진행도 추적, Redis 캐시 연동
+- **[UserStateService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/UserStateService.cs)**: 사용자 게임 상태 관리 및 델타 병합
+
+**Database Layer**
+- **[JustClimbDbContext](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Database/JustClimbDbContext.cs)**: Entity Framework Core 컨텍스트, 6개 테이블 매핑
+- **[AchievementSeeder](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Database/AchievementSeeder.cs)**: 업적 메타데이터 시드 데이터 생성
+- **Entity Models**: User, UserItem, UserStageRecord, Achievement, UserAchievement, UserAchievementProgress
+
+**Infrastructure**
+- **Redis 캐시**: 랭킹, 업적, 사용자 데이터 성능 최적화
+- **JWT 인증**: Steam 기반 무상태 인증 시스템
+- **로깅 시스템**: Serilog 기반 구조화된 로그 관리
+- **CORS & Middleware**: 클라이언트-서버 간 안전한 통신
 
 [UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
