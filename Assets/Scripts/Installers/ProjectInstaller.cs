@@ -57,6 +57,9 @@ namespace JustClimb.Installers
             Container.BindInterfacesAndSelfTo<OfflineCacheManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
 
             Container.BindInterfacesAndSelfTo<SaveManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
+            
+            // Achievement System - Steam 업적 관리
+            Container.BindInterfacesAndSelfTo<AchievementManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
         }
         
         /// <summary>

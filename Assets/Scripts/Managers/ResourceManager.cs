@@ -68,7 +68,13 @@ public class ResourceManager : IResourceManager
         if (original.GetComponent<Poolable>() != null)
         {
             // 풀에서 꺼내기
-            go = _poolManager.Pop(original, parent, count).gameObject;
+            var poolable = _poolManager.Pop(original, parent, count);
+            if (poolable == null)
+            {
+                Debug.LogError($"[ResourceManager] PoolManager에서 오브젝트를 가져오는데 실패했습니다: {loadPath}");
+                return null;
+            }
+            go = poolable.gameObject;
         }
         else
         {

@@ -59,9 +59,16 @@ namespace JustClimb.Items
                     user.transform.position,
                     Quaternion.identity, null, data._initialpoolcount
                 );
+                
+                if (effectInstance != null)
+                {
                 effectInstance.transform.SetParent(user.transform);
-
                 _soundmanager.PlaySFX(2);
+                }
+                else
+                {
+                    Debug.LogWarning($"[FeatherUse] 이펙트 인스턴스화에 실패했습니다: {featherEffectPrefab.name}");
+                }
             }
 
             // 버프 적용과 종료 처리를 코루틴으로

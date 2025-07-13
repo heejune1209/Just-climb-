@@ -66,7 +66,7 @@ public class PoolManager : MonoBehaviour, IPoolManager, IInitializable
             if (poolable == null)
                 return;
 
-            poolable.transform.parent = Root;
+            poolable.transform.SetParent(Root, false);
             poolable.gameObject.SetActive(false);
             poolable.IsUsing = false;
 
@@ -82,21 +82,45 @@ public class PoolManager : MonoBehaviour, IPoolManager, IInitializable
         // 풀에서 대기 중일때의 부모로부터 원래 게임에서의 부모로 설정.
         public Poolable Pop(Transform parent, ISceneManagerEx sceneManager) // 풀로부터 꺼내오기 (오브젝트 활성화)
         {
-            Poolable poolable;
+            Poolable poolable = null;
 
-            if (_poolStack.Count > 0) // 스택(대기상태)이 빈 크기 X 즉 하나라도 재활용 할 수 있는 애가 있다면 
-                poolable = _poolStack.Pop();
-            else // 스택(대기상태)이 지금 비었다면 재활용 할 수 있는 애가 없으므로 새로 만들어야
+            // 스택에서 유효한 Poolable을 찾을 때까지 반복
+            while (_poolStack.Count > 0)
+            {
+                var candidate = _poolStack.Pop();
+                
+                // null 체크 및 유효성 검사
+                if (candidate != null && candidate.gameObject != null)
+                {
+                    poolable = candidate;
+                    break;
+                }
+                else
+                {
+                    // 파괴된 오브젝트는 스킵하고 다음 것을 시도
+                    continue;
+                }
+            }
+
+            // 유효한 오브젝트를 찾지 못했거나 스택이 비어있으면 새로 생성
+            if (poolable == null)
                 poolable = Create();
+
+            // null 체크 추가 보안
+            if (poolable == null || poolable.gameObject == null)
+            {
+                Debug.LogError("[PoolManager] Poolable 생성에 실패했습니다.");
+                return null;
+            }
 
             poolable.gameObject.SetActive(true);  // 활성화 (poolable.gameObject로 접근해서 활성화)
 
             // DontDestroyOnLoad 해제 용도
             if (parent == null && sceneManager?.CurrentScene != null)
-                poolable.transform.parent = sceneManager.CurrentScene.transform;
+                poolable.transform.SetParent(sceneManager.CurrentScene.transform, false);
 
             // poolable 👉 풀에서 꺼낸 오브젝트의 Poolable
-            poolable.transform.parent = parent; // 파라미터로 받은 parent 를 부모로 설정
+            poolable.transform.SetParent(parent, false); // 파라미터로 받은 parent 를 부모로 설정
             poolable.IsUsing = true;
 
             return poolable;
@@ -177,7 +201,7 @@ public class PoolManager : MonoBehaviour, IPoolManager, IInitializable
     {
         Pool pool = new Pool();
         pool.Init(original, count); // Init 을 통해 해당 Pool은 DontDestroyOnLoad가 된다.
-        pool.Root.parent = _root;
+        pool.Root.SetParent(_root, false);
 
         _pool.Add(original.name, pool);
     }

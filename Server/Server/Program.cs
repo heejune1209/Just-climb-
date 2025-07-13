@@ -11,7 +11,7 @@ namespace Server
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -20,15 +20,55 @@ namespace Server
             builder.Services.AddControllers();
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
+            
+            // 로깅 설정 강화
+            builder.Logging.ClearProviders();
+            builder.Logging.AddConsole();
+            builder.Logging.AddDebug();
+            builder.Logging.SetMinimumLevel(LogLevel.Information);
+
+            // HTTPS 리다이렉션 설정 (Railway에서는 비활성화)
+            if (!builder.Environment.IsEnvironment("Railway"))
+            {
+                builder.Services.AddHttpsRedirection(options =>
+                {
+                    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+                    options.HttpsPort = builder.Environment.IsDevelopment() ? 5001 : 443;
+                });
+            }
+
+            // HSTS (HTTP Strict Transport Security) 설정 - 프로덕션용
+            if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Railway"))
+            {
+                builder.Services.AddHsts(options =>
+                {
+                    options.Preload = true;
+                    options.IncludeSubDomains = true;
+                    options.MaxAge = TimeSpan.FromDays(365);
+                    options.ExcludedHosts.Clear();
+                });
+            }
 
             // CORS 설정 추가 (Unity 클라이언트 접근 허용)
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowUnity", policy =>
                 {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyMethod()
-                          .AllowAnyHeader();
+                    if (builder.Environment.IsDevelopment())
+                    {
+                        // 개발 환경: 모든 Origin 허용
+                        policy.AllowAnyOrigin()
+                              .AllowAnyMethod()
+                              .AllowAnyHeader();
+                    }
+                    else
+                    {
+                        // 프로덕션 환경: 특정 도메인만 허용
+                        policy.WithOrigins("https://justclimb.com", "https://*.justclimb.com")
+                              .AllowAnyMethod()
+                              .AllowAnyHeader()
+                              .AllowCredentials();
+                    }
                 });
             });
 
@@ -40,6 +80,7 @@ namespace Server
             builder.Services.AddScoped<IUserStateService, UserStateService>();
             builder.Services.AddScoped<IRankingService, RankingService>();
             builder.Services.AddScoped<IUserService, UserService>();
+            builder.Services.AddScoped<IAchievementService, AchievementService>();
             builder.Services.AddSingleton<ConflictResolver>();
             
             // HttpClient 등록 (Steam Web API 호출용)
@@ -86,8 +127,17 @@ namespace Server
             {
                 app.MapOpenApi();
             }
+            else if (!app.Environment.IsEnvironment("Railway"))
+            {
+                // 프로덕션에서만 HSTS 활성화 (Railway 제외)
+                app.UseHsts();
+            }
 
-            app.UseHttpsRedirection();
+            // HTTPS 리다이렉션 (Railway에서는 비활성화)
+            if (!app.Environment.IsEnvironment("Railway"))
+            {
+                app.UseHttpsRedirection();
+            }
 
             // CORS 미들웨어 추가
             app.UseCors("AllowUnity");
@@ -99,7 +149,35 @@ namespace Server
 
             app.MapControllers();
 
-            app.Run();
+            // Health Check 엔드포인트 (Railway용)
+            app.MapGet("/api/v1/health", () => new { 
+                status = "Healthy", 
+                timestamp = DateTime.UtcNow,
+                environment = app.Environment.EnvironmentName
+            });
+
+            // 데이터베이스 마이그레이션 및 업적 시드
+            using (var scope = app.Services.CreateScope())
+            {
+                var context = scope.ServiceProvider.GetRequiredService<JustClimbDbContext>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                
+                try
+                {
+                    await context.Database.MigrateAsync();
+                    logger.LogInformation("데이터베이스 마이그레이션 완료");
+                    
+                    await AchievementSeeder.SeedAsync(context);
+                    logger.LogInformation("업적 시드 완료");
+                }
+                catch (Exception ex)
+                {
+                    logger.LogError(ex, "데이터베이스 초기화 중 오류 발생");
+                    throw;
+                }
+            }
+
+            await app.RunAsync();
         }
     }
 }

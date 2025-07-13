@@ -22,41 +22,87 @@ namespace Server.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Server.Models.User", b =>
+            modelBuilder.Entity("Server.Models.Achievement", b =>
                 {
-                    b.Property<string>("Id")
+                    b.Property<int>("AchievementId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("achievement_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AchievementId"));
+
+                    b.Property<string>("Category")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
-                        .HasColumnName("id");
+                        .HasColumnName("category");
 
-                    b.Property<string>("BestClearTimesJson")
+                    b.Property<string>("Code")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("best_clear_times_json");
-
-                    b.Property<string>("BestDeathCountsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("best_death_counts_json");
-
-                    b.Property<string>("BestGemRewardsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("best_gem_rewards_json");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("code");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
 
-                    b.Property<string>("CurrentDeathCountsJson")
+                    b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("current_death_counts_json");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("description");
 
-                    b.Property<string>("CurrentPlayTimesJson")
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("current_play_times_json");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("name");
+
+                    b.Property<int>("RewardAmount")
+                        .HasColumnType("int")
+                        .HasColumnName("reward_amount");
+
+                    b.Property<string>("RewardType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("reward_type");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("int")
+                        .HasColumnName("sort_order");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("AchievementId");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("SortOrder");
+
+                    b.ToTable("achievements", (string)null);
+                });
+
+            modelBuilder.Entity("Server.Models.User", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
 
                     b.Property<int>("Gems")
                         .HasColumnType("int")
@@ -68,18 +114,9 @@ namespace Server.Migrations
 
                     b.Property<string>("SelectedCharacter")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("selected_character");
-
-                    b.Property<string>("StageClearsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("stage_clears_json");
-
-                    b.Property<string>("StageFlagPositionsJson")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("stage_flag_positions_json");
 
                     b.Property<string>("SteamAvatarUrl")
                         .HasMaxLength(255)
@@ -99,23 +136,127 @@ namespace Server.Migrations
                         .HasColumnType("datetime2")
                         .HasColumnName("updated_at");
 
-                    b.Property<int>("Version")
-                        .HasColumnType("int")
-                        .HasColumnName("version");
-
                     b.HasKey("Id");
 
                     b.ToTable("users", (string)null);
                 });
 
+            modelBuilder.Entity("Server.Models.UserAchievement", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("AchievementId")
+                        .HasColumnType("int")
+                        .HasColumnName("achievement_id");
+
+                    b.Property<DateTime?>("ClaimedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("claimed_at");
+
+                    b.Property<DateTime>("UnlockedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("unlocked_at");
+
+                    b.HasKey("UserId", "AchievementId");
+
+                    b.HasIndex("AchievementId");
+
+                    b.HasIndex("UnlockedAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("UserId", "ClaimedAt")
+                        .HasDatabaseName("IX_UserAchievements_Unclaimed")
+                        .HasFilter("claimed_at IS NULL");
+
+                    b.ToTable("user_achievements", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserAchievements_ClaimedAfterUnlock", "claimed_at IS NULL OR claimed_at >= unlocked_at");
+                        });
+                });
+
+            modelBuilder.Entity("Server.Models.UserAchievementProgress", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("Chapter1PerfectStages")
+                        .HasColumnType("int")
+                        .HasColumnName("chapter1_perfect_stages");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("created_at");
+
+                    b.Property<int>("DeathsInCurrentStage")
+                        .HasColumnType("int")
+                        .HasColumnName("deaths_in_current_stage");
+
+                    b.Property<string>("ItemTypesUsedJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("item_types_used_json");
+
+                    b.Property<int>("ItemsPurchased")
+                        .HasColumnType("int")
+                        .HasColumnName("items_purchased");
+
+                    b.Property<int>("PerfectClears")
+                        .HasColumnType("int")
+                        .HasColumnName("perfect_clears");
+
+                    b.Property<int>("SpeedClears")
+                        .HasColumnType("int")
+                        .HasColumnName("speed_clears");
+
+                    b.Property<int>("StagesCompleted")
+                        .HasColumnType("int")
+                        .HasColumnName("stages_completed");
+
+                    b.Property<string>("UnlockedCharactersJson")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("unlocked_characters_json");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("updated_at");
+
+                    b.Property<bool>("UsedItemInCurrentStage")
+                        .HasColumnType("bit")
+                        .HasColumnName("used_item_in_current_stage");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("user_achievement_progress", (string)null);
+                });
+
             modelBuilder.Entity("Server.Models.UserItem", b =>
                 {
                     b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(50)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("user_id");
 
                     b.Property<string>("ItemId")
-                        .HasColumnType("nvarchar(450)")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("item_id");
 
                     b.Property<int>("Count")
@@ -144,15 +285,43 @@ namespace Server.Migrations
                         .HasColumnType("int")
                         .HasColumnName("best_death_count");
 
+                    b.Property<int>("BestGemCount")
+                        .HasColumnType("int")
+                        .HasColumnName("best_gem_count");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2")
                         .HasColumnName("created_at");
 
+                    b.Property<int>("CurrentDeathCount")
+                        .HasColumnType("int")
+                        .HasColumnName("current_death_count");
+
+                    b.Property<float>("CurrentPlayTime")
+                        .HasColumnType("real")
+                        .HasColumnName("current_play_time");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("display_name");
+
+                    b.Property<float?>("FlagX")
+                        .HasColumnType("real")
+                        .HasColumnName("flag_x");
+
+                    b.Property<float?>("FlagY")
+                        .HasColumnType("real")
+                        .HasColumnName("flag_y");
+
+                    b.Property<float?>("FlagZ")
+                        .HasColumnType("real")
+                        .HasColumnName("flag_z");
+
+                    b.Property<bool>("IsCleared")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_cleared");
 
                     b.Property<int>("StageNumber")
                         .HasColumnType("int")
@@ -164,23 +333,50 @@ namespace Server.Migrations
 
                     b.Property<string>("UserId")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StageNumber", "BestClearTime")
-                        .HasDatabaseName("IX_UserStageRecords_StageNumber_BestClearTime");
+                    b.HasIndex("StageNumber", "BestClearTime");
 
-                    b.HasIndex("StageNumber", "BestDeathCount")
-                        .HasDatabaseName("IX_UserStageRecords_StageNumber_BestDeathCount");
+                    b.HasIndex("StageNumber", "BestDeathCount");
 
                     b.HasIndex("UserId", "StageNumber")
-                        .IsUnique()
-                        .HasDatabaseName("IX_UserStageRecords_UserId_StageNumber");
+                        .IsUnique();
 
                     b.ToTable("user_stage_records", (string)null);
+                });
+
+            modelBuilder.Entity("Server.Models.UserAchievement", b =>
+                {
+                    b.HasOne("Server.Models.Achievement", "Achievement")
+                        .WithMany()
+                        .HasForeignKey("AchievementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany("Achievements")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Achievement");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Server.Models.UserAchievementProgress", b =>
+                {
+                    b.HasOne("Server.Models.User", "User")
+                        .WithOne("AchievementProgress")
+                        .HasForeignKey("Server.Models.UserAchievementProgress", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Server.Models.UserItem", b =>
@@ -194,9 +390,26 @@ namespace Server.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Server.Models.UserStageRecord", b =>
+                {
+                    b.HasOne("Server.Models.User", "User")
+                        .WithMany("StageRecords")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Server.Models.User", b =>
                 {
+                    b.Navigation("AchievementProgress");
+
+                    b.Navigation("Achievements");
+
                     b.Navigation("Items");
+
+                    b.Navigation("StageRecords");
                 });
 #pragma warning restore 612, 618
         }

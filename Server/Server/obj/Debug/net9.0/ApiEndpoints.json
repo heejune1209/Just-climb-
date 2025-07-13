@@ -1,5 +1,119 @@
 [
   {
+    "ContainingType": "Server.Controllers.AchievementController",
+    "Method": "GetUserAchievements",
+    "RelativePath": "api/Achievement",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "Server.Models.UserAchievement",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Server.Controllers.AchievementController",
+    "Method": "ClaimReward",
+    "RelativePath": "api/Achievement/{achievementId}/claim-reward",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "achievementId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.AchievementController",
+    "Method": "IsRewardClaimed",
+    "RelativePath": "api/Achievement/{achievementId}/reward-claimed",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "achievementId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Boolean",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Server.Controllers.AchievementController",
+    "Method": "UnlockAchievement",
+    "RelativePath": "api/Achievement/{achievementId}/unlock",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "achievementId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "Server.Controllers.AchievementController",
+    "Method": "IsAchievementUnlocked",
+    "RelativePath": "api/Achievement/{achievementId}/unlocked",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "achievementId",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "System.Boolean",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Server.Controllers.AchievementController",
+    "Method": "InitializeAchievements",
+    "RelativePath": "api/Achievement/initialize",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "Server.Controllers.AuthController",
     "Method": "AuthenticateWithSteam",
     "RelativePath": "api/Auth/steam",
@@ -76,7 +190,7 @@
       },
       {
         "Name": "SortType",
-        "Type": "System.String",
+        "Type": "System.Int32",
         "IsRequired": false
       },
       {

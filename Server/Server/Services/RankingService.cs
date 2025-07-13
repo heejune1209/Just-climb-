@@ -26,19 +26,74 @@ namespace Server.Services
         {
             try
             {
+                _logger.LogInformation("UpdateUserRecordAsync 시작: UserId={UserId}, Stage={Stage}, Time={Time}, Deaths={Deaths}", 
+                    userId, request.StageNumber, request.ClearTime, request.DeathCount);
+
+                // 추가 데이터 검증
+                if (string.IsNullOrEmpty(userId) || userId.Length > 100)
+                {
+                    _logger.LogError("유효하지 않은 UserId: {UserId}", userId);
+                    return false;
+                }
+
+                if (request.ClearTime <= 0 || request.ClearTime >= float.MaxValue)
+                {
+                    _logger.LogError("유효하지 않은 ClearTime: {Time}", request.ClearTime);
+                    return false;
+                }
+
+                if (request.DeathCount < 0 || request.DeathCount >= int.MaxValue)
+                {
+                    _logger.LogError("유효하지 않은 DeathCount: {Deaths}", request.DeathCount);
+                    return false;
+                }
+
+                // 🔧 트랜잭션을 사용한 안전한 User 생성 및 기록 업데이트
+                using var transaction = await _context.Database.BeginTransactionAsync();
+                try
+                {
+                    // User 존재 여부 확인 및 생성 (외래키 제약 조건 해결)
+                    var existingUser = await _context.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                    if (existingUser == null)
+                    {
+                        _logger.LogInformation("User가 존재하지 않아 새로 생성: UserId={UserId}", userId);
+                        
+                        var newUser = new User
+                        {
+                            Id = userId,
+                            Gold = 0,
+                            Gems = 0,
+                            SelectedCharacter = "Default",
+                            TutorialDisplayed = false,
+                            SteamDisplayName = request.DisplayName ?? "Player",
+                            CreatedAt = DateTime.UtcNow,
+                            UpdatedAt = DateTime.UtcNow
+                        };
+                        
+                        _context.Users.Add(newUser);
+                        await _context.SaveChangesAsync();
+                        _logger.LogInformation("User 생성 완료: UserId={UserId}", userId);
+                    }
+
                 var existingRecord = await _context.UserStageRecords
                     .FirstOrDefaultAsync(r => r.UserId == userId && r.StageNumber == request.StageNumber);
 
                 if (existingRecord == null)
                 {
+                    _logger.LogInformation("새 기록 생성: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
+                    
                     // 새 기록 생성
                     var newRecord = new UserStageRecord
                     {
                         UserId = userId,
                         StageNumber = request.StageNumber,
+                        IsCleared = true,
                         BestClearTime = request.ClearTime,
                         BestDeathCount = request.DeathCount,
-                        DisplayName = request.DisplayName,
+                        DisplayName = request.DisplayName ?? "Player",
+                        BestGemCount = 0,  // 기본값 설정
+                        CurrentPlayTime = 0f,
+                        CurrentDeathCount = 0,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };
@@ -47,20 +102,33 @@ namespace Server.Services
                 }
                 else
                 {
+                    _logger.LogInformation("기존 기록 업데이트 시도: UserId={UserId}, Stage={Stage}, 기존 Time={OldTime}, 새 Time={NewTime}", 
+                        userId, request.StageNumber, existingRecord.BestClearTime, request.ClearTime);
+                    
                     // 기존 기록 업데이트 (더 좋은 기록일 때만)
                     bool updated = false;
 
+                    // 클리어 표시
+                    if (!existingRecord.IsCleared)
+                    {
+                        existingRecord.IsCleared = true;
+                        updated = true;
+                        _logger.LogInformation("클리어 상태 업데이트: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
+                    }
+
                     // 더 빠른 클리어 타임
                     if (request.ClearTime > 0 && 
-                        (existingRecord.BestClearTime <= 0 || request.ClearTime < existingRecord.BestClearTime))
+                        (existingRecord.BestClearTime <= 0 || existingRecord.BestClearTime >= float.MaxValue || request.ClearTime < existingRecord.BestClearTime))
                     {
+                        _logger.LogInformation("더 빠른 클리어 타임 업데이트: {OldTime} -> {NewTime}", existingRecord.BestClearTime, request.ClearTime);
                         existingRecord.BestClearTime = request.ClearTime;
                         updated = true;
                     }
 
                     // 더 적은 사망 횟수
-                    if (existingRecord.BestDeathCount < 0 || request.DeathCount < existingRecord.BestDeathCount)
+                    if (existingRecord.BestDeathCount < 0 || existingRecord.BestDeathCount >= int.MaxValue || request.DeathCount < existingRecord.BestDeathCount)
                     {
+                        _logger.LogInformation("더 적은 사망 횟수 업데이트: {OldDeaths} -> {NewDeaths}", existingRecord.BestDeathCount, request.DeathCount);
                         existingRecord.BestDeathCount = request.DeathCount;
                         updated = true;
                     }
@@ -69,6 +137,7 @@ namespace Server.Services
                     if (!string.IsNullOrEmpty(request.DisplayName) && 
                         existingRecord.DisplayName != request.DisplayName)
                     {
+                        _logger.LogInformation("표시 이름 업데이트: {OldName} -> {NewName}", existingRecord.DisplayName, request.DisplayName);
                         existingRecord.DisplayName = request.DisplayName;
                         updated = true;
                     }
@@ -77,14 +146,33 @@ namespace Server.Services
                     {
                         existingRecord.UpdatedAt = DateTime.UtcNow;
                     }
+                    else
+                    {
+                        _logger.LogInformation("기존 기록이 더 좋아서 업데이트 안함: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
+                    }
                 }
 
+                _logger.LogInformation("데이터베이스 저장 시도: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
                 await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                _logger.LogInformation("데이터베이스 저장 성공: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
                 return true;
+                }
+                catch (Exception innerEx)
+                {
+                    await transaction.RollbackAsync();
+                    _logger.LogError(innerEx, "트랜잭션 중 오류 발생, 롤백 실행: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
+                    throw;
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "사용자 {UserId} 스테이지 {Stage} 기록 업데이트 실패", userId, request.StageNumber);
+                _logger.LogError(ex, "🚨 기록 업데이트 실패 - UserId: {UserId}, Stage: {Stage}, ClearTime: {ClearTime}, DeathCount: {DeathCount}, DisplayName: {DisplayName}\n" +
+                    "Exception: {Exception}\n" +
+                    "InnerException: {InnerException}\n" +
+                    "StackTrace: {StackTrace}", 
+                    userId, request.StageNumber, request.ClearTime, request.DeathCount, request.DisplayName,
+                    ex.Message, ex.InnerException?.Message, ex.StackTrace);
                 return false;
             }
         }
@@ -96,12 +184,17 @@ namespace Server.Services
         {
             try
             {
-                // 유효한 기록만 조회 (클리어 타임 > 0)
+                // 유효한 기록만 조회 (클리어된 기록 + 클리어 타임 > 0 + MaxValue 제외)
                 var baseQuery = _context.UserStageRecords
-                    .Where(r => r.StageNumber == request.StageNumber && r.BestClearTime > 0);
+                    .Where(r => r.StageNumber == request.StageNumber && 
+                               r.IsCleared && 
+                               r.BestClearTime > 0 &&
+                               r.BestClearTime < float.MaxValue &&  // MaxValue 제외
+                               r.BestDeathCount < int.MaxValue);    // MaxValue 제외
 
                 // 정렬 기준에 따라 정렬
-                IQueryable<UserStageRecord> sortedQuery = request.SortType switch
+                var sortType = (RankingSortType)request.SortType;
+                IQueryable<UserStageRecord> sortedQuery = sortType switch
                 {
                     RankingSortType.ClearTime => baseQuery
                         .OrderBy(r => r.BestClearTime)
@@ -126,7 +219,7 @@ namespace Server.Services
 
                 // 랭킹 항목으로 변환
                 var topEntries = topRecords
-                    .Select((record, index) => new RankingEntryDto
+                    .Select((record, index) => new RankingEntry
                     {
                         Rank = (request.Page - 1) * request.PageSize + index + 1,
                         UserId = record.UserId,
@@ -139,20 +232,23 @@ namespace Server.Services
                     .ToList();
 
                 // 내 기록 조회 (상위 N개에 포함되지 않은 경우)
-                RankingEntryDto? myEntry = null;
+                RankingEntry? myEntry = null;
                 if (!string.IsNullOrEmpty(currentUserId))
                 {
                     var myRecord = await GetUserRecordAsync(currentUserId, request.StageNumber);
 
-                    if (myRecord != null && myRecord.BestClearTime > 0)
+                    if (myRecord != null && myRecord.IsCleared && 
+                        myRecord.BestClearTime > 0 && 
+                        myRecord.BestClearTime < float.MaxValue &&
+                        myRecord.BestDeathCount < int.MaxValue)
                     {
                         // 내 순위 계산
-                        var myRank = await GetUserRankAsync(currentUserId, request.StageNumber, request.SortType);
+                        var myRank = await GetUserRankAsync(currentUserId, request.StageNumber, sortType);
                         
                         // 상위 N개에 포함되지 않은 경우에만 별도 표시
                         if (myRank > request.PageSize || !topEntries.Any(e => e.UserId == currentUserId))
                         {
-                            myEntry = new RankingEntryDto
+                            myEntry = new RankingEntry
                             {
                                 Rank = myRank,
                                 UserId = myRecord.UserId,
@@ -207,26 +303,32 @@ namespace Server.Services
             try
             {
                 var userRecord = await GetUserRecordAsync(userId, stageNumber);
-                if (userRecord == null || userRecord.BestClearTime <= 0)
+                if (userRecord == null || !userRecord.IsCleared || 
+                    userRecord.BestClearTime <= 0 || 
+                    userRecord.BestClearTime >= float.MaxValue ||
+                    userRecord.BestDeathCount >= int.MaxValue)
                     return -1; // 기록 없음
 
-                // 나보다 좋은 기록의 개수 + 1 = 내 순위
+                // 나보다 좋은 기록의 개수 + 1 = 내 순위 (MaxValue 제외)
                 var betterRecordsCount = sortType switch
                 {
                     RankingSortType.ClearTime => await _context.UserStageRecords
-                        .Where(r => r.StageNumber == stageNumber && r.BestClearTime > 0)
+                        .Where(r => r.StageNumber == stageNumber && r.IsCleared && 
+                                   r.BestClearTime > 0 && r.BestClearTime < float.MaxValue && r.BestDeathCount < int.MaxValue)
                         .Where(r => r.BestClearTime < userRecord.BestClearTime ||
                                    (r.BestClearTime == userRecord.BestClearTime && r.BestDeathCount < userRecord.BestDeathCount) ||
                                    (r.BestClearTime == userRecord.BestClearTime && r.BestDeathCount == userRecord.BestDeathCount && r.UpdatedAt < userRecord.UpdatedAt))
                         .CountAsync(),
                     RankingSortType.DeathCount => await _context.UserStageRecords
-                        .Where(r => r.StageNumber == stageNumber && r.BestClearTime > 0)
+                        .Where(r => r.StageNumber == stageNumber && r.IsCleared && 
+                                   r.BestClearTime > 0 && r.BestClearTime < float.MaxValue && r.BestDeathCount < int.MaxValue)
                         .Where(r => r.BestDeathCount < userRecord.BestDeathCount ||
                                    (r.BestDeathCount == userRecord.BestDeathCount && r.BestClearTime < userRecord.BestClearTime) ||
                                    (r.BestDeathCount == userRecord.BestDeathCount && r.BestClearTime == userRecord.BestClearTime && r.UpdatedAt < userRecord.UpdatedAt))
                         .CountAsync(),
                     _ => await _context.UserStageRecords
-                        .Where(r => r.StageNumber == stageNumber && r.BestClearTime > 0)
+                        .Where(r => r.StageNumber == stageNumber && r.IsCleared && 
+                                   r.BestClearTime > 0 && r.BestClearTime < float.MaxValue && r.BestDeathCount < int.MaxValue)
                         .Where(r => r.BestClearTime < userRecord.BestClearTime)
                         .CountAsync()
                 };

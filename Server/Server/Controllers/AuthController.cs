@@ -35,11 +35,58 @@ namespace Server.Controllers
         {
             try
             {
-                _logger.LogInformation("Steam authentication request received for SteamID: {SteamId}, DisplayName: {DisplayName}", 
-                    request.SteamId, request.SteamDisplayName);
+                _logger.LogInformation("Steam authentication request received");
+                _logger.LogInformation("Request data - SteamID: {SteamId}, DisplayName: {DisplayName}, TicketLength: {TicketLength}", 
+                    request?.SteamId ?? "null", request?.SteamDisplayName ?? "null", request?.AuthTicket?.Length ?? 0);
+                
+                // 요청 데이터 유효성 검사
+                if (request == null)
+                {
+                    _logger.LogError("Request is null");
+                    return BadRequest(new AuthResponse 
+                    { 
+                        Success = false, 
+                        Message = "Request data is null" 
+                    });
+                }
+                
+                if (string.IsNullOrEmpty(request.SteamId))
+                {
+                    _logger.LogError("SteamId is null or empty");
+                    return BadRequest(new AuthResponse 
+                    { 
+                        Success = false, 
+                        Message = "SteamId is required" 
+                    });
+                }
+                
+                if (string.IsNullOrEmpty(request.AuthTicket))
+                {
+                    _logger.LogError("AuthTicket is null or empty");
+                    return BadRequest(new AuthResponse 
+                    { 
+                        Success = false, 
+                        Message = "AuthTicket is required" 
+                    });
+                }
 
                 // 1. Steam Web API를 사용해서 티켓 검증
-                bool isValidTicket = await ValidateSteamTicket(request.SteamId, request.AuthTicket);
+                bool isValidTicket;
+                
+                // 개발 환경에서는 Steam Web API 검증을 우회 (추후 운영 환경에서 활성화)
+                if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+                {
+                    _logger.LogInformation("Development environment - bypassing Steam Web API validation");
+                    _logger.LogInformation("SteamID: {SteamId}, Ticket received: {HasTicket}", 
+                        request.SteamId, !string.IsNullOrEmpty(request.AuthTicket));
+                    isValidTicket = true; // 개발 환경에서는 항상 유효한 것으로 처리
+                }
+                else
+                {
+                    _logger.LogInformation("Production environment - validating with Steam Web API...");
+                    isValidTicket = await ValidateSteamTicket(request.SteamId, request.AuthTicket);
+                }
+                
                 if (!isValidTicket)
                 {
                     _logger.LogWarning("Invalid Steam ticket for SteamID: {SteamId}", request.SteamId);
@@ -93,6 +140,9 @@ namespace Server.Controllers
                 // Steam Web API 설정
                 var steamWebApiKey = _configuration["SteamSettings:WebApiKey"];
                 var steamAppId = _configuration["SteamSettings:AppId"];
+
+                _logger.LogInformation("Steam Web API Key: {Key}", steamWebApiKey?.Substring(0, 8) + "...");
+                _logger.LogInformation("Steam App ID: {AppId}", steamAppId);
 
                 if (string.IsNullOrEmpty(steamWebApiKey))
                 {

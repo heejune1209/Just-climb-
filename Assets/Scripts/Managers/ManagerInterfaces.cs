@@ -238,4 +238,67 @@ public interface IPoolManager
     void CreatePool(GameObject original, int count = 5);
     GameObject GetOriginal(string name);
     void Clear();
+}
+
+/// <summary>
+/// Steam 업적 관리 인터페이스
+/// </summary>
+public interface IAchievementManager
+{
+    /// <summary>
+    /// 스테이지 시작 시 호출
+    /// </summary>
+    void OnStageStart();
+    
+    /// <summary>
+    /// 스테이지 클리어 시 호출
+    /// </summary>
+    void OnStageCleared(int stageIndex, float clearTime, int deathCount, int gemsCollected, int totalGems);
+    
+    /// <summary>
+    /// 플레이어 사망 시 호출
+    /// </summary>
+    void OnPlayerDeath();
+    
+    /// <summary>
+    /// 아이템 사용 시 호출
+    /// </summary>
+    void OnItemUsed(string itemType);
+    
+    /// <summary>
+    /// 아이템 구매 시 호출
+    /// </summary>
+    void OnItemPurchased(string itemType);
+    
+    /// <summary>
+    /// 캐릭터 해제 시 호출
+    /// </summary>
+    void OnCharacterUnlocked(string characterName);
+    
+    /// <summary>
+    /// 업적 달성 여부 확인
+    /// </summary>
+    bool IsAchievementUnlocked(string achievementId);
+    
+    /// <summary>
+    /// 현재 진행률 출력 (디버그용)
+    /// </summary>
+    void PrintProgress();
+
+    void TestUnlockAchievement();
+
+    /// <summary>
+    /// 모든 업적 리셋 (테스트용)
+    /// </summary>
+    void ResetAllAchievements();
+    
+    /// <summary>
+    /// 업적 보상 수령 상태 확인
+    /// </summary>
+    bool IsRewardClaimed(string achievementId);
+    
+    /// <summary>
+    /// 업적 보상 수령 처리
+    /// </summary>
+    void ClaimReward(string achievementId);
 } 

@@ -51,39 +51,63 @@ namespace Server.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(userId))
+                // 입력 데이터 로깅
+                _logger.LogInformation("기록 업데이트 요청: UserId={UserId}, Stage={Stage}, Time={Time}, Deaths={Deaths}, DisplayName={DisplayName}", 
+                    userId, request.StageNumber, request.ClearTime, request.DeathCount, request.DisplayName);
+
+                // 유효성 검사
+                if (string.IsNullOrEmpty(userId) || userId.Length > 100)
                 {
+                    _logger.LogWarning("유효하지 않은 사용자 ID: {UserId}", userId);
                     return BadRequest(new { error = "유효하지 않은 사용자 ID입니다." });
                 }
 
-                if (request.ClearTime <= 0)
+                if (request.StageNumber <= 0 || request.StageNumber > 10)  // 실제 게임 스테이지는 1~10
                 {
+                    _logger.LogWarning("유효하지 않은 스테이지 번호: {Stage}", request.StageNumber);
+                    return BadRequest(new { error = "유효하지 않은 스테이지 번호입니다." });
+                }
+
+                if (request.ClearTime <= 0 || request.ClearTime >= float.MaxValue)
+                {
+                    _logger.LogWarning("유효하지 않은 클리어 타임: {Time}", request.ClearTime);
                     return BadRequest(new { error = "유효하지 않은 클리어 타임입니다." });
                 }
 
-                if (request.DeathCount < 0)
+                if (request.DeathCount < 0 || request.DeathCount >= int.MaxValue)
                 {
+                    _logger.LogWarning("유효하지 않은 사망 횟수: {Deaths}", request.DeathCount);
                     return BadRequest(new { error = "유효하지 않은 사망 횟수입니다." });
                 }
 
-                _logger.LogInformation("기록 업데이트 요청: UserId={UserId}, Stage={Stage}, Time={Time}, Deaths={Deaths}", 
-                    userId, request.StageNumber, request.ClearTime, request.DeathCount);
+                if (string.IsNullOrEmpty(request.DisplayName))
+                {
+                    request.DisplayName = "Player";
+                }
 
                 var success = await _rankingService.UpdateUserRecordAsync(userId, request);
 
                 if (success)
                 {
+                    _logger.LogInformation("기록 업데이트 성공: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
                     return Ok(new { message = "기록이 성공적으로 업데이트되었습니다." });
                 }
                 else
                 {
+                    _logger.LogError("기록 업데이트 실패: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
                     return StatusCode(500, new { error = "기록 업데이트에 실패했습니다." });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "기록 업데이트 중 오류 발생: UserId={UserId}", userId);
-                return StatusCode(500, new { error = "기록 업데이트 중 오류가 발생했습니다." });
+                _logger.LogError(ex, "🚨 [RankingController] 기록 업데이트 중 예외 발생\n" +
+                    "UserId: {UserId}\n" +
+                    "Request: {@Request}\n" +
+                    "Exception: {Exception}\n" +
+                    "InnerException: {InnerException}\n" +
+                    "StackTrace: {StackTrace}", 
+                    userId, request, ex.Message, ex.InnerException?.Message, ex.StackTrace);
+                return StatusCode(500, new { error = "기록 업데이트 중 오류가 발생했습니다.", details = ex.Message });
             }
         }
     }

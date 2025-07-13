@@ -107,6 +107,12 @@ namespace JustClimb.Manager
 
             // 서버 호환 아이템 리스트 델타 생성
             GenerateItemsDelta();
+            
+            // 업적 시스템에 아이템 구매 알림 (첫 획득 시에만)
+            if (GetItemCount(itemId) == amount) // 처음 획득한 경우
+            {
+                AchievementIntegration.OnItemPurchased(itemId.ToString());
+            }
         }
 
         // 아이템 사용 시도
@@ -136,6 +142,9 @@ namespace JustClimb.Manager
             // 쿨다운 기록
             if (data.cooldownDuration > 0f)
                 _nextAvailableTime[itemId] = Time.time + data.cooldownDuration;
+
+            // 업적 시스템에 아이템 사용 알림
+            AchievementIntegration.OnItemUsed(itemId.ToString());
 
             return true;
         }
@@ -189,33 +198,38 @@ namespace JustClimb.Manager
         // =====================
 
         /// <summary>
-        /// DataManager.Current.items는 이제 List<InventoryItem> 입니다.
-        /// 저장된 리스트에서 해당 아이템 찾기
+        /// DataManager.Current.items에서 아이템 개수 조회
+        /// SaveData의 InventoryItemDto를 InventoryItem으로 변환하여 사용
         /// </summary>
         int GetItemCountInternal(ItemType itemId)
         {
             // DataManager.Current가 null이면 빈 리스트 취급
-            var list = _dataManager.Current?.items;
-            if (list == null)
+            var saveData = _dataManager.Current;
+            if (saveData?.items == null)
                 return 0;
 
-            var inv = list.Find(x => x.itemId == itemId);
-            return inv != null ? inv.count : 0;
+            // InventoryItemDto에서 itemId는 문자열이므로 enum을 문자열로 변환하여 비교
+            var itemDto = saveData.items.Find(x => x.itemId == itemId.ToString());
+            return itemDto?.count ?? 0;
         }
 
         /// <summary>
         /// DataManager.Current.items 리스트에 아이템 수량 쓰기
+        /// InventoryItemDto 형태로 저장
         /// </summary>
         void SetItemCountInternal(ItemType itemId, int count)
         {
-            var list = _dataManager.Current.items;              // List<InventoryItem> 사용
-            int idx = list.FindIndex(x => x.itemId == itemId);
+            var saveData = _dataManager.Current;
+            var list = saveData.items;              // List<InventoryItemDto> 사용
+            string itemIdStr = itemId.ToString();   // enum을 문자열로 변환
+            
+            int idx = list.FindIndex(x => x.itemId == itemIdStr);
 
             if (idx < 0)
             {
                 // 새로 추가
                 if (count > 0)
-                    list.Add(new InventoryItem(itemId, count));
+                    list.Add(new InventoryItemDto(itemIdStr, count));
             }
             else
             {
@@ -228,22 +242,12 @@ namespace JustClimb.Manager
 
         /// <summary>
         /// 서버 호환 아이템 델타 생성
-        /// InventoryItem(enum) → InventoryItemDto(string) 변환
+        /// 이미 InventoryItemDto 형태이므로 그대로 전송
         /// </summary>
         private void GenerateItemsDelta()
         {
-            var items = _dataManager.Current.items;
-            var serverItems = new List<object>();
-            
-            foreach (var item in items)
-            {
-                serverItems.Add(new {
-                    itemId = item.itemId.ToString(),  // enum을 문자열로 변환
-                    count = item.count
-                });
-            }
-            
-            _dataManager.GenerateDelta("items", serverItems);
+            var items = _dataManager.Current.items; // 이미 InventoryItemDto 리스트
+            _dataManager.GenerateDelta("items", items);
         }
 
         // 메모리 누수 방지: MonoBehaviour OnDestroy 에서 이벤트 해제

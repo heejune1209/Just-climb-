@@ -33,6 +33,9 @@ namespace JustClimb.Manager
         private Dictionary<int, Dictionary<RankingSortType, RankingResponseDto>> _cachedRankings
             = new Dictionary<int, Dictionary<RankingSortType, RankingResponseDto>>();
 
+        // 🔧 중복 요청 방지용 (현재 처리 중인 스테이지들)
+        private HashSet<int> _pendingUpdates = new HashSet<int>();
+
         // 서버 설정
         private ServerConfig _serverConfig;
         private string _baseUrl;
@@ -82,9 +85,8 @@ namespace JustClimb.Manager
         /// </summary>
         public void Init()
         {
-            // 최단 기록/최저 사망 횟수 갱신 시 서버에 기록 업데이트
+            // 중복 방지: BestTimeUpdated만 구독 (하나의 기록 업데이트로 통합)
             _stageManager.OnBestTimeUpdated += OnBestRecordUpdated;
-            _stageManager.OnBestDeathUpdated += OnBestRecordUpdated;
 
             // 데이터가 로드된 이후에만 처리
             _dataManager.OnLoaded += HandleDataLoaded;
@@ -110,41 +112,77 @@ namespace JustClimb.Manager
 
         private IEnumerator HandleDataLoadedCoroutine(SaveData sd)
         {
+            // 🔧 최적화: 초기 데이터 로드 시에는 서버 업데이트 건너뛰기
+            // (실시간 기록 갱신은 OnBestRecordUpdated로 처리)
+            Debug.Log("[RankingManager] 초기 데이터 로드 완료. 실시간 기록 갱신 대기 중...");
+            yield break;
+            
+            /* 기존 코드 주석 처리 - 불필요한 중복 요청 방지
             // Steam 닉네임 가져오기
             string displayName = GetPlayerDisplayName();
             
-            int maxStage = Mathf.Max(sd.bestClearTimes.Count, sd.bestDeathCounts.Count);
+            // 게임에 실제 존재하는 스테이지 개수로 제한 (10개)
+            const int MAX_GAME_STAGES = 10;
+            int maxStage = Mathf.Min(Mathf.Max(sd.bestClearTimes.Count, sd.bestDeathCounts.Count), MAX_GAME_STAGES);
+            Debug.Log($"[RankingManager] 처리할 스테이지 범위: 1 ~ {maxStage}");
+            
             for (int i = 1; i <= maxStage; i++)
             {
-                if (i <= sd.bestClearTimes.Count && sd.bestClearTimes[i-1] > 0)
+                // 유효한 클리어 기록만 서버에 업데이트 (MaxValue 제외)
+                if (i <= sd.bestClearTimes.Count && 
+                    sd.bestClearTimes[i-1] > 0 && 
+                    sd.bestClearTimes[i-1] < float.MaxValue)
                 {
+                    int deathCount = (i <= sd.bestDeathCounts.Count) ? sd.bestDeathCounts[i-1] : 0;
+                    
+                    // 사망 횟수도 MaxValue 체크
+                    if (deathCount >= int.MaxValue)
+                    {
+                        deathCount = 0; // 기본값으로 설정
+                    }
+                    
                     var request = new UpdateRecordRequestDto
                     {
                         StageNumber = i,
                         ClearTime = sd.bestClearTimes[i-1],
-                        DeathCount = i <= sd.bestDeathCounts.Count ? sd.bestDeathCounts[i-1] : 0,
+                        DeathCount = deathCount,
                         DisplayName = displayName
                     };
+                    
+                    Debug.Log($"[RankingManager] 유효한 기록 업데이트: Stage {i}, Time={sd.bestClearTimes[i-1]:F2}s, Deaths={deathCount}");
                     yield return UpdateUserRecordCoroutine(request);
                 }
+                else if (i <= sd.bestClearTimes.Count)
+                {
+                    Debug.Log($"[RankingManager] 무효한 기록 건너뛰기: Stage {i}, Time={sd.bestClearTimes[i-1]}");
+                }
             }
+            */
         }
 
         /// <summary>
-        /// 최고 기록이 갱신되었을 때 서버에 업데이트
+        /// 최고 기록이 갱신되었을 때 서버에 업데이트 (통합된 단일 메서드)
         /// </summary>
-        private void OnBestRecordUpdated(int stageNum, float value)
+        private void OnBestRecordUpdated(int stageNum, float clearTime)
         {
-            OnBestRecordUpdated(stageNum, (int)value);
-        }
-
-        private void OnBestRecordUpdated(int stageNum, int value)
-        {
-            var clearTime = _stageManager.GetBestTime(stageNum);
             var deathCount = _stageManager.GetBestDeath(stageNum);
 
-            if (clearTime > 0)
+            // 🔧 중복 방지: 짧은 시간 내 동일 스테이지 요청 건너뛰기
+            if (_pendingUpdates.Contains(stageNum))
             {
+                Debug.Log($"[RankingManager] 이미 처리 중인 스테이지 건너뛰기: Stage {stageNum}");
+                return;
+            }
+
+            // 유효한 기록만 서버에 업데이트 (MaxValue 제외)
+            if (clearTime > 0 && clearTime < float.MaxValue)
+            {
+                // 사망 횟수도 MaxValue 체크
+                if (deathCount < 0 || deathCount >= int.MaxValue)
+                {
+                    deathCount = 0; // 기본값으로 설정
+                }
+                
                 // Steam 닉네임 가져오기
                 string displayName = GetPlayerDisplayName();
                 
@@ -156,6 +194,11 @@ namespace JustClimb.Manager
                     DisplayName = displayName
                 };
 
+                Debug.Log($"[RankingManager] 기록 업데이트 요청: Stage {stageNum}, Time={clearTime:F2}s, Deaths={deathCount}");
+
+                // 🔧 중복 방지: 처리 중 상태로 마킹
+                _pendingUpdates.Add(stageNum);
+
                 // 메인 스레드에서 코루틴으로 업데이트
                 UnityMainThreadDispatcher.Instance().Enqueue(() =>
                 {
@@ -165,6 +208,10 @@ namespace JustClimb.Manager
                         dispatcher.StartCoroutineOnMainThread(UpdateUserRecordCoroutine(request));
                     }
                 });
+            }
+            else
+            {
+                Debug.Log($"[RankingManager] 무효한 기록으로 업데이트 건너뛰기: Stage {stageNum}, Time={clearTime}");
             }
         }
 
@@ -255,11 +302,13 @@ namespace JustClimb.Manager
         /// <summary>
         /// 서버에서 랭킹 데이터 로드 (코루틴 버전)
         /// </summary>
-        private System.Collections.IEnumerator LoadRankingCoroutine(int stageNum, RankingSortType sortType)
+        private IEnumerator LoadRankingCoroutine(int stageNum, RankingSortType sortType)
         {
-            var url = $"{_baseUrl}?stageNumber={stageNum}&sortType={sortType}&page=1&pageSize=20&userId={_userId}";
+            // enum을 int로 변환해서 전송 (서버는 int 값을 기대함)
+            int sortTypeInt = (int)sortType;
+            var url = $"{_baseUrl}?stageNumber={stageNum}&sortType={sortTypeInt}&page=1&pageSize=20&userId={_userId}";
             Debug.Log($"[RankingManager] 서버 요청 시작 - URL: {url}");
-            Debug.Log($"[RankingManager] 현재 UserId: {_userId}");
+            Debug.Log($"[RankingManager] 현재 UserId: {_userId}, SortType: {sortType}({sortTypeInt})");
             
             using var request = UnityWebRequest.Get(url);
             
@@ -278,6 +327,34 @@ namespace JustClimb.Manager
                     Debug.Log($"[RankingManager] 서버 응답 JSON: {json}");
                     
                     var response = JsonConvert.DeserializeObject<RankingResponseDto>(json);
+                    
+                    // MaxValue 데이터 필터링 (초기화 값은 제외)
+                    if (response?.TopEntries != null)
+                    {
+                        for (int i = response.TopEntries.Count - 1; i >= 0; i--)
+                        {
+                            var entry = response.TopEntries[i];
+                            if (entry.ClearTime >= float.MaxValue || entry.DeathCount >= int.MaxValue)
+                            {
+                                Debug.Log($"[RankingManager] MaxValue 데이터 제거: Rank={entry.Rank}, ClearTime={entry.ClearTime}, DeathCount={entry.DeathCount}");
+                                response.TopEntries.RemoveAt(i);
+                            }
+                        }
+                        
+                        // 순위 재정렬 (제거 후)
+                        for (int i = 0; i < response.TopEntries.Count; i++)
+                        {
+                            response.TopEntries[i].Rank = i + 1;
+                        }
+                    }
+                    
+                    // MyEntry도 MaxValue 체크
+                    if (response?.MyEntry != null && 
+                        (response.MyEntry.ClearTime >= float.MaxValue || response.MyEntry.DeathCount >= int.MaxValue))
+                    {
+                        Debug.Log($"[RankingManager] MyEntry MaxValue 데이터 제거");
+                        response.MyEntry = null;
+                    }
 
                     if (response != null)
                     {
@@ -334,8 +411,30 @@ namespace JustClimb.Manager
         /// </summary>
         private IEnumerator UpdateUserRecordCoroutine(UpdateRecordRequestDto requestDto)
         {
+            // 데이터 유효성 검사
+            if (requestDto.ClearTime <= 0 || requestDto.ClearTime >= float.MaxValue)
+            {
+                Debug.LogError($"[RankingManager] 무효한 클리어 타임으로 업데이트 건너뛰기: {requestDto.ClearTime}");
+                yield break;
+            }
+
+            if (requestDto.DeathCount < 0 || requestDto.DeathCount >= int.MaxValue)
+            {
+                Debug.LogWarning($"[RankingManager] 무효한 데스카운트를 0으로 수정: {requestDto.DeathCount} -> 0");
+                requestDto.DeathCount = 0;
+            }
+
+            if (string.IsNullOrEmpty(requestDto.DisplayName))
+            {
+                requestDto.DisplayName = "Player";
+            }
+
             var url = $"{_baseUrl}/{_userId}/record";
             var json = JsonConvert.SerializeObject(requestDto);
+            
+            Debug.Log($"[RankingManager] 서버 요청 URL: {url}");
+            Debug.Log($"[RankingManager] 서버 요청 데이터: {json}");
+            Debug.Log($"[RankingManager] UserId: {_userId}");
             
             using var request = new UnityWebRequest(url, "POST");
             byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
@@ -361,7 +460,11 @@ namespace JustClimb.Manager
             else
             {
                 Debug.LogError($"[RankingManager] 기록 업데이트 실패: {request.error}");
+                Debug.LogError($"[RankingManager] 서버 응답: {request.downloadHandler.text}");
             }
+            
+            // 🔧 중복 방지: 처리 완료 후 대기 목록에서 제거
+            _pendingUpdates.Remove(requestDto.StageNumber);
         }
 
         /// <summary>
@@ -390,7 +493,6 @@ namespace JustClimb.Manager
             if (_stageManager != null)
             {
                 _stageManager.OnBestTimeUpdated -= OnBestRecordUpdated;
-                _stageManager.OnBestDeathUpdated -= OnBestRecordUpdated;
             }
             
             // DataManager 이벤트 해제

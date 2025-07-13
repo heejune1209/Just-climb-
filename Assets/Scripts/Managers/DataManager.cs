@@ -3,6 +3,7 @@ using JustClimb.Manager;
 using Newtonsoft.Json;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -113,6 +114,9 @@ public class DataManager : IDataManager, IInitializable
                 {
                     var txt = await File.ReadAllTextAsync(_filePath);
                     local = JsonConvert.DeserializeObject<SaveData>(txt) ?? new SaveData();
+                    
+                    // 🔧 로컬 데이터도 정리 (null 값들을 기본값으로 대체)
+                    CleanupServerData(local);
                 }
                 catch (Exception e)
                 {
@@ -148,6 +152,9 @@ public class DataManager : IDataManager, IInitializable
                     if (response.IsSuccessStatusCode)
                     {
                         var serverData = JsonConvert.DeserializeObject<SaveData>(json) ?? new SaveData();
+                        
+                        // 🔧 서버 데이터 정리 (null 값들을 기본값으로 대체)
+                        CleanupServerData(serverData);
 
                         // 덮어쓰기 + 로컬 저장 (파일 접근 동기화)
                         await _fileSemaphore.WaitAsync();
@@ -290,6 +297,54 @@ public class DataManager : IDataManager, IInitializable
 
         // 실제 서버 전송은 DataSyncManager로 위임
         _syncMgr.EnqueueDelta(d);
+    }
+
+    /// <summary>
+    /// 🔧 서버에서 받은 데이터의 null 값들을 기본값으로 정리
+    /// </summary>
+    private void CleanupServerData(SaveData data)
+    {
+        if (data == null) return;
+
+        // stageFlagPositions의 null 항목들을 기본값으로 대체
+        if (data.stageFlagPositions != null)
+        {
+            for (int i = 0; i < data.stageFlagPositions.Count; i++)
+            {
+                if (data.stageFlagPositions[i] == null)
+                {
+                    data.stageFlagPositions[i] = new SerializableVector3Dto(0f, 0f, 0f);
+                    Debug.Log($"[DataManager] stageFlagPositions[{i}] null 값을 기본값으로 대체");
+                }
+            }
+        }
+        else
+        {
+            data.stageFlagPositions = new List<SerializableVector3Dto>();
+        }
+
+        // 다른 리스트들과 객체들도 null 체크
+        data.stageClears ??= new List<bool>();
+        data.bestGemRewards ??= new List<int>();
+        data.bestClearTimes ??= new List<float>();
+        data.bestDeathCounts ??= new List<int>();
+        data.currentPlayTimes ??= new List<float>();
+        data.currentDeathCounts ??= new List<int>();
+        data.items ??= new List<InventoryItemDto>();
+        data.achievementRewards ??= new Dictionary<string, bool>();
+        data.achievementUnlocked ??= new Dictionary<string, bool>();
+        
+        // AchievementProgressDto 내부도 null 체크
+        if (data.achievementProgress == null)
+        {
+            data.achievementProgress = new AchievementProgressDto();
+        }
+        
+        // AchievementProgressDto의 리스트들도 null 체크
+        data.achievementProgress.unlockedCharacters ??= new List<string>();
+        data.achievementProgress.itemTypesUsed ??= new List<string>();
+
+        Debug.Log($"[DataManager] 서버 데이터 정리 완료 - stageFlagPositions: {data.stageFlagPositions.Count}개");
     }
     // External: OfflineCacheManager 는 dataManager.OnDeltaGenerated += CacheDelta 로
     // 오프라인일 때 델타를 가로채 저장할 수 있고,

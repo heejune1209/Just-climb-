@@ -246,6 +246,7 @@ namespace JustClimb.Manager
                 {
                     try
                     {
+                        LogInfo($"Server response: {request.downloadHandler.text}");
                         var response = JsonConvert.DeserializeObject<AuthResponse>(request.downloadHandler.text);
                         
                         if (response.Success)
@@ -267,6 +268,7 @@ namespace JustClimb.Manager
                     catch (Exception e)
                     {
                         LogError($"Failed to parse server response: {e.Message}");
+                        LogError($"Raw response: {request.downloadHandler.text}");
                         _isAuthInProgress = false;
                         OnAuthenticationFailed?.Invoke("Failed to parse server response");
                     }
@@ -274,6 +276,8 @@ namespace JustClimb.Manager
                 else
                 {
                     LogError($"Server request failed: {request.error}");
+                    LogError($"Response code: {request.responseCode}");
+                    LogError($"Response text: {request.downloadHandler.text}");
                     _isAuthInProgress = false;
                     OnAuthenticationFailed?.Invoke(request.error);
                 }
@@ -302,11 +306,28 @@ namespace JustClimb.Manager
 
         private void OnDestroy()
         {
-            if (_isSteamInitialized && SteamManager.Initialized && _authTicket != HAuthTicket.Invalid)
+            // 개발 환경에서는 Steam API 정리를 건너뜀
+            #if UNITY_EDITOR
+            Debug.Log("[SteamAuthManager] 개발 환경: Steam API 정리 건너뜀");
+            return;
+            #endif
+            
+            // OnDestroy에서는 SteamManager.Initialized를 체크하지 않습니다.
+            // 이미 Steam이 종료되었을 수 있고, Initialized 체크 시 새로운 SteamManager 인스턴스가 생성될 수 있습니다.
+            if (_isSteamInitialized && _authTicket != HAuthTicket.Invalid)
             {
                 try
                 {
-                    SteamUser.CancelAuthTicket(_authTicket);
+                    // Steam API가 여전히 유효한지 간단히 체크
+                    if (SteamAPI.IsSteamRunning())
+                    {
+                        SteamUser.CancelAuthTicket(_authTicket);
+                        Debug.Log("[SteamAuthManager] Auth ticket 취소 완료");
+                    }
+                    else
+                    {
+                        Debug.Log("[SteamAuthManager] Steam이 실행되지 않아 auth ticket 취소 건너뜀");
+                    }
                 }
                 catch (Exception e)
                 {

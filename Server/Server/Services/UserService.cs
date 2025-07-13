@@ -8,11 +8,13 @@ namespace Server.Services
     {
         private readonly JustClimbDbContext _context;
         private readonly ILogger<UserService> _logger;
+        private readonly IAchievementService _achievementService;
 
-        public UserService(JustClimbDbContext context, ILogger<UserService> logger)
+        public UserService(JustClimbDbContext context, ILogger<UserService> logger, IAchievementService achievementService)
         {
             _context = context;
             _logger = logger;
+            _achievementService = achievementService;
         }
 
         public async Task<User?> GetUserBySteamIdAsync(string steamId)
@@ -91,6 +93,9 @@ namespace Server.Services
 
                 _context.Users.Add(newUser);
                 await _context.SaveChangesAsync();
+
+                // 새 사용자의 업적 초기화
+                await _achievementService.InitializeUserAchievementsAsync(steamId);
 
                 _logger.LogInformation("Successfully created user with Steam ID: {SteamId}, DisplayName: {DisplayName}", 
                     steamId, steamDisplayName);

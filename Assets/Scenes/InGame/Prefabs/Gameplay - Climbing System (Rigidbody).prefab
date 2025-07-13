@@ -2922,7 +2922,7 @@ MonoBehaviour:
       hangClimbUpState: Climb.Hang Climb up
       GroundLayers:
         serializedVersion: 2
-        m_Bits: 2097153
+        m_Bits: 2097152
       sphereRadius: 0.3
       horizontalOffset: 0.5
       minHeight: 1
