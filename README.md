@@ -416,171 +416,7 @@ graph TB
 - **장애물 시스템**
   - **Core**: [`IObstacle`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/IObstacle.cs), [`ObstacleBase`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleBase.cs), [`ObstacleTrigger`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleTrigger.cs) - 기본 뼈대 정의
   - **Spawners**: [`RockDropper`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RockDropper.cs), [`RollingSpawner`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RollingSpawner.cs), [`CannonShooter`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/CannonShooter.cs) - 장애물 생성
-  - **Effects**: [`KnockbackZone`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/KnockbackZone.cs), [`JumpPad`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/JumpPad.cs), [`DeathZone`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/DeathZone.cs) - 충돌 반응
-  - **Utils**: [`PoolableObstacle`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Utils/PoolableObstacle.cs) - 오브젝트 풀링 지원
-
-- **클라이밍 시스템**: FSM 기반 벽면 그랩·이동 로직 (Dias Games Asset 활용)
-
-### Sync Layer
-- **[DataSyncManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataSyncManager.cs)**  
-  - **델타 기반 실시간 동기화**: 변경사항만 추적하여 서버 전송으로 네트워크 부하 최소화
-  - **배치 처리**: 5초 간격 주기적 전송, 실패 시 재시도 메커니즘
-  - **즉시 Flush**: 앱 종료(`OnApplicationPause`/`OnApplicationFocus`) 시 남은 데이터 즉시 전송
-
-- **[OfflineCacheManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/OfflineCacheManager.cs)**  
-  - **네트워크 상태 감지**: 온라인/오프라인 상태 모니터링
-  - **오프라인 캐싱**: 네트워크 단절 시 로컬 큐에 데이터 저장
-  - **자동 동기화**: 온라인 복귀 시 캐시된 데이터 자동 서버 전송
-
-- **[SaveManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SaveManager.cs)**  
-  - **자동 저장**: 게임 종료, 백그라운드 전환 시 자동 저장 및 동기화
-  - **생명주기 관리**: `OnApplicationPause`, `OnApplicationFocus` 이벤트 처리
-
-### DI System Layer
-- **[ProjectInstaller](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/ProjectInstaller.cs)**  
-  - **전역 의존성 주입**: 모든 매니저의 Zenject DI 바인딩 및 초기화 순서 관리
-  - **UserIdProvider**: Steam ID 기반 동적 사용자 ID 관리 및 인증 성공 시 자동 업데이트
-
-- **Scene별 Installer**
-  - [`MainSceneInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/MainSceneInstaller.cs): 메인 씬 전용 의존성
-  - [`LobbySceneInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/LobbySceneInstaller.cs): 로비 씬 전용 의존성
-  - [`StageSceneInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/StageSceneInstaller.cs): 스테이지 씬 전용 의존성
-  - [`CharacterSelectInstaller`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Installers/CharacterSelectInstaller.cs): 캐릭터 선택 전용 의존성
-
-### Server-Side Architecture (ASP.NET Core)
-
-**Controllers (API Layer)**
-- **[AuthController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/AuthController.cs)**: Steam Web API 티켓 검증 → JWT 토큰 발급 (`POST /api/auth/steam`)
-- **[RankingController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs)**: 실시간 랭킹 조회 및 기록 업데이트 API
-- **[AchievementController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/AchievementController.cs)**: 업적 달성/조회 API, Steam 업적 동기화
-- **[SaveController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/SaveController.cs)**: 게임 데이터 저장/로드 API
-- **[DatabaseController](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/DatabaseController.cs)**: 데이터베이스 관리 API
-
-**Services (Business Logic)**
-- **[UserService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/UserService.cs)**: Steam 기반 사용자 생성/관리, 프로필 동기화
-- **[RankingService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/RankingService.cs)**: 랭킹 계산, 정렬, 캐시 관리 비즈니스 로직
-- **[AchievementService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/AchievementService.cs)**: 업적 달성 로직, 진행도 추적, Redis 캐시 연동
-- **[UserStateService](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/UserStateService.cs)**: 사용자 게임 상태 관리 및 델타 병합
-
-**Database Layer**
-- **[JustClimbDbContext](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Database/JustClimbDbContext.cs)**: Entity Framework Core 컨텍스트, 6개 테이블 매핑
-- **[AchievementSeeder](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Database/AchievementSeeder.cs)**: 업적 메타데이터 시드 데이터 생성
-- **Entity Models**: User, UserItem, UserStageRecord, Achievement, UserAchievement, UserAchievementProgress
-
-**Infrastructure**
-- **Redis 캐시**: 랭킹, 업적, 사용자 데이터 성능 최적화
-- **JWT 인증**: Steam 기반 무상태 인증 시스템
-- **로깅 시스템**: Serilog 기반 구조화된 로그 관리
-- **CORS & Middleware**: 클라이언트-서버 간 안전한 통신
-
-[UI 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/UI%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md#1-%EC%94%AC-%EC%B4%88%EA%B8%B0%ED%99%94-%EB%B0%8F-ui-%EB%A1%9C%EB%93%9C-%ED%94%8C%EB%A1%9C%EC%9A%B0-basescene--zenject-di)
-
----
-    
-### 아이템·재화 시스템 구조
-
-```mermaid
-graph TB
-    subgraph "Definition Layer (ScriptableObject Assets)"
-        ItemDataSO["ItemData.asset<br/>(Base ScriptableObject)"]
-        FeatherSO["FeatherData.asset"]
-        WingSO["WingData.asset"] 
-        LampSO["LampData.asset"]
-        FlagSO["FlagData.asset"]
-        
-        ItemDataSO --> FeatherSO
-        ItemDataSO --> WingSO
-        ItemDataSO --> LampSO
-        ItemDataSO --> FlagSO
-    end
-    
-    subgraph "Logic Layer (Interfaces & Implementations)"
-        ItemDataCS["ItemData.cs<br/>(ScriptableObject Class)"]
-        IItemUse["IItemUse.cs<br/>(Interface)"]
-        
-        FeatherUse["FeatherUse.cs"]
-        WingUse["WingUse.cs"]
-        LampUse["LampUse.cs"]
-        FlagUse["FlagUse.cs"]
-        
-        ItemDataCS -.-> IItemUse
-        IItemUse --> FeatherUse
-        IItemUse --> WingUse
-        IItemUse --> LampUse
-        IItemUse --> FlagUse
-    end
-    
-    subgraph "Data Layer (Persistence & State)"
-        DataManager["DataManager.cs<br/>(JSON I/O + Events)"]
-        SaveData["SaveData.cs<br/>(Serializable Data Model)"]
-        InventoryItem["InventoryItem.cs<br/>(ItemId + Count)"]
-        
-        DataManager --> SaveData
-        SaveData --> InventoryItem
-    end
-    
-    subgraph "Domain Layer (Business Logic)"
-        ItemDatabase["ItemDatabase.cs<br/>(Asset Database API)"]
-        ItemManager["ItemManager.cs<br/>(Item Operations & Buffs)"]
-        CurrencyManager["CurrencyManager.cs<br/>(Gold & Gems Management)"]
-        
-        ItemDatabase --> ItemManager
-        ItemManager --> CurrencyManager
-    end
-    
-    subgraph "UI Layer (Presentation)"
-        UIInventory["UI_Inventory.cs<br/>(Slot Display & Interaction)"]
-    end
-    
-    %% Cross-layer connections
-    FeatherSO -.-> ItemDataCS
-    WingSO -.-> ItemDataCS
-    LampSO -.-> ItemDataCS
-    FlagSO -.-> ItemDataCS
-    
-    ItemDataCS --> ItemDatabase
-    InventoryItem --> ItemManager
-    DataManager --> ItemManager
-    
-    ItemManager --> UIInventory
-    CurrencyManager --> UIInventory
-    
-    %% Styling
-    classDef definitionStyle fill:#ffebee,stroke:#d32f2f,color:#000
-    classDef logicStyle fill:#e3f2fd,stroke:#1976d2,color:#000
-    classDef dataStyle fill:#fff3e0,stroke:#f57c00,color:#000
-    classDef domainStyle fill:#e8f5e8,stroke:#388e3c,color:#000
-    classDef uiStyle fill:#f3e5f5,stroke:#7b1fa2,color:#000
-    
-    class ItemDataSO,FeatherSO,WingSO,LampSO,FlagSO definitionStyle
-    class ItemDataCS,IItemUse,FeatherUse,WingUse,LampUse,FlagUse logicStyle
-    class DataManager,SaveData,InventoryItem dataStyle
-    class ItemDatabase,ItemManager,CurrencyManager domainStyle
-    class UIInventory uiStyle
-```
-- **Definition Layer**: `ItemData.asset` (베이스 ScriptableObject) → 개별 아이템 에셋들 (`FeatherData.asset`, `WingData.asset`, `LampData.asset`, `FlagData.asset`)
-- **Logic Layer**: [`ItemData.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs) (ScriptableObject 클래스) + [`IItemUse.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs) 인터페이스 → 구현체들 (`FeatherUse.cs`, `WingUse.cs`, `LampUse.cs`, `FlagUse.cs`)  
-- **Data Layer**: `DataManager.cs` (JSON I/O + 이벤트 시스템), `SaveData.cs` (직렬화 데이터 모델), `InventoryItem.cs` (ItemId + Count 구조체)
-- **Domain Layer**: `ItemDatabase.cs` (에셋 데이터베이스 API), `ItemManager.cs` (아이템 연산 + 버프 시스템), `CurrencyManager.cs` (골드/젬 관리)
-- **UI Layer**: `UI_Inventory.cs` (슬롯 표시 + 상호작용 처리)  
-
-[아이템 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/%EC%95%84%EC%9D%B4%ED%85%9C%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
-
----
-
-### Obstacle Structure 
-![image](https://github.com/user-attachments/assets/24ebe925-cbaf-4006-8240-513eebafee46)
-- **Core Interface & Base**  
-  [`IObstacle.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/IObstacle.cs)(동작 계약), [`ObstacleBase.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleBase.cs)(Activate/Deactivate 공통 로직), [`ObstacleTrigger.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Core/ObstacleTrigger.cs)(충돌 감지 → IObstacle 호출)로 모든 장애물의 기본 뼈대를 정의.
-
-- **Obstacle Definitions**  
-  `ObstacleData.asset`(공통 속성)과 `DropperData.asset`, `RollerData.asset`, `CannonData.asset` 같은 ScriptableObject에 개별 장애물 파라미터를 저장.
-
-- **Spawner Components**  
-  [`RockDropper.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RockDropper.cs), [`RollingSpawner.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/RollingSpawner.cs), [`CannonShooter.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Spawners/CannonShooter.cs)가 정의된 Data Asset을 읽어 실제 장애물을 씬에 스폰하는 역할.
-
-- **Obstacle Effects**  
-  [`KnockbackZone.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/KnockbackZone.cs), [`JumpPad.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/JumpPad.cs), [`DeathZone.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/DeathZone.cs), [`MaterialChanger.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/MaterialChanger.cs) 등으로 장애물에 닿았을 때 발생할 충돌 반응이나 특수 효과를 구현.
+  - **Effects**: [`KnockbackZone`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/KnockbackZone.cs), [`JumpPad`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/JumpPad.cs), [`DeathZone`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/DeathZone.cs), [`MaterialChanger.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Effects/MaterialChanger.cs) 등으로 장애물에 닿았을 때 발생할 충돌 반응이나 특수 효과를 구현.
 
 - **Pooling Support**  
   [`PoolableObstacle.cs`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Obstacles/Utils/PoolableObstacle.cs)는 Object Pooling 기능을 제공하며, `ObstacleBase`를 상속해 장애물 인스턴스를 재사용.  
@@ -604,6 +440,27 @@ graph TB
   - **개인 기록 분리**: Top N 랭킹과 내 기록 별도 표시
   - **캐시 최적화**: 중복 요청 방지 및 성능 향상
   - **테스트 데이터**: 개발 및 테스트용 더미 데이터 생성
+
+[랭킹·업적 시스템 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/%EB%9E%AD%ED%82%B9%C2%B7%EC%97%85%EC%A0%81%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
+
+### 업적 시스템 구조
+
+- **클라이언트 측**
+  - `AchievementManager`: Steam API 연동 및 업적 조건 체크
+  - `UI_Achievement`: 업적 목록 표시 및 보상 수령 UI
+  - **Steam API Integration**: Steamworks.NET을 통한 실시간 업적 해제
+
+- **서버 측**
+  - `AchievementController`: JWT 인증 기반 REST API
+  - `AchievementService`: 업적 상태 관리 및 보상 처리
+  - **Database**: 사용자별 업적 진행도 및 보상 상태 저장
+
+- **주요 기능**
+  - **이중 동기화**: Steam API와 서버 DB에 동시 업적 해제
+  - **실시간 이벤트**: 게임플레이 중 조건 달성 시 즉시 업적 해제
+  - **진행도 추적**: 클라이언트와 서버 양쪽에서 업적 진행 상태 관리
+  - **보상 시스템**: 업적 달성 시 게임 내 재화 지급 및 수령 상태 관리
+  - **오프라인 지원**: Steam API 실패 시에도 서버 DB 동기화 유지
 
 ---
 
