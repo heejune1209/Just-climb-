@@ -3,8 +3,6 @@ builder = "NIXPACKS"
 
 [deploy]
 startCommand = "dotnet Server.dll"
-
-[deploy]
 restartPolicyType = "ON_FAILURE"
 restartPolicyMaxRetries = 10
 
