@@ -1,19 +1,17 @@
-# Just Climb Server 배포용 Dockerfile  
+# Just Climb Server 배포용 Dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
 # 전체 소스 복사
 COPY . .
 
-# Server 프로젝트로 이동하여 빌드
-WORKDIR "/src/Server/Server"
-RUN dotnet restore
-RUN dotnet build "Server.csproj" -c Release -o /app/build
+# Server.csproj 파일을 직접 지정하여 복원 및 빌드
+RUN dotnet restore "Server/Server/Server.csproj"
+RUN dotnet build "Server/Server/Server.csproj" -c Release -o /app/build
 
 # 퍼블리시
 FROM build AS publish
-WORKDIR "/src/Server/Server"
-RUN dotnet publish "Server.csproj" -c Release -o /app/publish
+RUN dotnet publish "Server/Server/Server.csproj" -c Release -o /app/publish
 
 # 런타임
 FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
