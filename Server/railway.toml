@@ -1,6 +1,6 @@
 [build]
 builder = "dockerfile"
-
+ 
 [deploy]
 startCommand = "dotnet Server.dll"
 healthcheckPath = "/api/v1/health"

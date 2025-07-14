@@ -57,9 +57,9 @@ namespace Server
                     if (builder.Environment.IsDevelopment())
                     {
                         // 개발 환경: 모든 Origin 허용
-                        policy.AllowAnyOrigin()
-                              .AllowAnyMethod()
-                              .AllowAnyHeader();
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
                     }
                     else
                     {
@@ -136,7 +136,7 @@ namespace Server
             // HTTPS 리다이렉션 (Railway에서는 비활성화)
             if (!app.Environment.IsEnvironment("Railway"))
             {
-                app.UseHttpsRedirection();
+            app.UseHttpsRedirection();
             }
 
             // CORS 미들웨어 추가

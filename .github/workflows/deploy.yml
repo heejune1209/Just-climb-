@@ -1,0 +1,134 @@
+name: Deploy to Steam and AWS
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  UNITY_VERSION: 2022.3.0f1
+  AWS_REGION: ap-northeast-2
+
+jobs:
+  # Unity 빌드
+  unity-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        
+      - name: Cache Unity Library
+        uses: actions/cache@v3
+        with:
+          path: Library
+          key: Library-${{ hashFiles('ProjectSettings/**') }}
+          
+      - name: Unity Build
+        uses: game-ci/unity-builder@v2
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          targetPlatform: StandaloneWindows64
+          projectPath: ./
+          buildName: JustClimb
+          
+      - name: Upload Unity Build Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: unity-build
+          path: build/
+          
+  # 서버 빌드 및 배포
+  server-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+        
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+        
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # Docker 이미지 빌드
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./Server
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+          # ECR에 푸시
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+      - name: Update ECS service
+        run: |
+          # ECS 서비스 강제 업데이트
+          aws ecs update-service \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --service ${{ secrets.ECS_SERVICE }} \
+            --force-new-deployment
+          
+          # 배포 완료 대기
+          aws ecs wait services-stable \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --services ${{ secrets.ECS_SERVICE }}
+            
+      - name: Verify deployment
+        run: |
+          # 서비스 상태 확인
+          aws ecs describe-services \
+            --cluster ${{ secrets.ECS_CLUSTER }} \
+            --services ${{ secrets.ECS_SERVICE }} \
+            --query 'services[0].deployments[0].status' \
+            --output text
+          
+  # Steam 배포
+  steam-deploy:
+    needs: [unity-build, server-deploy]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Unity Build
+        uses: actions/download-artifact@v3
+        with:
+          name: unity-build
+          path: ./build
+          
+      - name: Steam Deploy
+        uses: game-ci/steam-deploy@v3
+        with:
+          username: ${{ secrets.STEAM_USERNAME }}
+          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+          appId: ${{ secrets.STEAM_APP_ID }}
+          buildDescription: ${{ github.ref_name }}
+          rootPath: ./build
+          depot1Path: StandaloneWindows64
+          releaseBranch: prerelease
+          
+  # 배포 알림
+  notify:
+    needs: [unity-build, server-deploy, steam-deploy]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Deployment Status
+        run: |
+          if [ "${{ needs.server-deploy.result }}" = "success" ] && [ "${{ needs.steam-deploy.result }}" = "success" ]; then
+            echo "✅ Just Climb 배포 완료!"
+            echo "🌐 서버: https://api.justclimb.com"
+            echo "🎮 Steam: 빌드 업로드 완료"
+          else
+            echo "❌ 배포 실패"
+            echo "서버 배포: ${{ needs.server-deploy.result }}"
+            echo "Steam 배포: ${{ needs.steam-deploy.result }}"
+            exit 1
+          fi 
