@@ -1,7 +1,8 @@
 [build]
 builder = "NIXPACKS"
-buildCommand = "dotnet restore && dotnet publish -c Release -o out"
-startCommand = "dotnet out/Server.dll"
+
+[deploy]
+startCommand = "dotnet Server.dll"
 
 [deploy]
 restartPolicyType = "ON_FAILURE"
