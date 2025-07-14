@@ -1,28 +1,25 @@
-# Just Climb Server 배포용 Dockerfile
+# Just Climb Server - 간단한 Dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
-WORKDIR /src
-
-# 전체 소스 복사
-COPY . .
-
-# Server.csproj 파일을 직접 지정하여 복원 및 빌드
-RUN dotnet restore "Server/Server/Server.csproj"
-RUN dotnet build "Server/Server/Server.csproj" -c Release -o /app/build
-
-# 퍼블리시
-FROM build AS publish
-RUN dotnet publish "Server/Server/Server.csproj" -c Release -o /app/publish
-
-# 런타임
-FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS final
 WORKDIR /app
 
-# curl 설치 (헬스체크용)
+# Server 폴더만 복사
+COPY Server/Server/ ./
+
+# 복원, 빌드, 퍼블리시
+RUN dotnet restore *.csproj
+RUN dotnet publish *.csproj -c Release -o out
+
+# 런타임 이미지
+FROM mcr.microsoft.com/dotnet/aspnet:6.0
+WORKDIR /app
+
+# curl 설치
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-COPY --from=publish /app/publish .
+# 앱 복사
+COPY --from=build /app/out .
 
-# Railway 포트 설정
+# 포트 설정
 EXPOSE $PORT
 
 # 헬스체크
