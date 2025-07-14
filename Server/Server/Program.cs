@@ -14,6 +14,12 @@ namespace Server
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            
+            // Railway 환경 설정 파일 로드
+            if (builder.Environment.IsEnvironment("Railway"))
+            {
+                builder.Configuration.AddJsonFile("appsettings.Railway.json", optional: false, reloadOnChange: true);
+            }
 
             // Add services to the container.
 
