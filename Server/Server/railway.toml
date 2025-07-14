@@ -1,6 +1,3 @@
-[build]
-builder = "NIXPACKS"
-
 [deploy]
 startCommand = "dotnet Server.dll"
 restartPolicyType = "ON_FAILURE"
@@ -8,11 +5,4 @@ restartPolicyMaxRetries = 10
 
 [environments.production.variables]
 ASPNETCORE_ENVIRONMENT = "Railway"
-ASPNETCORE_URLS = "http://0.0.0.0:$PORT"
-
-# Nixpacks 명시적 설정
-[build.nixpacks]
-cmds = [
-    "dotnet restore",
-    "dotnet publish -c Release -o out"
-] 
+ASPNETCORE_URLS = "http://0.0.0.0:$PORT" 
