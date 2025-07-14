@@ -3,11 +3,11 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /app
 
 # 프로젝트 파일 복사 및 복원
-COPY Server/Server.csproj ./
+COPY Server.csproj ./
 RUN dotnet restore
 
 # 소스 코드 복사 및 빌드
-COPY Server/ ./
+COPY . ./
 RUN dotnet publish -c Release -o out
 
 # 런타임 이미지
