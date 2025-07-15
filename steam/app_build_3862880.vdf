@@ -1,0 +1,24 @@
+"appbuild"
+{
+	"appid" "3862880"
+	"desc" "Just Climb - Auto Build"
+	"buildoutput" "..\\output\\"
+	"contentroot" "..\\builds\\windows\\"
+	"setlive" "default"
+	"preview" "0"
+	"local" ""
+	
+	"depots"
+	{
+		"3862881"
+		{
+			"FileMapping"
+			{
+				"LocalPath" "*"
+				"DepotPath" "."
+				"recursive" "1"
+			}
+			"FileExclusion" "*.pdb"
+		}
+	}
+} 

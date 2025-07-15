@@ -10,10 +10,10 @@ namespace JustClimb.Config
         public const string BASE_URL = "https://localhost:5001"; // 개발용
         public const bool IS_DEVELOPMENT = true;
 #elif DEVELOPMENT_BUILD
-        public const string BASE_URL = "https://justclimb-api.railway.app"; // Railway 개발 서버
+        public const string BASE_URL = "https://api.justclimb.com"; // AWS 개발 서버
         public const bool IS_DEVELOPMENT = true;
 #else
-        public const string BASE_URL = "https://justclimb-api.railway.app"; // Railway 프로덕션 (무료 시작)
+        public const string BASE_URL = "https://api.justclimb.com"; // AWS 프로덕션 서버
         public const bool IS_DEVELOPMENT = false;
 #endif
 

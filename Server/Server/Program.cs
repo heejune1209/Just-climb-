@@ -14,11 +14,22 @@ namespace Server
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-            
-            // Railway 환경 설정 파일 로드
-            if (builder.Environment.IsEnvironment("Railway"))
+
+            // AWS 환경 설정 파일 로드
+            if (builder.Environment.IsEnvironment("AWS"))
             {
-                builder.Configuration.AddJsonFile("appsettings.Railway.json", optional: false, reloadOnChange: true);
+                builder.Configuration.AddJsonFile("appsettings.AWS.json", optional: false, reloadOnChange: true);
+                
+                // 환경 변수 값으로 설정 파일의 placeholder 치환
+                var configuration = builder.Configuration.Build();
+                var updatedConfig = new ConfigurationBuilder()
+                    .AddConfiguration(configuration)
+                    .AddEnvironmentVariables()
+                    .Build();
+                
+                // 환경 변수 값으로 치환된 설정 적용
+                builder.Configuration.Sources.Clear();
+                builder.Configuration.AddConfiguration(updatedConfig);
             }
 
             // Add services to the container.
@@ -33,18 +44,18 @@ namespace Server
             builder.Logging.AddDebug();
             builder.Logging.SetMinimumLevel(LogLevel.Information);
 
-            // HTTPS 리다이렉션 설정 (Railway에서는 비활성화)
-            if (!builder.Environment.IsEnvironment("Railway"))
+            // HTTPS 리다이렉션 설정 (개발 환경에서는 비활성화)
+            if (!builder.Environment.IsDevelopment())
             {
                 builder.Services.AddHttpsRedirection(options =>
                 {
                     options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
-                    options.HttpsPort = builder.Environment.IsDevelopment() ? 5001 : 443;
+                    options.HttpsPort = 443;
                 });
             }
 
             // HSTS (HTTP Strict Transport Security) 설정 - 프로덕션용
-            if (!builder.Environment.IsDevelopment() && !builder.Environment.IsEnvironment("Railway"))
+            if (!builder.Environment.IsDevelopment())
             {
                 builder.Services.AddHsts(options =>
                 {
@@ -78,8 +89,23 @@ namespace Server
                 });
             });
 
+            // 데이터베이스 컨텍스트 설정 (PostgreSQL/SQL Server 지원)
             builder.Services.AddDbContext<JustClimbDbContext>(opts =>
-                opts.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+            {
+                var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+                if (builder.Environment.IsEnvironment("AWS") || 
+                    connectionString.Contains("Host=") || 
+                    connectionString.Contains("Server=") && connectionString.Contains("Port="))
+                {
+                    // PostgreSQL 사용
+                    opts.UseNpgsql(connectionString);
+                }
+                else
+                {
+                    // SQL Server 사용 (기본값)
+                    opts.UseSqlServer(connectionString);
+                }
+            });
             builder.Services.AddStackExchangeRedisCache(opts =>
                 opts.Configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString"));
 
@@ -133,16 +159,12 @@ namespace Server
             {
                 app.MapOpenApi();
             }
-            else if (!app.Environment.IsEnvironment("Railway"))
+            else
             {
-                // 프로덕션에서만 HSTS 활성화 (Railway 제외)
+                // 프로덕션에서만 HSTS 활성화
                 app.UseHsts();
-            }
-
-            // HTTPS 리다이렉션 (Railway에서는 비활성화)
-            if (!app.Environment.IsEnvironment("Railway"))
-            {
-            app.UseHttpsRedirection();
+                // HTTPS 리다이렉션
+                app.UseHttpsRedirection();
             }
 
             // CORS 미들웨어 추가
@@ -155,7 +177,7 @@ namespace Server
 
             app.MapControllers();
 
-            // Health Check 엔드포인트 (Railway용)
+            // Health Check 엔드포인트
             app.MapGet("/api/v1/health", () => new { 
                 status = "Healthy", 
                 timestamp = DateTime.UtcNow,

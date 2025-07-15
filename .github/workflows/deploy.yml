@@ -1,134 +1,190 @@
-name: Deploy to Steam and AWS
+name: Deploy to AWS
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
 env:
-  UNITY_VERSION: 2022.3.0f1
-  AWS_REGION: ap-northeast-2
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
-  # Unity 빌드
+  # Unity 빌드 작업
   unity-build:
     runs-on: ubuntu-latest
+    name: Build Unity Client
+    
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        lfs: true
+    
+    - name: Cache Unity Library
+      uses: actions/cache@v3
+      with:
+        path: Library
+        key: Library-${{ runner.os }}-${{ hashFiles('ProjectSettings/**') }}
+        restore-keys: Library-${{ runner.os }}-
+    
+    - name: Update Version Info
+      run: |
+        # 빌드 번호 생성 (GitHub run number 사용)
+        BUILD_NUMBER="${{ github.run_number }}"
+        BUILD_DATE=$(date '+%Y-%m-%d %H:%M:%S')
+        COMMIT_HASH="${{ github.sha }}"
         
-      - name: Cache Unity Library
-        uses: actions/cache@v3
-        with:
-          path: Library
-          key: Library-${{ hashFiles('ProjectSettings/**') }}
-          
-      - name: Unity Build
-        uses: game-ci/unity-builder@v2
-        env:
-          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
-        with:
-          targetPlatform: StandaloneWindows64
-          projectPath: ./
-          buildName: JustClimb
-          
-      - name: Upload Unity Build Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: unity-build
-          path: build/
-          
-  # 서버 빌드 및 배포
-  server-deploy:
+        # VersionManager.cs 파일 업데이트
+        sed -i "s/public const string BUILD_NUMBER = \".*\"/public const string BUILD_NUMBER = \"${BUILD_NUMBER}\"/" Assets/Scripts/Utils/VersionManager.cs
+        sed -i "s/public const string BUILD_DATE = \".*\"/public const string BUILD_DATE = \"${BUILD_DATE}\"/" Assets/Scripts/Utils/VersionManager.cs
+        sed -i "s/public const string COMMIT_HASH = \".*\"/public const string COMMIT_HASH = \"${COMMIT_HASH:0:7}\"/" Assets/Scripts/Utils/VersionManager.cs
+        
+        # Unity 프로젝트 설정 업데이트
+        echo "Build Number: ${BUILD_NUMBER}"
+        echo "Build Date: ${BUILD_DATE}"
+        echo "Commit Hash: ${COMMIT_HASH:0:7}"
+    
+    - name: Build Unity Project
+      uses: game-ci/unity-builder@v4
+      env:
+        UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+        UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      with:
+        targetPlatform: StandaloneWindows64
+        buildName: JustClimb
+        buildPath: builds/windows
+        
+    - name: Upload Unity Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: unity-build-windows
+        path: builds/windows
+  
+  test:
     runs-on: ubuntu-latest
+    name: Test Server
+    
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
-        
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-          
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-        
-      - name: Build, tag, and push image to Amazon ECR
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          # Docker 이미지 빌드
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG ./Server
-          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-          # ECR에 푸시
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-          
-      - name: Update ECS service
-        run: |
-          # ECS 서비스 강제 업데이트
-          aws ecs update-service \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --service ${{ secrets.ECS_SERVICE }} \
-            --force-new-deployment
-          
-          # 배포 완료 대기
-          aws ecs wait services-stable \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --services ${{ secrets.ECS_SERVICE }}
-            
-      - name: Verify deployment
-        run: |
-          # 서비스 상태 확인
-          aws ecs describe-services \
-            --cluster ${{ secrets.ECS_CLUSTER }} \
-            --services ${{ secrets.ECS_SERVICE }} \
-            --query 'services[0].deployments[0].status' \
-            --output text
-          
-  # Steam 배포
+    - uses: actions/checkout@v4
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+    
+    - name: Restore dependencies
+      run: dotnet restore Server/Server/Server.csproj
+    
+    - name: Build
+      run: dotnet build Server/Server/Server.csproj --no-restore
+    
+    - name: Test
+      run: dotnet test Server/Server/Server.csproj --no-build --verbosity normal
+
+  build-and-push:
+    needs: test
+    runs-on: ubuntu-latest
+    name: Build and Push Docker Image
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha
+          type=raw,value=latest,enable={{is_default_branch}}
+    
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./Server/Server
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+
+  # Steam 배포 작업
   steam-deploy:
-    needs: [unity-build, server-deploy]
+    needs: unity-build
     runs-on: ubuntu-latest
+    name: Deploy to Steam
+    if: github.ref == 'refs/heads/main'
+    
     steps:
-      - name: Download Unity Build
-        uses: actions/download-artifact@v3
-        with:
-          name: unity-build
-          path: ./build
-          
-      - name: Steam Deploy
-        uses: game-ci/steam-deploy@v3
-        with:
-          username: ${{ secrets.STEAM_USERNAME }}
-          configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
-          appId: ${{ secrets.STEAM_APP_ID }}
-          buildDescription: ${{ github.ref_name }}
-          rootPath: ./build
-          depot1Path: StandaloneWindows64
-          releaseBranch: prerelease
-          
-  # 배포 알림
-  notify:
-    needs: [unity-build, server-deploy, steam-deploy]
+    - uses: actions/checkout@v4
+    
+    - name: Download Unity Build
+      uses: actions/download-artifact@v4
+      with:
+        name: unity-build-windows
+        path: ./builds/windows
+    
+    - name: Update Steam Build Description
+      run: |
+        BUILD_DESCRIPTION="Just Climb v1.0.0.${{ github.run_number }} - $(date '+%Y-%m-%d %H:%M:%S')"
+        echo "BUILD_DESCRIPTION=${BUILD_DESCRIPTION}" >> $GITHUB_ENV
+        echo "🎮 Steam Build Description: ${BUILD_DESCRIPTION}"
+    
+    - name: Deploy to Steam
+      uses: game-ci/steam-deploy@v3
+      with:
+        username: ${{ secrets.STEAM_USERNAME }}
+        configVdf: ${{ secrets.STEAM_CONFIG_VDF }}
+        appId: ${{ secrets.STEAM_APP_ID }}
+        buildDescription: ${{ env.BUILD_DESCRIPTION }}
+        rootPath: ./builds/windows
+        depot1Path: StandaloneWindows64
+        releaseBranch: default
+        
+    - name: Steam Build Status
+      run: |
+        echo "🎮 Steam 빌드 업로드 완료!"
+        echo "📦 App ID: ${{ secrets.STEAM_APP_ID }}"
+        echo "🚀 Build: ${{ env.BUILD_DESCRIPTION }}"
+        echo "🔗 Commit: ${{ github.sha }}"
+        echo "🌿 Branch: ${{ github.ref_name }}"
+        echo "👤 Author: ${{ github.actor }}"
+        echo "📅 Time: $(date '+%Y-%m-%d %H:%M:%S')"
+        echo ""
+        echo "✅ 플레이어들이 Steam에서 업데이트를 받을 수 있습니다!"
+
+  deploy:
+    needs: build-and-push
     runs-on: ubuntu-latest
-    if: always()
+    name: Deploy to AWS
+    if: github.ref == 'refs/heads/main'
+    
     steps:
-      - name: Deployment Status
-        run: |
-          if [ "${{ needs.server-deploy.result }}" = "success" ] && [ "${{ needs.steam-deploy.result }}" = "success" ]; then
-            echo "✅ Just Climb 배포 완료!"
-            echo "🌐 서버: https://api.justclimb.com"
-            echo "🎮 Steam: 빌드 업로드 완료"
-          else
-            echo "❌ 배포 실패"
-            echo "서버 배포: ${{ needs.server-deploy.result }}"
-            echo "Steam 배포: ${{ needs.steam-deploy.result }}"
-            exit 1
-          fi 
+    - name: Deploy to Jenkins
+      run: |
+        curl -X POST \
+          -H "Authorization: Bearer ${{ secrets.JENKINS_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "parameter": [
+              {
+                "name": "IMAGE_TAG",
+                "value": "${{ github.sha }}"
+              },
+              {
+                "name": "BRANCH",
+                "value": "${{ github.ref_name }}"
+              }
+            ]
+          }' \
+          ${{ secrets.JENKINS_URL }}/job/just-climb-deploy/buildWithParameters 

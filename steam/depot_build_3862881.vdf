@@ -1,0 +1,14 @@
+"DepotBuildConfig"
+{
+	"DepotID" "3862881"
+	"contentroot" "..\\builds\\windows\\"
+	"FileMapping"
+	{
+		"LocalPath" "*"
+		"DepotPath" "."
+		"recursive" "1"
+	}
+	"FileExclusion" "*.pdb"
+	"FileExclusion" "*.log"
+	"FileExclusion" "UnityCrashHandler*"
+} 
