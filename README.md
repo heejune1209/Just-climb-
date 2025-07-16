@@ -19,7 +19,7 @@
 
 ## 설계서
 ### Game Flow
-![Image](https://github.com/user-attachments/assets/679a1411-5d48-4aaa-879f-68a8efc2cd31)
+![Image](<img width="1109" height="592" alt="Image" src="https://github.com/user-attachments/assets/c779aa26-6074-472e-a308-cb9b31804551" />)
 - 씬 전환 기반 구조로 타이틀 → 로비 → 스테이지 → 결과로 이어지는 흐름
 - 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
 
