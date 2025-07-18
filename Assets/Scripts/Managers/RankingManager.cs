@@ -53,7 +53,7 @@ namespace JustClimb.Manager
             if (_serverConfig == null)
             {
                 Debug.LogError("[RankingManager] ServerConfig를 찾을 수 없습니다!");
-                _baseUrl = "https://localhost:7091/api/ranking";
+                _baseUrl = "https://localhost:5259/api/ranking";
             }
             else
             {

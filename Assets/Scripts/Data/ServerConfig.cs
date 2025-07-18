@@ -1,5 +1,4 @@
 using UnityEngine;
-
 namespace JustClimb.Data
 {
     /// <summary>
@@ -11,10 +10,10 @@ namespace JustClimb.Data
     {
         [Header("서버 URL 설정")]
         [Tooltip("개발 환경에서 사용할 서버 URL")]
-        public string developmentServerUrl = "https://localhost:7091";  // 현재 프로젝트 포트
+        public string developmentServerUrl = "http://localhost:5259";  // 로컬 개발용 (HTTP)
         
-        [Tooltip("운영 환경에서 사용할 서버 URL")]
-        public string productionServerUrl = "https://your-production-server.com";
+        [Tooltip("운영 환경에서 사용할 서버 URL - AWS EC2 게임서버")]
+        public string productionServerUrl = "http://54.180.97.179:5000";
         
         [Header("API 엔드포인트")]
         [Tooltip("사용자 상태 조회/저장 API 경로")]
@@ -35,11 +34,17 @@ namespace JustClimb.Data
         /// </summary>
         public string GetBaseUrl()
         {
+            // 🧪 AWS 서버 테스트용 - 임시로 Production URL 사용
+            return productionServerUrl;
+            
+            // 원래 코드 (테스트 완료 후 복구)
+            /*
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
                 return developmentServerUrl;
             #else
                 return productionServerUrl;
             #endif
+            */
         }
         
         /// <summary>

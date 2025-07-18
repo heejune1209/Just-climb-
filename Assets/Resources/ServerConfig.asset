@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: db640a5b600e7f6409dd26c239f8be84, type: 3}
   m_Name: ServerConfig
   m_EditorClassIdentifier: 
-  developmentServerUrl: https://localhost:7091
-  productionServerUrl: https://your-production-server.com
+  developmentServerUrl: https://localhost:5259
+  productionServerUrl: http://54.180.97.179:5000
   userStateApiPath: /api/users
   deltaApiPath: /api/users/{0}/state/delta
   timeoutSeconds: 30

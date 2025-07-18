@@ -55,7 +55,7 @@ public class DataManager : IDataManager, IInitializable
         if (_serverConfig == null)
         {
             Debug.LogError("[DataManager] ServerConfig를 찾을 수 없습니다! Resources/ServerConfig.asset을 생성하세요.");
-            _serverUrl = "https://localhost:7091/api/users";  // 기본값
+            _serverUrl = "https://localhost:5259/api/users";  // 기본값
         }
         else
         {
