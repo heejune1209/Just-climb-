@@ -168,3 +168,4 @@ C:\Users\user\Just_Climb\Server\Server\bin\Debug\net9.0\Microsoft.AspNetCore.Aut
 C:\Users\user\Just_Climb\Server\Server\bin\Debug\net9.0\appsettings.Production.json
 C:\Users\user\Just_Climb\Server\Server\bin\Debug\net9.0\Npgsql.dll
 C:\Users\user\Just_Climb\Server\Server\bin\Debug\net9.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
+C:\Users\user\Just_Climb\Server\Server\bin\Debug\net9.0\appsettings.AWS.json
