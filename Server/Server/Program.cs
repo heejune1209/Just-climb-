@@ -88,7 +88,7 @@ namespace Server
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
                 if (builder.Environment.IsEnvironment("AWS") || 
                     connectionString.Contains("Host=") || 
-                    connectionString.Contains("Server=") && connectionString.Contains("Port="))
+                    connectionString.Contains("Port=5432"))
                 {
                     // PostgreSQL 사용
                     opts.UseNpgsql(connectionString);
