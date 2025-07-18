@@ -34,8 +34,12 @@
 ExportedObj/
 .consulo/
 *.csproj
+# Allow Server project files
+!Server/**/*.csproj
 *.unityproj
 *.sln
+# Allow Server solution files
+!Server/**/*.sln
 *.suo
 *.tmp
 *.user
