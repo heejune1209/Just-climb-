@@ -1,7 +1,8 @@
+using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Server.Config;
 using Server.Database;
 using Server.Services;
@@ -20,16 +21,8 @@ namespace Server
             {
                 builder.Configuration.AddJsonFile("appsettings.AWS.json", optional: false, reloadOnChange: true);
                 
-                // 환경 변수 값으로 설정 파일의 placeholder 치환
-                var configuration = builder.Configuration.Build();
-                var updatedConfig = new ConfigurationBuilder()
-                    .AddConfiguration(configuration)
-                    .AddEnvironmentVariables()
-                    .Build();
-                
-                // 환경 변수 값으로 치환된 설정 적용
-                builder.Configuration.Sources.Clear();
-                builder.Configuration.AddConfiguration(updatedConfig);
+                // 환경 변수도 추가
+                builder.Configuration.AddEnvironmentVariables();
             }
 
             // Add services to the container.
