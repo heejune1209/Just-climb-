@@ -604,12 +604,120 @@ Unity Client → Steam Ticket → Server Validation → JWT Token → Authentica
   - **CharacterHistory Entity**: 캐릭터 변경 이력 추적을 위한 엔티티 모델
   - **Repository 패턴**: EF Core 기반 캐릭터 데이터 관리
 
+### 🚀 **AWS 클라우드 인프라 구축 및 서버 배포**
+실제 운영 환경을 위한 AWS 기반 인프라 구축 및 자동화 배포 시스템 구현
+
+#### **인프라 구성**
+- **AWS EC2**: .NET 9.0 런타임 환경 구성 (Amazon Linux 2023)
+- **AWS RDS PostgreSQL**: 사용자 데이터, 랭킹, 업적 정보 저장
+- **AWS ElastiCache Redis**: 세션 관리 및 캐시 최적화
+- **보안 그룹**: 3-티어 아키텍처 보안 정책 (Unity Client → EC2 → RDS/Redis)
+
+#### **배포 환경 설정**
+- **환경별 설정 파일**: `appsettings.json`(로컬), `appsettings.AWS.json`(배포), `appsettings.Production.json`(운영)
+- **데이터베이스 연결**: PostgreSQL 연결 문자열 및 Entity Framework Core 마이그레이션
+- **.NET 9.0 호환성**: 개발/배포 환경 일관성 확보 및 최신 .NET 기능 활용
+
+#### **배포 자동화 워크플로우**
+- **GitHub Actions**: 코드 푸시 시 자동 빌드 및 테스트
+- **Jenkins**: CI/CD 파이프라인 구축 및 배포 자동화
+- **Docker**: 컨테이너 기반 배포 및 환경 일관성 보장
+- **실시간 모니터링**: 서버 상태 및 성능 메트릭 모니터링
+
+### 📊 **배포 자동화 워크플로우 다이어그램**
+
+```mermaid
+graph TB
+    subgraph "🖥️ Development Environment"
+        DEV[개발자 로컬 환경]
+        UNITY[Unity Client]
+        VSCODE[VS Code]
+    end
+    
+    subgraph "🔄 CI/CD Pipeline"
+        GITHUB[GitHub Repository]
+        ACTIONS[GitHub Actions]
+        JENKINS[Jenkins CI/CD]
+        DOCKER[Docker Build]
+    end
+    
+    subgraph "☁️ AWS Cloud Infrastructure"
+        subgraph "🖥️ Compute"
+            EC2[EC2 Instance<br/>Amazon Linux 2023<br/>.NET 9.0 Runtime]
+        end
+        
+        subgraph "🗄️ Database"
+            RDS[RDS PostgreSQL<br/>User Data<br/>Rankings<br/>Achievements]
+        end
+        
+        subgraph "⚡ Cache"
+            REDIS[ElastiCache Redis<br/>Session Management<br/>Performance Cache]
+        end
+        
+        subgraph "🔒 Security"
+            SG1[Security Group<br/>Unity Client Access]
+            SG2[Security Group<br/>EC2 → RDS/Redis]
+        end
+    end
+    
+    subgraph "🎮 Client Distribution"
+        STEAM[Steam Platform]
+        STEAMWORKS[Steamworks.NET<br/>Authentication<br/>Achievements]
+    end
+    
+    %% Development Flow
+    DEV --> VSCODE
+    DEV --> UNITY
+    
+    %% CI/CD Flow
+    VSCODE --> GITHUB
+    GITHUB --> ACTIONS
+    ACTIONS --> JENKINS
+    JENKINS --> DOCKER
+    DOCKER --> EC2
+    
+    %% Infrastructure Flow
+    EC2 --> RDS
+    EC2 --> REDIS
+    
+    %% Security Flow
+    SG1 --> EC2
+    SG2 --> RDS
+    SG2 --> REDIS
+    
+    %% Client Flow
+    UNITY --> STEAMWORKS
+    STEAMWORKS --> STEAM
+    UNITY --> EC2
+    
+    %% Configuration Flow
+    EC2 -.->|Environment Config| CONFIG[appsettings.AWS.json<br/>Connection Strings<br/>JWT Settings]
+    
+    %% Monitoring Flow
+    EC2 -.->|Logs & Metrics| MONITOR[CloudWatch<br/>Performance Monitoring]
+    
+    %% Styling
+    classDef devEnv fill:#E3F2FD,stroke:#1976D2,stroke-width:2px,color:#000
+    classDef cicd fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    classDef aws fill:#FFF3E0,stroke:#F57C00,stroke-width:2px,color:#000
+    classDef client fill:#E8F5E8,stroke:#388E3C,stroke-width:2px,color:#000
+    classDef config fill:#FFF8E1,stroke:#F9A825,stroke-width:2px,color:#000
+    classDef security fill:#FFEBEE,stroke:#D32F2F,stroke-width:2px,color:#000
+    
+    class DEV,UNITY,VSCODE devEnv
+    class GITHUB,ACTIONS,JENKINS,DOCKER cicd
+    class EC2,RDS,REDIS aws
+    class STEAM,STEAMWORKS client
+    class CONFIG,MONITOR config
+    class SG1,SG2 security
+```
 
 ### 🚀 **향후 개발 계획**
 1. **캐릭터 선택 시스템 완성**: 클라이언트 UI → 서버 저장 → 모든 기기에서 동기화
-2. **성능 최적화**: 실시간 동기화 및 캐시 시스템 개선
-3. **추가 업적 컨텐츠**: 더 다양한 업적 조건 및 보상 시스템
-4. **Steam Workshop 연동**: 사용자 생성 컨텐츠 지원 검토
+2. **AWS 배포 자동화 완성**: Jenkins/Docker 기반 완전 자동화 배포 파이프라인 구축
+3. **성능 최적화**: 실시간 동기화 및 캐시 시스템 개선, CloudWatch 모니터링 강화
+4. **추가 업적 컨텐츠**: 더 다양한 업적 조건 및 보상 시스템
+5. **로드 밸런싱**: 다중 EC2 인스턴스 및 Application Load Balancer 구성
 
 ---
 
