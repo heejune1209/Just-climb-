@@ -278,13 +278,13 @@ graph TB
 - **[DataManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/DataManager.cs)**  
   - 로컬 JSON(`save.json`) 읽기/쓰기 및 델타 이벤트 시스템 관리
   - `Init()` → 파일 복사/로드, `Load()` → `OnLoaded` 이벤트, `Save()` → `OnSaved` 이벤트
-  - **델타 이벤트 시스템**: 데이터 변경 시 `OnDeltaGenerated` 이벤트 발생으로 실시간 동기화
+   - **델타 이벤트 시스템**: 데이터 변경 시 `OnDeltaGenerated` 이벤트 발생으로 실시간 동기화
   - `GenerateDelta(key, value)`: 특정 필드 변경사항 추적
 
 - **[SaveData](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/SaveData.cs)**  
   - 게임 상태 직렬화 모델: `gold`, `gems`, `selectedCharacter`, `items`(InventoryItem[])
   - 스테이지 데이터: `stageClears`, `stageRewards`, `stageTimes`, `stagePlayTimes`, `stageDeathCounts`, `stageFlagPositions`
-  - **최고 기록 추적**: `bestClearTimes`, `bestDeathCounts` 추가
+   - **최고 기록 추적**: `bestClearTimes`, `bestDeathCounts` 추가
 
 - **[InventoryItem](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Data/Models/InventoryItem.cs)**  
   - 아이템별 `itemId`·`count` 저장 클래스
@@ -342,8 +342,8 @@ graph TB
 
 - **[UIManager](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/UIManager.cs)**  
   - UI 생명주기 관리: `@UI_Root` 생성 → 씬(`UI_Scene`), 팝업(`UI_Popup`) 인스턴스화
-  - Canvas 세팅, 팝업 스택 관리, `Time.timeScale` 제어
-  - **Zenject DI 통합**: 런타임 UI 컴포넌트 자동 의존성 주입
+   - Canvas 세팅, 팝업 스택 관리, `Time.timeScale` 제어  
+   - **Zenject DI 통합**: 런타임 UI 컴포넌트 자동 의존성 주입
 
 - **[SceneManagerEX](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/SceneManagerEX.cs)**  
   - 씬 전환 최적화: 전환 전 `Managers.Clear()` → `SceneManager.LoadScene()` 안전한 씬 로드
@@ -365,8 +365,8 @@ graph TB
   - Steamworks.NET 초기화 및 Steam 클라이언트 연동 관리
 
 - **Utilities**  
-  - [Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs): 전역 enum/상수
-  - [Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs): 컴포넌트 보장·계층 탐색
+  - [Define.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Define.cs): 전역 enum/상수  
+  - [Util.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Util.cs): 컴포넌트 보장·계층 탐색  
   - [Extension.cs](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/Extension.cs): `GameObject` 확장 메서드
 
 ### UI Layer
