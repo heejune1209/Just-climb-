@@ -852,6 +852,25 @@ graph TB
     %% Network Communication
     DataSyncManager --> SaveController
     ```
+
+  **🏗️ 아키텍처 특징:**
+  
+  ### **7-Layer 모듈화 구조**
+  - **UI Layer**: 상점/인벤토리 사용자 인터페이스
+  - **DI System**: Zenject 기반 의존성 주입 시스템  
+  - **Domain Layer**: 비즈니스 로직 (재화/아이템 관리)
+  - **Persistence Layer**: 데이터 저장 및 직렬화 시스템
+  - **Sync Layer**: 실시간 서버 동기화 및 오프라인 캐시
+  - **Game Systems**: Strategy Pattern 기반 아이템 효과 시스템
+  - **Server Layer**: ASP.NET Core 백엔드 API
+  
+  ### **핵심 설계 패턴**
+  - **Dependency Injection**: 인터페이스 기반 느슨한 결합 및 테스트 용이성
+  - **Strategy Pattern**: `IItemUse` 인터페이스로 아이템 효과 확장성 확보
+  - **Delta Event System**: 변경사항만 실시간 서버 동기화로 성능 최적화
+  - **Repository Pattern**: Entity Framework Core 기반 데이터베이스 추상화
+  - **Observer Pattern**: UnityEvent 기반 UI 자동 갱신 시스템
+  
   - [`ItemData`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs) & [`IItemUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs): ScriptableObject + 인터페이스 기반 확장 구조
   - **아이템 구현체**: [`FeatherUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FeatherUse.cs)(깃털 - 낙하 감속), [`WingUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/WingUse.cs)(날개 - 2단 점프), [`LampUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/LampUse.cs)(램프 - 시야 확장), [`FlagUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FlagUse.cs)(깃발 - 체크포인트)
   - [`ItemInput`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemInput.cs): 아이템 사용 입력 처리
