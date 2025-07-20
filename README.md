@@ -411,6 +411,447 @@ graph TB
 ---
 ### Game Systems Layer
 - **아이템 시스템**
+  - Item & Currency Structure Class Diagram
+    ```mermaid
+    classDiagram
+    %% UI Layer
+    class UI_Shop {
+        +BuyItem(itemType, price)
+        +UpdateGoldDisplay()
+        +UpdateItemDisplay()
+        -OnBuyButtonClick()
+        -ValidatePurchase()
+    }
+    
+    class UI_Inventory {
+        +UpdateItemSlot(itemType, count)
+        +ShowCooldown(itemType, remaining)
+        +DisplayBuffStatus()
+        -OnItemSlotClick()
+        -RefreshInventoryUI()
+    }
+    
+    class UI_Base {
+        <<abstract>>
+        #dataManager: IDataManager
+        #currencyManager: ICurrencyManager
+        #itemManager: IItemManager
+        +Init()
+        +Clear()
+    }
+    
+    %% DI System
+    class ProjectInstaller {
+        +InstallBindings()
+        -BindManagers()
+        -BindServices()
+        -BindInterfaces()
+    }
+    
+    class IDataManager {
+        <<interface>>
+        +Load()
+        +Save()
+        +GenerateDelta(key, value)
+        +OnLoaded: UnityEvent
+        +OnSaved: UnityEvent
+        +OnDeltaGenerated: UnityEvent~DeltaEvent~
+    }
+    
+    class ICurrencyManager {
+        <<interface>>
+        +GetGold(): int
+        +GetGems(): int
+        +AddGold(amount): bool
+        +SpendGold(amount): bool
+        +OnGoldChanged: UnityEvent~int~
+        +OnGemsChanged: UnityEvent~int~
+    }
+    
+    class IItemManager {
+        <<interface>>
+        +UseItem(itemType, player): bool
+        +AddItem(itemType, count)
+        +RemoveItem(itemType, count)
+        +GetItemCount(itemType): int
+        +OnItemCountChanged: UnityEvent~ItemType, int~
+    }
+    
+    %% Domain Layer
+    class CurrencyManager {
+        -dataManager: IDataManager
+        -syncManager: IDataSyncManager
+        +GetGold(): int
+        +GetGems(): int
+        +AddGold(amount): bool
+        +SpendGold(amount): bool
+        +AddGems(amount): bool
+        +SpendGems(amount): bool
+        +OnGoldChanged: UnityEvent~int~
+        +OnGemsChanged: UnityEvent~int~
+        -HandleDataLoaded()
+        -NotifyGoldChange()
+        -NotifyGemsChange()
+    }
+    
+    class ItemManager {
+        -dataManager: IDataManager
+        -itemDatabase: ItemDatabase
+        -itemUses: Dictionary~ItemType, IItemUse~
+        -cooldowns: Dictionary~ItemType, float~
+        +UseItem(itemType, player): bool
+        +AddItem(itemType, count)
+        +RemoveItem(itemType, count)
+        +GetItemCount(itemType): int
+        +IsOnCooldown(itemType): bool
+        +OnItemCountChanged: UnityEvent~ItemType, int~
+        +OnItemUsed: UnityEvent~ItemType~
+        -LoadItemUses()
+        -SetItemCountInternal(itemType, count)
+        -StartCooldown(itemType, duration)
+    }
+    
+    class ItemDatabase {
+        -allItems: ItemData[]
+        -itemDataMap: Dictionary~ItemType, ItemData~
+        +GetItemData(itemType): ItemData
+        +GetAllItems(): ItemData[]
+        +LoadItemDatabase()
+        -BuildItemMap()
+    }
+    
+    %% Persistence Layer
+    class DataManager {
+        -saveData: SaveData
+        -serverConfig: ServerConfig
+        -deltaEvents: Queue~DeltaEvent~
+        -filePath: string
+        +Current: SaveData
+        +Load()
+        +Save()
+        +GenerateDelta(key, value)
+        +OnLoaded: UnityEvent
+        +OnSaved: UnityEvent
+        +OnDeltaGenerated: UnityEvent~DeltaEvent~
+        -LoadFromFile()
+        -SaveToFile()
+        -CreateDeltaEvent(key, oldValue, newValue)
+    }
+    
+    class SaveData {
+        +gold: int
+        +gems: int
+        +selectedCharacter: int
+        +items: InventoryItem[]
+        +stageClears: bool[]
+        +stageRewards: bool[]
+        +stageTimes: float[]
+        +stagePlayTimes: float[]
+        +stageDeathCounts: int[]
+        +stageFlagPositions: Vector3[]
+        +bestClearTimes: float[]
+        +bestDeathCounts: int[]
+        +achievements: Dictionary~string, bool~
+        +achievementProgress: Dictionary~string, int~
+        +GetItemCount(itemType): int
+        +SetItemCount(itemType, count)
+        +AddItem(itemType, count)
+        +RemoveItem(itemType, count)
+    }
+    
+    class InventoryItem {
+        +itemId: ItemType
+        +count: int
+        +InventoryItem(id, count)
+        +ToString(): string
+    }
+    
+    class DeltaEvent {
+        +key: string
+        +oldValue: object
+        +newValue: object
+        +timestamp: DateTime
+        +userId: string
+        +DeltaEvent(key, oldValue, newValue)
+        +ToJson(): string
+    }
+    
+    class ServerConfig {
+        <<ScriptableObject>>
+        +serverUrl: string
+        +apiKey: string
+        +timeoutSeconds: int
+        +retryAttempts: int
+        +IsProduction: bool
+    }
+    
+    %% Sync Layer
+    class DataSyncManager {
+        -httpClient: HttpClient
+        -serverConfig: ServerConfig
+        -dataManager: IDataManager
+        -offlineCache: IOfflineCacheManager
+        -syncQueue: Queue~DeltaEvent~
+        -lastSyncTime: DateTime
+        +SyncToServer()
+        +SyncFromServer()
+        +EnqueueDelta(deltaEvent)
+        +OnSyncSuccess: UnityEvent
+        +OnSyncFailed: UnityEvent~string~
+        -ProcessDeltaBatch()
+        -HandleNetworkError(exception)
+        -RetrySync()
+    }
+    
+    class OfflineCacheManager {
+        -cacheFilePath: string
+        -cachedDeltas: List~DeltaEvent~
+        +StoreOfflineDeltas(deltas)
+        +GetOfflineDeltas(): List~DeltaEvent~
+        +ClearOfflineCache()
+        +HasOfflineData(): bool
+        -SaveToCache()
+        -LoadFromCache()
+    }
+    
+    %% Game Systems Layer
+    class ItemData {
+        <<ScriptableObject>>
+        +itemType: ItemType
+        +itemName: string
+        +description: string
+        +icon: Sprite
+        +price: int
+        +rarity: ItemRarity
+        +cooldownDuration: float
+        +stackable: bool
+        +maxStack: int
+        +itemUse: IItemUse
+    }
+    
+    class IItemUse {
+        <<interface>>
+        +Use(player): bool
+        +CanUse(player): bool
+        +GetCooldown(): float
+        +GetDescription(): string
+    }
+    
+    class FeatherUse {
+        +jumpMultiplier: float
+        +duration: float
+        +Use(player): bool
+        +CanUse(player): bool
+        +GetCooldown(): float
+        +GetDescription(): string
+        -ApplyJumpBuff(player)
+    }
+    
+    class WingUse {
+        +doubleJumpCount: int
+        +duration: float
+        +Use(player): bool
+        +CanUse(player): bool
+        +GetCooldown(): float
+        +GetDescription(): string
+        -EnableDoubleJump(player)
+    }
+    
+    class LampUse {
+        +lightRadius: float
+        +duration: float
+        +Use(player): bool
+        +CanUse(player): bool
+        +GetCooldown(): float
+        +GetDescription(): string
+        -CreateLight(player)
+    }
+    
+    class FlagUse {
+        +Use(player): bool
+        +CanUse(player): bool
+        +GetCooldown(): float
+        +GetDescription(): string
+        -SetCheckpoint(position)
+    }
+    
+    class ItemInput {
+        -itemManager: IItemManager
+        -player: GameObject
+        -inputMap: Dictionary~KeyCode, ItemType~
+        +Update()
+        +SetKeyBinding(keyCode, itemType)
+        -HandleItemInput(itemType)
+        -ShowItemFeedback(itemType, success)
+    }
+    
+    %% Server Layer (ASP.NET Core)
+    class SaveController {
+        -userService: IUserService
+        -userStateService: IUserStateService
+        +GetUserState(userId): ActionResult~SaveData~
+        +UpdateUserState(userId, saveData): ActionResult
+        +ProcessDeltaEvents(userId, deltas): ActionResult
+        +SyncUserData(userId): ActionResult
+        -ValidateUserId(userId): bool
+        -LogUserAction(userId, action)
+    }
+    
+    class IUserService {
+        <<interface>>
+        +GetUserAsync(steamId): Task~User~
+        +CreateUserAsync(steamId, profile): Task~User~
+        +UpdateUserAsync(user): Task~User~
+        +DeleteUserAsync(steamId): Task~bool~
+    }
+    
+    class UserService {
+        -dbContext: JustClimbDbContext
+        -cache: IMemoryCache
+        +GetUserAsync(steamId): Task~User~
+        +CreateUserAsync(steamId, profile): Task~User~
+        +UpdateUserAsync(user): Task~User~
+        +DeleteUserAsync(steamId): Task~bool~
+        -CacheUser(user)
+        -InvalidateCache(steamId)
+    }
+    
+    class IUserStateService {
+        <<interface>>
+        +GetUserStateAsync(userId): Task~SaveData~
+        +UpdateUserStateAsync(userId, state): Task~bool~
+        +ProcessDeltasAsync(userId, deltas): Task~bool~
+        +MergeDeltasAsync(userId, deltas): Task~SaveData~
+    }
+    
+    class UserStateService {
+        -dbContext: JustClimbDbContext
+        -userService: IUserService
+        -cache: IMemoryCache
+        +GetUserStateAsync(userId): Task~SaveData~
+        +UpdateUserStateAsync(userId, state): Task~bool~
+        +ProcessDeltasAsync(userId, deltas): Task~bool~
+        +MergeDeltasAsync(userId, deltas): Task~SaveData~
+        -ValidateDelta(delta): bool
+        -ApplyDeltaToState(state, delta): SaveData
+    }
+    
+    class JustClimbDbContext {
+        +Users: DbSet~User~
+        +UserItems: DbSet~UserItem~
+        +UserStageRecords: DbSet~UserStageRecord~
+        +OnConfiguring(optionsBuilder)
+        +OnModelCreating(modelBuilder)
+        +SaveChangesAsync(): Task~int~
+    }
+    
+    class User {
+        +SteamId: string
+        +DisplayName: string
+        +ProfileUrl: string
+        +Gold: int
+        +Gems: int
+        +SelectedCharacter: int
+        +CreatedAt: DateTime
+        +UpdatedAt: DateTime
+        +LastLoginAt: DateTime
+        +UserItems: ICollection~UserItem~
+        +StageRecords: ICollection~UserStageRecord~
+    }
+    
+    class UserItem {
+        +Id: int
+        +SteamId: string
+        +ItemType: ItemType
+        +Count: int
+        +User: User
+    }
+    
+    %% Enums
+    class ItemType {
+        <<enumeration>>
+        Feather
+        Wing
+        Lamp
+        Flag
+        HealthPotion
+        SpeedBoost
+    }
+    
+    class ItemRarity {
+        <<enumeration>>
+        Common
+        Uncommon
+        Rare
+        Epic
+        Legendary
+    }
+    
+    %% Relationships - UI Layer
+    UI_Shop --|> UI_Base
+    UI_Inventory --|> UI_Base
+    UI_Base --> ICurrencyManager
+    UI_Base --> IItemManager
+    UI_Base --> IDataManager
+    
+    %% Relationships - DI System
+    ProjectInstaller ..> IDataManager
+    ProjectInstaller ..> ICurrencyManager
+    ProjectInstaller ..> IItemManager
+    ProjectInstaller ..> DataSyncManager
+    
+    %% Relationships - Domain Layer
+    CurrencyManager ..|> ICurrencyManager
+    ItemManager ..|> IItemManager
+    DataManager ..|> IDataManager
+    
+    CurrencyManager --> IDataManager
+    CurrencyManager --> DataSyncManager
+    ItemManager --> IDataManager
+    ItemManager --> ItemDatabase
+    ItemManager --> IItemUse
+    
+    %% Relationships - Persistence Layer
+    DataManager --> SaveData
+    DataManager --> ServerConfig
+    DataManager --> DeltaEvent
+    SaveData --> InventoryItem
+    
+    %% Relationships - Sync Layer
+    DataSyncManager --> IDataManager
+    DataSyncManager --> OfflineCacheManager
+    DataSyncManager --> ServerConfig
+    DataSyncManager --> DeltaEvent
+    
+    %% Relationships - Game Systems
+    ItemDatabase --> ItemData
+    ItemData --> IItemUse
+    ItemData --> ItemType
+    ItemData --> ItemRarity
+    FeatherUse ..|> IItemUse
+    WingUse ..|> IItemUse
+    LampUse ..|> IItemUse
+    FlagUse ..|> IItemUse
+    ItemInput --> IItemManager
+    
+    %% Relationships - Server Layer
+    SaveController --> IUserService
+    SaveController --> IUserStateService
+    UserService ..|> IUserService
+    UserStateService ..|> IUserStateService
+    UserService --> JustClimbDbContext
+    UserStateService --> JustClimbDbContext
+    UserStateService --> IUserService
+    
+    %% Relationships - Database
+    JustClimbDbContext --> User
+    JustClimbDbContext --> UserItem
+    User --> UserItem
+    UserItem --> ItemType
+    
+    %% Network Communication
+    DataSyncManager --> SaveController
+    ```
   - [`ItemData`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemData.cs) & [`IItemUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/IItemUse.cs): ScriptableObject + 인터페이스 기반 확장 구조
   - **아이템 구현체**: [`FeatherUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FeatherUse.cs)(깃털 - 낙하 감속), [`WingUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/WingUse.cs)(날개 - 2단 점프), [`LampUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/LampUse.cs)(램프 - 시야 확장), [`FlagUse`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/FlagUse.cs)(깃발 - 체크포인트)
   - [`ItemInput`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Items/ItemInput.cs): 아이템 사용 입력 처리
