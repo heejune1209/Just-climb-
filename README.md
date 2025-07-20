@@ -1069,6 +1069,50 @@ Unity Client → Steam Ticket → Server Validation → JWT Token → Authentica
   - **Repository 패턴**: EF Core 기반 캐릭터 데이터 관리
 
 ### 🚀 **AWS 클라우드 인프라 구축 및 서버 배포**
+```mermaid
+graph TB
+    subgraph "🎮 Game Clients"
+        PLAYER1[🎮 Player 1<br/>Unity Client]
+        PLAYER2[🎮 Player 2<br/>Unity Client]  
+        PLAYER3[🎮 Player N<br/>Unity Client]
+    end
+    
+    subgraph "☁️ AWS Infrastructure"
+        EC2[🖥️ EC2 Instance<br/>.NET 9.0 API Server<br/>Just Climb Backend]
+        
+        RDS[🗄️ RDS PostgreSQL<br/>User Data<br/>Rankings<br/>Achievements]
+        
+        REDIS[⚡ ElastiCache Redis<br/>Session Cache<br/>Real-time Rankings<br/>Performance Data]
+    end
+    
+    %% Client to Server
+    PLAYER1 -->|🔐 Steam Auth<br/>📊 Game Data<br/>🏆 Rankings<br/>🎯 Achievements| EC2
+    PLAYER2 -->|🔐 Steam Auth<br/>📊 Game Data<br/>🏆 Rankings<br/>🎯 Achievements| EC2
+    PLAYER3 -->|🔐 Steam Auth<br/>📊 Game Data<br/>🏆 Rankings<br/>🎯 Achievements| EC2
+    
+    %% Server to Database
+    EC2 -->|💾 User Data<br/>🎮 Game Progress<br/>🏆 Rankings<br/>🎯 Achievements| RDS
+    
+    %% Server to Cache
+    EC2 -->|⚡ Session Data<br/>📊 Live Rankings<br/>🎯 Real-time Stats| REDIS
+    
+    %% Database reads
+    RDS -.->|📖 User Profiles<br/>🏆 Leaderboards<br/>🎯 Achievement Data| EC2
+    
+    %% Cache reads
+    REDIS -.->|⚡ Fast Queries<br/>📊 Cached Rankings<br/>🎮 Session Info| EC2
+    
+    %% Styling
+    classDef clients fill:#E8F5E8,stroke:#388E3C,stroke-width:2px,color:#000
+    classDef server fill:#FFF8E1,stroke:#F57F17,stroke-width:2px,color:#000
+    classDef database fill:#FFEBEE,stroke:#C62828,stroke-width:2px,color:#000
+    classDef cache fill:#E0F2F1,stroke:#00695C,stroke-width:2px,color:#000
+    
+    class PLAYER1,PLAYER2,PLAYER3 clients
+    class EC2 server
+    class RDS database
+    class REDIS cache
+```
 실제 운영 환경을 위한 AWS 기반 인프라 구축 및 자동화 배포 시스템 구현
 
 #### **인프라 구성**
