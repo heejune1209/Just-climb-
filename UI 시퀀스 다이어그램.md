@@ -70,48 +70,7 @@ sequenceDiagram
     UIManager->>UI_Shop: Destroy()
 ```
 
-## 3) Steam 인증 및 업적 시스템 플로우
-
-```mermaid
-sequenceDiagram
-    participant Player as 플레이어
-    participant UI_Main as UI_Main<br/>(메인 씬)
-    participant SteamAuthMgr as SteamAuthManager
-    participant AchievementMgr as AchievementManager
-    participant UI_Achievement as UI_Achievement<br/>(팝업)
-    participant UI_SyncStatus as UI_SyncStatus
-
-    %% Steam 인증 과정
-    UI_Main->>SteamAuthMgr: 게임 시작 시 자동 인증 시도
-    SteamAuthMgr->>SteamAuthMgr: Steam 티켓 생성 및 서버 전송
-    
-    alt 인증 성공
-        SteamAuthMgr->>UI_Main: OnAuthenticationSuccess(jwtToken)
-        UI_Main->>UI_SyncStatus: 동기화 상태 "연결됨" 표시
-        UI_Main-->>Player: Steam 사용자명 표시
-    else 인증 실패
-        SteamAuthMgr->>UI_Main: OnAuthenticationFailed(error)
-        UI_Main->>UI_SyncStatus: "오프라인 모드" 표시
-    end
-
-    %% 업적 달성 플로우
-    Note over Player, AchievementMgr: 게임 중 업적 달성 조건 충족
-    AchievementMgr->>AchievementMgr: OnStageCleared() 이벤트 감지
-    AchievementMgr->>AchievementMgr: 업적 달성 체크 및 Steam 업적 동기화
-    AchievementMgr->>UI_Achievement: ShowAchievementPopup(achievementData)
-    
-    UI_Achievement-->>Player: 업적 달성 팝업 표시
-    
-    %% 업적 목록 보기
-    Player->>UI_Main: 업적 버튼 클릭
-    UI_Main->>UIManager: ShowPopupUI<UI_Achievement>("UI_Achievement")
-    UIManager->>UI_Achievement: [Inject] AchievementManager 주입
-    UI_Achievement->>AchievementMgr: GetAllAchievements()
-    AchievementMgr-->>UI_Achievement: 업적 목록 데이터
-    UI_Achievement-->>Player: 업적 목록 UI 표시
-```
-
-## 4) 랭킹 시스템 UI 플로우
+## 3) 랭킹 시스템 UI 플로우
 
 ```mermaid
 sequenceDiagram
@@ -153,7 +112,7 @@ sequenceDiagram
     UI_Ranking->>UI_Ranking: UI 리프레시
 ```
 
-## 5) 데이터 동기화 상태 UI 플로우
+## 4) 데이터 동기화 상태 UI 플로우
 
 ```mermaid
 sequenceDiagram
