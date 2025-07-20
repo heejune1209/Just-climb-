@@ -852,9 +852,6 @@ graph TB
     %% Network Communication
     DataSyncManager --> SaveController
     ```
-
-  **🏗️ 아키텍처 특징:**
-  
   ### **7-Layer 모듈화 구조**
   - **UI Layer**: 상점/인벤토리 사용자 인터페이스
   - **DI System**: Zenject 기반 의존성 주입 시스템  
