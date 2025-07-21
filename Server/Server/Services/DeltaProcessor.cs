@@ -18,15 +18,18 @@ namespace Server.Services
     {
         private readonly JustClimbDbContext _dbContext;
         private readonly ConflictResolver _conflictResolver;
+        private readonly UserRepository _userRepository;
         private readonly ILogger<DeltaProcessor> _logger;
 
         public DeltaProcessor(
             JustClimbDbContext dbContext,
             ConflictResolver conflictResolver,
+            UserRepository userRepository,
             ILogger<DeltaProcessor> logger)
         {
             _dbContext = dbContext;
             _conflictResolver = conflictResolver;
+            _userRepository = userRepository;
             _logger = logger;
         }
 
@@ -55,7 +58,7 @@ namespace Server.Services
                 // 기본 필드들은 ConflictResolver 사용
                 if (IsBasicUserField(delta.Key))
                 {
-                    var user = await _dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId);
+                    var user = await _userRepository.GetUserByIdAsync(userId);
                     if (user != null)
                     {
                         _conflictResolver.Resolve(user, delta);
@@ -152,19 +155,19 @@ namespace Server.Services
 
             // 델타 타입에 따라 값 업데이트
             if (delta.Key.StartsWith("currentPlayTimes_"))
-                record.CurrentPlayTime = ParseFloat(delta.Value);
+                record.CurrentPlayTime = ParseHelper.ParseFloat(delta.Value);
             else if (delta.Key.StartsWith("currentDeathCounts_"))
-                record.CurrentDeathCount = ParseInt(delta.Value);
+                record.CurrentDeathCount = ParseHelper.ParseInt(delta.Value);
             else if (delta.Key.StartsWith("bestClearTimes_"))
-                record.BestClearTime = ParseFloat(delta.Value);
+                record.BestClearTime = ParseHelper.ParseFloat(delta.Value);
             else if (delta.Key.StartsWith("bestDeathCounts_"))
-                record.BestDeathCount = ParseInt(delta.Value);
+                record.BestDeathCount = ParseHelper.ParseInt(delta.Value);
             else if (delta.Key.StartsWith("bestGemRewards_"))
-                record.BestGemCount = ParseInt(delta.Value);
+                record.BestGemCount = ParseHelper.ParseInt(delta.Value);
             else if (delta.Key.StartsWith("stageFlagPositions_"))
             {
                 // JSON으로 받은 깃발 위치를 개별 좌표로 분리
-                var flagPos = DeserializeJson<SerializableVector3Dto>(delta.Value);
+                var flagPos = JsonHelper.DeserializeObject<SerializableVector3Dto>(delta.Value);
                 if (flagPos != null)
                 {
                     record.FlagX = flagPos.x;
@@ -193,7 +196,7 @@ namespace Server.Services
                     return;
                 }
                 
-                var isUnlocked = ParseBool(delta.Value);
+                var isUnlocked = ParseHelper.ParseBool(delta.Value);
 
                 var record = await _dbContext.UserAchievements
                     .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.AchievementId == achievementId);
@@ -220,7 +223,7 @@ namespace Server.Services
                     return;
                 }
                 
-                var isRewarded = ParseBool(delta.Value);
+                var isRewarded = ParseHelper.ParseBool(delta.Value);
 
                 var record = await _dbContext.UserAchievements
                     .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.AchievementId == achievementId);
@@ -247,7 +250,7 @@ namespace Server.Services
                 }
 
                 // JSON을 파싱해서 개별 필드에 할당
-                var progressDto = DeserializeJson<AchievementProgressDto>(delta.Value);
+                var progressDto = JsonHelper.DeserializeObject<AchievementProgressDto>(delta.Value);
                 if (progressDto != null)
                 {
                     progress.StagesCompleted = progressDto.stagesCompleted;
@@ -255,8 +258,8 @@ namespace Server.Services
                     progress.SpeedClears = progressDto.speedClears;
                     progress.Chapter1PerfectStages = progressDto.chapter1PerfectStages;
                     progress.ItemsPurchased = progressDto.itemsPurchased;
-                    progress.UnlockedCharactersJson = SerializeToJson(progressDto.unlockedCharacters);
-                    progress.ItemTypesUsedJson = SerializeToJson(progressDto.itemTypesUsed);
+                    progress.UnlockedCharactersJson = JsonHelper.SerializeList(progressDto.unlockedCharacters);
+                    progress.ItemTypesUsedJson = JsonHelper.SerializeList(progressDto.itemTypesUsed);
                     progress.DeathsInCurrentStage = progressDto.deathsInCurrentStage;
                     progress.UsedItemInCurrentStage = progressDto.usedItemInCurrentStage;
                     progress.TotalDeaths = progressDto.totalDeaths;
@@ -281,7 +284,7 @@ namespace Server.Services
             _dbContext.UserItems.RemoveRange(existingItems);
 
             // 새로운 아이템들 추가 (JSON 파싱)
-            var items = Newtonsoft.Json.JsonConvert.DeserializeObject<List<InventoryItemDto>>(delta.Value);
+            var items = JsonHelper.DeserializeList<InventoryItemDto>(delta.Value);
             if (items != null)
             {
                 foreach (var item in items)
@@ -299,50 +302,6 @@ namespace Server.Services
             _logger.LogDebug("[DeltaProcessor] 아이템 델타 처리 완료 - Count: {Count}", items?.Count ?? 0);
         }
 
-        // 파싱 헬퍼 메서드들
-        private int ParseInt(string value, int defaultValue = 0)
-        {
-            return int.TryParse(value, out int result) ? result : defaultValue;
-        }
-
-        private float ParseFloat(string value, float defaultValue = 0f)
-        {
-            return float.TryParse(value, System.Globalization.CultureInfo.InvariantCulture, out float result) ? result : defaultValue;
-        }
-
-        private bool ParseBool(string value, bool defaultValue = false)
-        {
-            return bool.TryParse(value, out bool result) ? result : defaultValue;
-        }
-
-        private T DeserializeJson<T>(string json)
-        {
-            if (string.IsNullOrEmpty(json))
-                return default(T);
-
-            try
-            {
-                return JsonConvert.DeserializeObject<T>(json);
-            }
-            catch (JsonException)
-            {
-                return default(T);
-            }
-        }
-
-        private string SerializeToJson<T>(T obj)
-        {
-            if (obj == null)
-                return "[]";
-            
-            try
-            {
-                return JsonConvert.SerializeObject(obj);
-            }
-            catch (JsonException)
-            {
-                return "[]";
-            }
-        }
+        // 🚨 중복 제거: 이제 JsonHelper와 ParseHelper를 사용합니다
     }
 } 

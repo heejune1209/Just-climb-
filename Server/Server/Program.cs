@@ -115,6 +115,9 @@ namespace Server
             builder.Services.AddScoped<UserStateLoader>();
             builder.Services.AddScoped<UserStateMapper>();
             
+            // 공통 유틸리티 & Repository 패턴
+            builder.Services.AddScoped<UserRepository>();
+            
             // HttpClient 등록 (Steam Web API 호출용)
             builder.Services.AddHttpClient();
             

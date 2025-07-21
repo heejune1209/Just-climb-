@@ -1,9 +1,10 @@
-using System;
-using System.Collections.Generic;
-using UnityEngine;
 using JustClimb.Data;
 using JustClimb.Items;
 using JustClimb.Manager;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 using Zenject;
 
 /// <summary>
@@ -30,6 +31,10 @@ public interface IDataManager : IDisposable
     // 풀-덤프 델타 별도 호출
     void GenerateFullDelta();
 
+    void GetRanking<T>(int stageNum, int sortType, int page, int pageSize, Action<T> onSuccess, Action<string> onError, T defaultValue = default);
+    void UpdateUserRecord<T>(object recordData, Action<T> onSuccess, Action<string> onError, T defaultValue = default);
+    void AuthenticateWithSteam<T>(object authData, Action<T> onSuccess, Action<string> onError, T defaultValue = default);
+
     // 키·값 기반 델타 생성 메서드
     void GenerateDelta(string key, object value);
 }
@@ -40,6 +45,12 @@ public interface IDataSyncManager
 
     /// <summary>동기화 코루틴을 일시 중지.</summary>
     void PauseSync();
+    
+    Coroutine StartNetworkCoroutine(IEnumerator coroutine);
+
+    IEnumerator GetRequest<T>(string url, Action<T> onSuccess, Action<string> onError, T defaultValue = default);
+
+    IEnumerator PostRequest<T>(string url, object data, Action<T> onSuccess, Action<string> onError, T defaultValue = default);
 
     /// <summary>동기화 코루틴을 재개.</summary>
     void ResumeSync();

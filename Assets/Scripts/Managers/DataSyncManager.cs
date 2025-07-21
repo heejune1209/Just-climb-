@@ -3,17 +3,18 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using JustClimb.Data;
+using JustClimb.Utils;
 using Zenject;
+using System;
 
 namespace JustClimb.Manager
 {
     /// <summary>
-    /// 델타 이벤트를 큐잉하고, 주기적으로 서버에 POST 전송합니다.
-    /// 실패 시 재큐잉, 앱 백그라운드 진입/종료 시 Flush() 호출
+    /// 통합 네트워크 통신 매니저
+    /// 모든 서버 통신을 담당하며 델타 이벤트 큐잉 및 범용 HTTP 통신을 지원합니다.
     /// </summary>
     public class DataSyncManager : MonoBehaviour, IDataSyncManager, IInitializable
     {
-
         [Header("Sync Settings")]
         [Tooltip("Δ를 서버로 전송할 주기(초)")]
         [SerializeField] private float _syncInterval = 5f;
@@ -25,8 +26,6 @@ namespace JustClimb.Manager
         private SteamAuthManager _steamAuthManager;  // Steam 인증 매니저
 
         // 전송 대기 중인 Δ 큐
-        // readonly는 런타임 시 (runtime)에 초기화 가능
-        // 선언부에서 생성자에서 둘 중 하나에 할당
         private readonly Queue<DeltaEvent> _queue = new();
 
         // Zenject 의존성 주입
@@ -39,32 +38,13 @@ namespace JustClimb.Manager
         }
 
         /// <summary>
-        /// UnityWebRequest에 JWT 토큰 헤더 추가
-        /// </summary>
-        private void AddAuthorizationHeader(UnityWebRequest request)
-        {
-            if (_steamAuthManager != null && _steamAuthManager.HasValidToken())
-            {
-                request.SetRequestHeader("Authorization", $"Bearer {_steamAuthManager.JwtToken}");
-            }
-        }
-
-        /// <summary>
         /// Zenject에서 자동으로 호출됨.
         /// </summary>
         public void Initialize()
         {
-            // 서버 설정 로드
-            _serverConfig = Resources.Load<ServerConfig>("ServerConfig");
-            if (_serverConfig == null)
-            {
-                Debug.LogError("[DataSyncManager] ServerConfig를 찾을 수 없습니다! Resources/ServerConfig.asset을 생성하세요.");
-                _endpointFormat = "https://localhost:7091/api/users/{0}/state/delta";  // 기본값
-            }
-            else
-            {
-                _endpointFormat = _serverConfig.GetDeltaApiUrlFormat();
-            }
+            // ✅ ConfigHelper 사용 (중복 제거)
+            _serverConfig = ConfigHelper.GetServerConfig();
+            _endpointFormat = ConfigHelper.GetDeltaApiUrlFormat();
 
             Debug.Log($"[DataSyncManager] 초기화 완료 - 엔드포인트: {_endpointFormat}, UserId: {_userId}");
 
@@ -80,6 +60,9 @@ namespace JustClimb.Manager
 
             StartCoroutine(SyncLoop());
         }
+
+        #region Delta Queue Management (기존 기능 유지)
+        
         /// <summary>
         /// DataManager에서 델타가 생성될 때마다 호출되어,
         /// 내부 큐에 쌓인 델타를 서버로 전송하도록 트리거.
@@ -92,6 +75,7 @@ namespace JustClimb.Manager
             }
             Debug.Log($"[DataSyncManager] Δ 큐잉 → {d}");
         }
+
         // 주기적으로 Flush() 호출
         private IEnumerator SyncLoop()
         {
@@ -133,32 +117,25 @@ namespace JustClimb.Manager
 
             // JSON 직렬화용 래퍼
             var wrapper = new DeltaWrapper { Deltas = batch };
-            string body = JsonUtility.ToJson(wrapper);
+            string body = JsonHelper.SerializeObject(wrapper);
 
             string url = string.Format(_endpointFormat, _userId);
             Debug.Log($"[DataSyncManager] 델타 전송 시도: {url}");
-            Debug.Log($"[DataSyncManager] 전송 데이터: {body}");
             
-            using var www = new UnityWebRequest(url, "POST");
-            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(body);
-            www.uploadHandler = new UploadHandlerRaw(bytes);
-            www.downloadHandler = new DownloadHandlerBuffer();
-            www.SetRequestHeader("Content-Type", "application/json");
+            // ✅ NetworkHelper 사용 (통합된 네트워크 처리)
+            using var request = NetworkHelper.CreatePostRequest(url, wrapper, _steamAuthManager);
             
-            // JWT 토큰 헤더 추가
-            AddAuthorizationHeader(www);
+            yield return request.SendWebRequest();
 
-            yield return www.SendWebRequest();
-
-            if (www.result == UnityWebRequest.Result.Success)
+            if (request.result == UnityWebRequest.Result.Success)
             {
                 Debug.Log($"[DataSyncManager] 델타 전송 성공 ({batch.Count}건)");
             }
             else
             {
-                Debug.LogError($"[DataSyncManager] 델타 전송 실패: {www.error}");
-                Debug.LogError($"[DataSyncManager] 응답 코드: {www.responseCode}");
-                Debug.LogError($"[DataSyncManager] 응답 내용: {www.downloadHandler.text}");
+                Debug.LogError($"[DataSyncManager] 델타 전송 실패: {request.error}");
+                Debug.LogError($"[DataSyncManager] 응답 코드: {request.responseCode}");
+                Debug.LogError($"[DataSyncManager] 응답 내용: {request.downloadHandler.text}");
                 // 실패한 델타 다시 재큐잉
                 lock (_queue)
                 {
@@ -170,11 +147,9 @@ namespace JustClimb.Manager
 
         /// <summary>
         /// 앱 종료 직전에 동기식으로 델타를 전부 서버에 전송.
-        /// coroutine이 아니므로 Application.quitting 안에서도 작동.
         /// </summary>
         public void FlushNow()
         {
-            // 1) 큐에서 가져온 델타를 리스트로 복사
             List<DeltaEvent> batch;
             lock (_queue)
             {
@@ -183,23 +158,12 @@ namespace JustClimb.Manager
                 _queue.Clear();
             }
 
-            // 2) JSON으로 직렬화
             var wrapper = new DeltaWrapper { Deltas = batch };
-            string body = JsonUtility.ToJson(wrapper);
-
-            // 3) UnityWebRequest를 동기 모드로 발송
             var url = string.Format(_endpointFormat, _userId);
             Debug.Log($"[DataSyncManager] FlushNow 시도: {url}");
             
-            using var req = new UnityWebRequest(url, "POST")
-            {
-                uploadHandler = new UploadHandlerRaw(System.Text.Encoding.UTF8.GetBytes(body)),
-                downloadHandler = new DownloadHandlerBuffer()
-            };
-            req.SetRequestHeader("Content-Type", "application/json");
-            
-            // JWT 토큰 헤더 추가
-            AddAuthorizationHeader(req);
+            // ✅ NetworkHelper 사용
+            using var req = NetworkHelper.CreatePostRequest(url, wrapper, _steamAuthManager);
 
             // SendWebRequest를 블록킹 호출
             var op = req.SendWebRequest();
@@ -214,6 +178,105 @@ namespace JustClimb.Manager
                 Debug.LogError($"[DataSyncManager] FlushNow 응답 내용: {req.downloadHandler.text}");
             }
         }
+
+        #endregion
+
+        #region 범용 HTTP 통신 API (새로 추가)
+
+        /// <summary>
+        /// 범용 GET 요청 (코루틴)
+        /// </summary>
+        public IEnumerator GetRequest<T>(string url, Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+        {
+            Debug.Log($"[DataSyncManager] GET 요청: {url}");
+            
+            using var request = NetworkHelper.CreateGetRequest(url, _steamAuthManager);
+            
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                var result = NetworkHelper.ParseResponse<T>(request, defaultValue);
+                onSuccess?.Invoke(result);
+                Debug.Log($"[DataSyncManager] GET 성공: {url}");
+            }
+            else
+            {
+                string error = $"GET 요청 실패: {request.error} (Code: {request.responseCode})";
+                Debug.LogError($"[DataSyncManager] {error}");
+                onError?.Invoke(error);
+            }
+        }
+
+        /// <summary>
+        /// 범용 POST 요청 (코루틴)
+        /// </summary>
+        public IEnumerator PostRequest<T>(string url, object data, Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+        {
+            Debug.Log($"[DataSyncManager] POST 요청: {url}");
+            
+            using var request = NetworkHelper.CreatePostRequest(url, data, _steamAuthManager);
+            
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                var result = NetworkHelper.ParseResponse<T>(request, defaultValue);
+                onSuccess?.Invoke(result);
+                Debug.Log($"[DataSyncManager] POST 성공: {url}");
+            }
+            else
+            {
+                string error = $"POST 요청 실패: {request.error} (Code: {request.responseCode})";
+                Debug.LogError($"[DataSyncManager] {error}");
+                onError?.Invoke(error);
+            }
+        }
+
+        /// <summary>
+        /// 범용 PUT 요청 (코루틴)
+        /// </summary>
+        public IEnumerator PutRequest<T>(string url, object data, Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+        {
+            Debug.Log($"[DataSyncManager] PUT 요청: {url}");
+            
+            string json = JsonHelper.SerializeObject(data);
+            byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(json);
+
+            using var request = new UnityWebRequest(url, "PUT")
+            {
+                uploadHandler = new UploadHandlerRaw(bodyRaw),
+                downloadHandler = new DownloadHandlerBuffer()
+            };
+            
+            request.SetRequestHeader("Content-Type", "application/json");
+            NetworkHelper.AddAuthorizationHeader(request, _steamAuthManager);
+            
+            yield return request.SendWebRequest();
+
+            if (request.result == UnityWebRequest.Result.Success)
+            {
+                var result = NetworkHelper.ParseResponse<T>(request, defaultValue);
+                onSuccess?.Invoke(result);
+                Debug.Log($"[DataSyncManager] PUT 성공: {url}");
+            }
+            else
+            {
+                string error = $"PUT 요청 실패: {request.error} (Code: {request.responseCode})";
+                Debug.LogError($"[DataSyncManager] {error}");
+                onError?.Invoke(error);
+            }
+        }
+
+        /// <summary>
+        /// 즉시 실행 가능한 코루틴 시작 헬퍼
+        /// </summary>
+        public Coroutine StartNetworkCoroutine(IEnumerator coroutine)
+        {
+            return StartCoroutine(coroutine);
+        }
+
+        #endregion
 
         // 델타 배열을 JsonUtility로 직렬화하기 위한 래퍼 클래스
         [System.Serializable]

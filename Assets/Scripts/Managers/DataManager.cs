@@ -1,21 +1,17 @@
 using JustClimb.Data;
 using JustClimb.Manager;
-using Newtonsoft.Json;
+using JustClimb.Utils;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Net.Http;
-using System.Threading;
-using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.InputSystem;
 using Zenject;
 
 // 로컬 캐시와 서버 GET (Load)
 // 로컬 JSON 저장(SaveLocal)
 // 풀 덤프/필드 델타 발생(GenerateFullDelta/GenerateDelta)
-public class DataManager : IDataManager, IInitializable
+public class DataManager : MonoBehaviour, IDataManager, IInitializable
 {
     // 실제 게임 플레이 중 read/write 하는 유저 저장 파일
     private readonly string _filePath;
@@ -27,42 +23,20 @@ public class DataManager : IDataManager, IInitializable
     public event Action<SaveData> OnLoaded;
     public event Action<SaveData> OnSaved;
     public event Action<DeltaEvent> OnDeltaGenerated;  // 델타가 생성될 때마다 발생
-    // Unity 메인 스레드로 이벤트를 전송하기 위한 컨텍스트
-    readonly SynchronizationContext _syncCtx;
+    // 서버 통신용 DataSyncManager (통합된 네트워크 레이어)
     readonly IDataSyncManager _syncMgr;
-
-    // 서버 호출용 HttpClient
-    readonly HttpClient _http = new HttpClient();
-    readonly string _serverUrl;
     readonly string _userId;        // 스팀ID나 자체 유저ID
     readonly ServerConfig _serverConfig;
-    readonly SteamAuthManager _steamAuthManager;  // Steam 인증 매니저
-
-    // 파일 접근 동기화를 위한 세마포어
-    private readonly SemaphoreSlim _fileSemaphore = new SemaphoreSlim(1, 1);
 
     [Inject]
-    public DataManager(IDataSyncManager syncMgr, [Inject(Id = "UserId")] string userId, SteamAuthManager steamAuthManager)
+    public DataManager(IDataSyncManager syncMgr, [Inject(Id = "UserId")] string userId)
     {
         _syncMgr = syncMgr;
         _userId = userId;
-        _steamAuthManager = steamAuthManager;
-        _syncCtx = SynchronizationContext.Current;
         _filePath = Path.Combine(Application.persistentDataPath, "save.json");
 
-        // 서버 설정 로드
-        _serverConfig = Resources.Load<ServerConfig>("ServerConfig");
-        if (_serverConfig == null)
-        {
-            Debug.LogError("[DataManager] ServerConfig를 찾을 수 없습니다! Resources/ServerConfig.asset을 생성하세요.");
-            _serverUrl = "https://localhost:5259/api/users";  // 기본값
-        }
-        else
-        {
-            _serverUrl = _serverConfig.GetUserStateApiUrl();
-            // HTTP 클라이언트 타임아웃 설정
-            _http.Timeout = TimeSpan.FromSeconds(_serverConfig.timeoutSeconds);
-        }
+        // ✅ ConfigHelper 사용 (중복 제거)
+        _serverConfig = ConfigHelper.GetServerConfig();
     }
 
     /// <summary>
@@ -80,105 +54,82 @@ public class DataManager : IDataManager, IInitializable
     /// </summary>
     public void Load()
     {
-        var loadTask = LoadAsync();
+        StartCoroutine(LoadCoroutine());
     }
 
-    /// <summary>
-    /// HTTP 요청에 JWT 토큰 헤더 추가
-    /// </summary>
-    private void AddAuthorizationHeader(HttpRequestMessage request)
-    {
-        if (_steamAuthManager != null && _steamAuthManager.HasValidToken())
-        {
-            request.Headers.Add("Authorization", $"Bearer {_steamAuthManager.JwtToken}");
-        }
-    }
+    // ✅ JWT 토큰 헤더 추가는 DataSyncManager에서 자동으로 처리됨
 
     /// <summary>
-    /// 리팩토링된 LoadAsync:
-    /// 1) 오프라인일 때 로컬에 JSON으로 임시 로드(캐시)(GET)
-    /// 2) 온라인일 때 서버에서 최신 JSON GET → 덮어쓰기 + OnLoaded 재발행
+    /// 리팩토링된 LoadCoroutine:
+    /// 1) 로컬에서 JSON 로드 → OnLoaded
+    /// 2) 온라인이면 서버에서 최신 JSON GET → 덮어쓰기 + OnLoaded 재발행
+    /// ✅ DataSyncManager를 통한 통합 네트워크 통신 사용
     /// </summary>
-    async Task LoadAsync()
+    private IEnumerator LoadCoroutine()
     {
         SaveData local = null;
 
-        // 파일 접근 동기화
-        await _fileSemaphore.WaitAsync();
-        try
-        {
-            // 1) 로컬에서
-            if (File.Exists(_filePath))
-            {
-                try
-                {
-                    var txt = await File.ReadAllTextAsync(_filePath);
-                    local = JsonConvert.DeserializeObject<SaveData>(txt) ?? new SaveData();
-                    
-                    // 🔧 로컬 데이터도 정리 (null 값들을 기본값으로 대체)
-                    CleanupServerData(local);
-                }
-                catch (Exception e)
-                {
-                    Debug.LogWarning($"[DataManager] 로컬 파일 읽기 실패: {e.Message}");
-                    local = new SaveData();
-                }
-            }
-            else local = new SaveData();
-
-            Current = local;
-            _syncCtx.Post(_ => OnLoaded?.Invoke(Current), null);
-        }
-        finally
-        {
-            _fileSemaphore.Release();
-        }
-
-        // 2) 온라인이면 서버(DB)에서 최신 데이터를 불러와 사용 (GET)
-        if (Application.internetReachability != NetworkReachability.NotReachable)
+        // 1) 로컬에서 로드
+        if (File.Exists(_filePath))
         {
             try
             {
-                var url = $"{_serverUrl}/{_userId}/state";
+                string txt = File.ReadAllText(_filePath);
+                local = JsonHelper.DeserializeObject<SaveData>(txt, new SaveData());
                 
-                // JWT 토큰을 포함한 HTTP 요청 생성
-                using (var request = new HttpRequestMessage(HttpMethod.Get, url))
-                {
-                    AddAuthorizationHeader(request);
-                    
-                    var response = await _http.SendAsync(request);
-                    var json = await response.Content.ReadAsStringAsync();
-                    
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var serverData = JsonConvert.DeserializeObject<SaveData>(json) ?? new SaveData();
-                        
-                        // 🔧 서버 데이터 정리 (null 값들을 기본값으로 대체)
-                        CleanupServerData(serverData);
-
-                        // 덮어쓰기 + 로컬 저장 (파일 접근 동기화)
-                        await _fileSemaphore.WaitAsync();
-                        try
-                        {
-                            await File.WriteAllTextAsync(_filePath, json);
-                            Current = serverData;
-                            _syncCtx.Post(_ => OnLoaded?.Invoke(Current), null);
-                        }
-                        finally
-                        {
-                            _fileSemaphore.Release();
-                        }
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"[DataManager] 서버 로드 실패: {response.StatusCode} - {json}");
-                    }
-                }
+                // 🔧 로컬 데이터도 정리 (null 값들을 기본값으로 대체)
+                CleanupServerData(local);
+                Debug.Log("[DataManager] 로컬 파일에서 데이터 로드 성공");
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[DataManager] 서버 로드 실패: {e.Message}");
+                Debug.LogWarning($"[DataManager] 로컬 파일 읽기 실패: {e.Message}");
+                local = new SaveData();
             }
+        }
+        else local = new SaveData();
+
+        Current = local;
+        OnLoaded?.Invoke(Current);
+
+        // 2) 온라인이면 서버(DB)에서 최신 데이터를 불러와 사용 (GET)
+        if (NetworkHelper.IsOnline())
+        {
+            var url = ConfigHelper.GetUserStateApiUrl(_userId);
+            
+            bool serverLoadCompleted = false;
+            
+            // ✅ DataSyncManager를 통한 통합 네트워크 통신
+            yield return _syncMgr.StartNetworkCoroutine(_syncMgr.GetRequest<SaveData>(
+                url,
+                onSuccess: (serverData) => {
+                    // 🔧 서버 데이터 정리 (null 값들을 기본값으로 대체)
+                    CleanupServerData(serverData);
+                    
+                    // 덮어쓰기 + 로컬 저장
+                    try
+                    {
+                        string json = JsonHelper.SerializeSaveData(serverData);
+                        File.WriteAllText(_filePath, json);
+                        Current = serverData;
+                        OnLoaded?.Invoke(Current);
+                        Debug.Log("[DataManager] 서버에서 데이터 로드 성공");
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.LogError($"[DataManager] 서버 데이터 로컬 저장 실패: {e.Message}");
+                    }
+                    serverLoadCompleted = true;
+                },
+                onError: (error) => {
+                    Debug.LogWarning($"[DataManager] 서버 로드 실패: {error}");
+                    serverLoadCompleted = true;
+                },
+                defaultValue: new SaveData()
+            ));
+            
+            // 서버 로드 완료 대기
+            yield return new WaitUntil(() => serverLoadCompleted);
         }
     }
 
@@ -187,28 +138,19 @@ public class DataManager : IDataManager, IInitializable
     /// </summary>
     public void SaveLocal()
     {
-        _ = SaveLocalAsync();
-    }
-
-    async Task SaveLocalAsync()
-    {
-        // ✅ Newtonsoft.Json 사용 (enum 변환 지원)
-        var json = JsonConvert.SerializeObject(Current, Formatting.Indented);
-
-        // 파일 접근 동기화
-        await _fileSemaphore.WaitAsync();
         try
         {
-            await File.WriteAllTextAsync(_filePath, json);
-            _syncCtx.Post(_ => OnSaved?.Invoke(Current), null);
+            // ✅ JsonHelper 사용 (통합된 오류 처리)
+            var json = JsonHelper.SerializeSaveData(Current);
+            
+            File.WriteAllText(_filePath, json);
+            OnSaved?.Invoke(Current);
+            
+            Debug.Log("[DataManager] 로컬 저장 성공");
         }
         catch (Exception e)
         {
             Debug.LogError($"[DataManager] 로컬 저장 실패: {e.Message}");
-        }
-        finally
-        {
-            _fileSemaphore.Release();
         }
     }
 
@@ -226,8 +168,8 @@ public class DataManager : IDataManager, IInitializable
     /// <summary>전체 상태 덤프 델타만 발생</summary>
     public void GenerateFullDelta()
     {
-        // ✅ Newtonsoft.Json 사용 (enum 변환 지원)
-        var json = JsonConvert.SerializeObject(Current);
+        // ✅ JsonHelper 사용 (통합된 오류 처리)
+        var json = JsonHelper.SerializeObject(Current);
         Debug.Log($"[DataManager] 풀 델타 생성 - 크기: {json.Length} bytes");
         SyncDelta(new DeltaEvent("json:full", json));
     }
@@ -239,52 +181,11 @@ public class DataManager : IDataManager, IInitializable
     /// </summary>
     public void GenerateDelta(string key, object val)
     {
-        string json;
-
-        // 기본 타입과 복합 타입을 구분하여 직렬화
-        if (val is int)
-        {
-            json = val.ToString();
-        }
-        else if (val is float floatVal)
-        {
-            json = floatVal.ToString(System.Globalization.CultureInfo.InvariantCulture);
-        }
-        else if (val is bool boolVal)
-        {
-            json = boolVal ? "true" : "false";
-        }
-        else if (val is string)
-        {
-            json = val.ToString();
-        }
-        else if (IsListType(val))
-        {
-            // 리스트/배열은 Newtonsoft.Json으로 직렬화 (JsonUtility는 루트 레벨 배열 지원 안 함)
-            json = JsonConvert.SerializeObject(val);
-        }
-        else
-        {
-            // ✅ 복합 타입도 Newtonsoft.Json으로 직렬화 (enum 변환 지원)
-            json = JsonConvert.SerializeObject(val);
-        }
-
+        // ✅ JsonHelper 사용 (타입 구분 로직 통합)
+        string json = JsonHelper.SerializeDeltaValue(val);
+        
         Debug.Log($"[DataManager] 델타 생성 - Key: {key}, Value: {val}, JSON: {json}");
         SyncDelta(new DeltaEvent(key, json));
-    }
-
-    /// <summary>
-    /// 객체가 리스트/배열 타입인지 확인
-    /// </summary>
-    private bool IsListType(object obj)
-    {
-        if (obj == null) return false;
-
-        var type = obj.GetType();
-        return type.IsArray ||
-               (type.IsGenericType &&
-                typeof(IEnumerable).IsAssignableFrom(type) &&
-                !typeof(string).IsAssignableFrom(type));
     }
 
     /// <summary>델타 전송 진입점(단일)</summary>
@@ -299,8 +200,57 @@ public class DataManager : IDataManager, IInitializable
         _syncMgr.EnqueueDelta(d);
     }
 
+    #region 도메인별 서버 통신 API (다른 매니저들을 위한 캡슐화된 인터페이스)
+
     /// <summary>
-    /// 🔧 서버에서 받은 데이터의 null 값들을 기본값으로 정리
+    /// 랭킹 데이터 조회 (RankingManager용)
+    /// </summary>
+    public void GetRanking<T>(int stageNum, int sortType, int page, int pageSize, Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+    {
+        var url = $"{ConfigHelper.GetRankingApiUrl()}?stageNumber={stageNum}&sortType={sortType}&page={page}&pageSize={pageSize}&userId={_userId}";
+        StartCoroutine(_syncMgr.GetRequest(url, onSuccess, onError, defaultValue));
+    }
+
+    /// <summary>
+    /// 사용자 기록 업데이트 (RankingManager용)
+    /// </summary>
+    public void UpdateUserRecord<T>(object recordData, Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+    {
+        var url = ConfigHelper.GetUserRecordApiUrl(_userId);
+        StartCoroutine(_syncMgr.PostRequest(url, recordData, onSuccess, onError, defaultValue));
+    }
+
+    /// <summary>
+    /// Steam 인증 (SteamAuthManager용)
+    /// </summary>
+    public void AuthenticateWithSteam<T>(object authData, Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+    {
+        var url = ConfigHelper.GetSteamAuthApiUrl();
+        StartCoroutine(_syncMgr.PostRequest(url, authData, onSuccess, onError, defaultValue));
+    }
+
+    /// <summary>
+    /// 업적 데이터 조회 (AchievementManager용)
+    /// </summary>
+    public void GetAchievements<T>(Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+    {
+        var url = $"{ConfigHelper.GetBaseUrl()}/api/achievements/{_userId}";
+        StartCoroutine(_syncMgr.GetRequest(url, onSuccess, onError, defaultValue));
+    }
+
+    /// <summary>
+    /// 업적 보상 수령 (AchievementManager용)
+    /// </summary>
+    public void ClaimAchievementReward<T>(string achievementId, Action<T> onSuccess, Action<string> onError, T defaultValue = default)
+    {
+        var url = $"{ConfigHelper.GetBaseUrl()}/api/achievements/{_userId}/{achievementId}/claim";
+        StartCoroutine(_syncMgr.PostRequest(url, new { }, onSuccess, onError, defaultValue));
+    }
+
+    #endregion
+
+    /// <summary>
+    /// 서버에서 받은 데이터의 null 값들을 기본값으로 정리
     /// </summary>
     private void CleanupServerData(SaveData data)
     {
@@ -355,12 +305,6 @@ public class DataManager : IDataManager, IInitializable
     // 메모리 누수 방지 (Zenject 싱글톤용 IDisposable 구현)
     public void Dispose()
     {
-        // HTTP 클라이언트 정리
-        _http?.Dispose();
-
-        // 세마포어 정리
-        _fileSemaphore?.Dispose();
-
         // 외부 구독자들이 남아있을 수 있으니 이벤트 초기화
         OnLoaded = null;
         OnSaved = null;
@@ -368,8 +312,7 @@ public class DataManager : IDataManager, IInitializable
 
         // 현재 데이터 정리
         Current = null;
-
-        // 매니저 참조 해제 (readonly 필드는 해제할 수 없음)
-        // _syncMgr, _userId, _syncCtx, _filePath, _serverUrl는 readonly이므로 제외
+        
+        Debug.Log("[DataManager] 리소스 정리 완료 (HttpClient, SemaphoreSlim 제거됨)");
     }
 }

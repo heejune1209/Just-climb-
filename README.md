@@ -23,13 +23,13 @@
 - 씬 전환 기반 구조로 타이틀 → 로비 → 스테이지 → 결과로 이어지는 흐름
 - 각 Scene은 UI 구조 및 매니저 관리 하에 독립적으로 동작.
 
-### 리팩토링된 아키텍처 구조 (Steam 연동 + DI 적용)
+### 리팩토링된 계층화 아키텍처 구조 (Steam 연동 + DI 적용)
 
 ```mermaid
 graph TB
-    %% 클라이언트 사이드 (Unity)
-    subgraph "🎮 Unity Client"
-        subgraph "UI Layer"
+    %% 클라이언트 사이드 (Unity) - 계층화된 구조
+    subgraph "🎮 Unity Client - Layered Architecture"
+        subgraph "UI Layer (Presentation)"
             UI_Main[UI_Main]
             UI_Lobby[UI_Lobby]
             UI_Stage[UI_Stage]
@@ -45,11 +45,31 @@ graph TB
             UI_Components[UI Components]
         end
         
-        subgraph "Infrastructure Layer"
+        subgraph "Application Layer (Business Logic)"
+            RankingManager[RankingManager<br/>✅ Uses DataManager APIs]
+            AchievementManager[AchievementManager<br/>✅ Uses DataManager APIs]
+            SteamAuthManager[SteamAuthManager<br/>✅ Uses DataManager APIs]
+            CurrencyManager[CurrencyManager]
+            ItemManager[ItemManager]
+            StageManager[StageManager]
+            GameManager[GameManager]
+        end
+        
+        subgraph "Domain Layer (Business Services)"
+            DataManager[DataManager<br/>🆕 Domain API Provider<br/>✅ GetRanking, UpdateUserRecord<br/>✅ AuthenticateWithSteam<br/>✅ GetAchievements, ClaimReward<br/>✅ MonoBehaviour for Coroutines]
+            ItemDatabase[ItemDatabase]
+            AchievementIDs[AchievementIDs]
+            SaveData[SaveData]
+            InventoryItem[InventoryItem]
+            DeltaEvent[DeltaEvent]
+            ServerConfig[ServerConfig]
+        end
+        
+        subgraph "Infrastructure Layer (Network & System)"
+            DataSyncManager[DataSyncManager<br/>🆕 Unified HTTP Communication<br/>✅ GET, POST, PUT, DELETE<br/>✅ JWT Auto-handling<br/>✅ UnityWebRequest Only]
             UIManager[UIManager]
             ResourceManager[ResourceManager]
             SceneManagerEX[SceneManagerEX]
-            GameManager[GameManager]
             PoolManager[PoolManager]
             SoundManager[SoundManager]
             BaseScene[BaseScene]
@@ -57,16 +77,14 @@ graph TB
             LobbyScene[LobbyScene]
             StageScene[StageScene]
             SteamManager[SteamManager<br/>Steamworks.NET]
+            OfflineCacheManager[OfflineCacheManager<br/>Offline Cache]
+            SaveManager[SaveManager]
         end
         
-        subgraph "Domain Layer"
-            CurrencyManager[CurrencyManager]
-            ItemManager[ItemManager]
-            StageManager[StageManager]
-            RankingManager[RankingManager]
-            AchievementManager[AchievementManager<br/>🆕 Steam Integration]
-            SteamAuthManager[SteamAuthManager<br/>🆕 Steam Auth]
-            ItemDatabase[ItemDatabase]
+        subgraph "Utilities Layer (Common Helpers)"
+            ConfigHelper[ConfigHelper<br/>🆕 Configuration Management<br/>✅ URL Generation<br/>✅ Settings Cache]
+            JsonHelper[JsonHelper<br/>🆕 JSON Serialization<br/>✅ SaveData Processing<br/>✅ Delta Value Handling]
+            NetworkHelper[NetworkHelper<br/>🆕 Network Utilities<br/>✅ JWT Token Handling<br/>✅ SSL Certificate Bypass<br/>✅ Request Creation]
         end
         
         subgraph "Game Systems"
@@ -80,21 +98,6 @@ graph TB
             ItemUses[Item Uses<br/>FeatherUse, WingUse, LampUse]
             ItemData[ItemData & IItemUse]
             ItemInput[ItemInput]
-        end
-        
-        subgraph "Persistence Layer"
-            DataManager[DataManager]
-            SaveData[SaveData]
-            InventoryItem[InventoryItem]
-            DeltaEvent[DeltaEvent]
-            ServerConfig[ServerConfig]
-            AchievementIDs[AchievementIDs]
-        end
-        
-        subgraph "Sync Layer"
-            DataSyncManager[DataSyncManager<br/>🆕 Real-time Sync]
-            OfflineCacheManager[OfflineCacheManager<br/>🆕 Offline Cache]
-            SaveManager[SaveManager]
         end
         
         subgraph "DI System"
@@ -154,7 +157,9 @@ graph TB
         RedisCache[Redis Cache<br/>🆕 Performance]
     end
     
-    %% 연결 관계
+    %% 계층간 의존성 관계 (상위 → 하위 계층으로만 의존)
+    
+    %% UI Layer → Application Layer
     UI_Main --> UIManager
     UI_Lobby --> UIManager
     UI_Stage --> UIManager
@@ -164,19 +169,43 @@ graph TB
     CharacterSelector --> SteamAuthManager
     UI_Base --> UIManager
     
+    %% Application Layer → Domain Layer
+    RankingManager -->|도메인 API 호출| DataManager
+    AchievementManager -->|도메인 API 호출| DataManager
+    SteamAuthManager -->|도메인 API 호출| DataManager
+    CurrencyManager --> DataManager
+    ItemManager --> DataManager
+    StageManager --> DataManager
+    GameManager --> DataManager
+    
+    %% Domain Layer → Infrastructure Layer
+    DataManager -->|캡슐화된 네트워크 호출| DataSyncManager
+    
+    %% Infrastructure Layer → Utilities Layer
+    DataSyncManager -->|HTTP 요청 생성| NetworkHelper
+    DataSyncManager -->|JSON 처리| JsonHelper
+    DataSyncManager -->|설정 로드| ConfigHelper
+    DataManager -->|JSON 처리| JsonHelper
+    DataManager -->|설정 로드| ConfigHelper
+    DataManager -->|네트워크 상태 확인| NetworkHelper
+    
+    %% Infrastructure 내부 관계
     MainScene --> UIManager
     LobbyScene --> UIManager
     StageScene --> UIManager
     BaseScene --> SceneManagerEX
-    
     UIManager --> ResourceManager
-    GameManager --> StageManager
-    StageManager --> DataManager
-    RankingManager --> DataSyncManager
-    AchievementManager --> DataSyncManager
-    SteamAuthManager --> DataSyncManager
     SteamManager --> SteamAuthManager
+    DataSyncManager --> OfflineCacheManager
     
+    %% Domain Layer 내부 관계
+    DataManager --> SaveData
+    DataManager --> DeltaEvent
+    DataManager --> ServerConfig
+    AchievementManager --> AchievementIDs
+    ItemManager --> ItemDatabase
+    
+    %% Game Systems (독립적)
     ItemManager --> ItemSystem
     ItemSystem --> ItemUses
     ItemUses --> ItemData
@@ -186,21 +215,17 @@ graph TB
     ObstacleCore --> ObstacleSpawners
     ObstacleCore --> ObstacleEffects
     
-    DataManager --> SaveData
-    DataManager --> DeltaEvent
-    DataManager --> ServerConfig
-    AchievementManager --> AchievementIDs
-    DataSyncManager --> OfflineCacheManager
-    
+    %% DI System (모든 계층에 주입)
     ProjectInstaller --> UserIdProvider
     ProjectInstaller --> MainSceneInstaller
     ProjectInstaller --> LobbySceneInstaller
     ProjectInstaller --> StageSceneInstaller
     ProjectInstaller --> CharacterSelectInstaller
     
-    DataSyncManager -.->|HTTP API| AuthController
-    RankingManager -.->|HTTP API| RankingController
-    AchievementManager -.->|HTTP API| AchievementController
+    %% 서버 통신 (DataManager의 도메인 API를 통해 캡슐화됨)
+    DataSyncManager -.->|Unified HTTP API| AuthController
+    DataSyncManager -.->|Unified HTTP API| RankingController
+    DataSyncManager -.->|Unified HTTP API| AchievementController
     
     AuthController --> UserService
     AchievementController --> AchievementService
@@ -225,40 +250,51 @@ graph TB
     AchievementManager -.->|Steam SDK| SteamworksNET
     AchievementService -.->|Cache| RedisCache
     
-    %% 스타일링 - 밝은 배경에 검은 글자
-    classDef newComponent fill:#90EE90,stroke:#228B22,stroke-width:2px,color:#000000
+    %% 스타일링 - 계층별 색상 구분 (밝은 배경에 검은 글자)
     classDef uiLayer fill:#FFE4E1,stroke:#DC143C,stroke-width:2px,color:#000000
-    classDef infraLayer fill:#E0F6FF,stroke:#4682B4,stroke-width:2px,color:#000000
-    classDef domainLayer fill:#F0E6FF,stroke:#8B008B,stroke-width:2px,color:#000000
+    classDef appLayer fill:#E8F5E8,stroke:#4CAF50,stroke-width:2px,color:#000000
+    classDef domainLayer fill:#FFF3E0,stroke:#FF9800,stroke-width:2px,color:#000000
+    classDef infraLayer fill:#E3F2FD,stroke:#2196F3,stroke-width:2px,color:#000000
+    classDef utilLayer fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px,color:#000000
     classDef gameSystem fill:#E6F3FF,stroke:#4169E1,stroke-width:2px,color:#000000
-    classDef persistLayer fill:#FFFACD,stroke:#DAA520,stroke-width:2px,color:#000000
-    classDef syncLayer fill:#F0FFF0,stroke:#32CD32,stroke-width:2px,color:#000000
     classDef diSystem fill:#FFF0F5,stroke:#FF69B4,stroke-width:2px,color:#000000
     classDef serverLayer fill:#E6FFE6,stroke:#32CD32,stroke-width:2px,color:#000000
     classDef dbLayer fill:#FFEFD5,stroke:#D2691E,stroke-width:2px,color:#000000
     classDef externalLayer fill:#FFF8DC,stroke:#FF8C00,stroke-width:2px,color:#000000
+    classDef newComponent fill:#FFFACD,stroke:#FFD700,stroke-width:3px,color:#000000
     
-    class AchievementManager,SteamAuthManager,DataSyncManager,OfflineCacheManager,AuthController,AchievementController,UserService,AchievementService,UserStateService,JustClimbDbContext,AchievementSeeder,AchievementsTable,UserAchievementsTable,UserAchievementProgressTable,SteamWebAPI,SteamworksNET,RedisCache,ProjectInstaller newComponent
-    
+    %% UI Layer (Presentation)
     class UI_Main,UI_Lobby,UI_Stage,UI_Achievement,UI_Popup,UI_RankingEntry,UI_SyncStatus,UI_Base,CharacterSelector,StartLogo,TextColorChange,TutorialTrigger,UI_Components uiLayer
     
-    class UIManager,ResourceManager,SceneManagerEX,GameManager,PoolManager,SoundManager,BaseScene,MainScene,LobbyScene,StageScene,SteamManager infraLayer
+    %% Application Layer (Business Logic)
+    class RankingManager,AchievementManager,SteamAuthManager,CurrencyManager,ItemManager,StageManager,GameManager appLayer
     
-    class CurrencyManager,ItemManager,StageManager,RankingManager,AchievementManager,SteamAuthManager,ItemDatabase domainLayer
+    %% Domain Layer (Business Services) - 새로 강조
+    class DataManager,ItemDatabase,AchievementIDs,SaveData,InventoryItem,DeltaEvent,ServerConfig domainLayer
     
+    %% Infrastructure Layer (Network & System)
+    class DataSyncManager,UIManager,ResourceManager,SceneManagerEX,PoolManager,SoundManager,BaseScene,MainScene,LobbyScene,StageScene,SteamManager,OfflineCacheManager,SaveManager infraLayer
+    
+    %% Utilities Layer (Common Helpers) - 새로 추가
+    class ConfigHelper,JsonHelper,NetworkHelper utilLayer
+    
+    %% Game Systems (독립적)
     class ClimbingSystem,ObstacleSystem,ItemSystem,InputSystem,ObstacleCore,ObstacleSpawners,ObstacleEffects,ItemUses,ItemData,ItemInput gameSystem
     
-    class DataManager,SaveData,InventoryItem,DeltaEvent,ServerConfig,AchievementIDs persistLayer
-    
-    class DataSyncManager,OfflineCacheManager,SaveManager syncLayer
-    
+    %% DI System (Dependency Injection)
     class ProjectInstaller,MainSceneInstaller,LobbySceneInstaller,StageSceneInstaller,CharacterSelectInstaller,UserIdProvider diSystem
     
+    %% Server Layer
     class AuthController,AchievementController,RankingController,SaveController,DatabaseController,UserService,AchievementService,RankingService,UserStateService,User,Achievement,DTOs,SaveDataServer,JustClimbDbContext,AchievementSeeder serverLayer
     
+    %% Database Layer
     class UsersTable,UserItemsTable,UserStageRecordsTable,AchievementsTable,UserAchievementsTable,UserAchievementProgressTable dbLayer
     
+    %% External Systems
     class SteamWebAPI,SteamworksNET,RedisCache externalLayer
+    
+    %% 새로 추가/개선된 컴포넌트 강조
+    class DataManager,DataSyncManager,ConfigHelper,JsonHelper,NetworkHelper newComponent
 ```
 
 **아키텍처 특징:**

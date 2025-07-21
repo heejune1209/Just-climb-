@@ -65,7 +65,7 @@ namespace Server.Services
         /// 사용자 상태를 저장합니다
         /// </summary>
         public async Task<bool> SaveStateAsync(string userId, SaveData saveData)
-        {
+            {
             _logger.LogInformation("[UserStateService] SaveStateAsync 시작 - UserId: {UserId}", userId);
             
             try
@@ -86,7 +86,7 @@ namespace Server.Services
             {
                 _logger.LogError(ex, "[UserStateService] SaveStateAsync 실패 - UserId: {UserId}", userId);
                 return false;
-            }
+        }
         }
 
         /// <summary>
@@ -104,7 +104,7 @@ namespace Server.Services
                 
                 // 캐시 무효화 (델타 처리 후 데이터 변경)
                 await _cacheManager.InvalidateCacheAsync(userId);
-
+                
                 _logger.LogInformation("[UserStateService] MergeDeltasAsync 완료 - UserId: {UserId}", userId);
             }
             catch (System.Exception ex)
@@ -124,7 +124,7 @@ namespace Server.Services
                 return await _dbContext.Users.AnyAsync(u => u.Id == userId);
             }
             catch (Exception ex)
-            {
+                    {
                 _logger.LogError(ex, "[UserStateService] UserExistsAsync 실패 - UserId: {UserId}", userId);
                 return false;
             }
@@ -166,7 +166,7 @@ namespace Server.Services
         /// 캐시 상태 확인
         /// </summary>
         public async Task<bool> IsCachedAsync(string userId)
-        {
+            {
             return await _cacheManager.IsCachedAsync(userId);
         }
 
@@ -182,7 +182,7 @@ namespace Server.Services
         /// 캐시 통계 조회 (디버깅/모니터링용)
         /// </summary>
         public async Task<CacheStats> GetCacheStatsAsync(string userId)
-        {
+            {
             return await _cacheManager.GetCacheStatsAsync(userId);
         }
 
@@ -190,7 +190,7 @@ namespace Server.Services
         /// 사용자의 스테이지 기록만 조회 (경량)
         /// </summary>
         public async Task<List<UserStageRecord>> GetUserStageRecordsAsync(string userId)
-        {
+            {
             return await _loader.LoadUserStageRecordsAsync(userId);
         }
 
@@ -198,10 +198,10 @@ namespace Server.Services
         /// 사용자의 업적 진행률만 조회 (경량)
         /// </summary>
         public async Task<UserAchievementProgress> GetUserAchievementProgressAsync(string userId)
-        {
+            {
             return await _loader.LoadUserAchievementProgressAsync(userId);
-        }
+            }
 
         #endregion
     }
-} 
+}

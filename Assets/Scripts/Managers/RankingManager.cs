@@ -1,6 +1,5 @@
 using JustClimb.Data;
 using JustClimb.Manager;
-using JustClimb.Utils;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -9,6 +8,7 @@ using Zenject;
 using Newtonsoft.Json;
 using System.Collections;
 using System.Text;
+using JustClimb.Utils;
 
 namespace JustClimb.Manager
 {
@@ -112,7 +112,7 @@ namespace JustClimb.Manager
 
         private IEnumerator HandleDataLoadedCoroutine(SaveData sd)
         {
-            // 🔧 최적화: 초기 데이터 로드 시에는 서버 업데이트 건너뛰기
+            // 최적화: 초기 데이터 로드 시에는 서버 업데이트 건너뛰기
             // (실시간 기록 갱신은 OnBestRecordUpdated로 처리)
             Debug.Log("[RankingManager] 초기 데이터 로드 완료. 실시간 기록 갱신 대기 중...");
             yield break;
@@ -300,114 +300,95 @@ namespace JustClimb.Manager
         }
 
         /// <summary>
-        /// 서버에서 랭킹 데이터 로드 (코루틴 버전)
+        /// 서버에서 랭킹 데이터 로드 (✅ DataManager 캡슐화 API 사용)
         /// </summary>
         private IEnumerator LoadRankingCoroutine(int stageNum, RankingSortType sortType)
         {
             // enum을 int로 변환해서 전송 (서버는 int 값을 기대함)
             int sortTypeInt = (int)sortType;
-            var url = $"{_baseUrl}?stageNumber={stageNum}&sortType={sortTypeInt}&page=1&pageSize=20&userId={_userId}";
-            Debug.Log($"[RankingManager] 서버 요청 시작 - URL: {url}");
-            Debug.Log($"[RankingManager] 현재 UserId: {_userId}, SortType: {sortType}({sortTypeInt})");
             
-            using var request = UnityWebRequest.Get(url);
+            Debug.Log($"[RankingManager] 서버 요청 시작 - Stage: {stageNum}, SortType: {sortType}({sortTypeInt})");
+            Debug.Log($"[RankingManager] 현재 UserId: {_userId}");
             
-            // JWT 토큰 헤더 추가
-            AddAuthorizationHeader(request);
+            bool requestCompleted = false;
             
-            yield return request.SendWebRequest();
-
-            Debug.Log($"[RankingManager] 서버 응답 - Result: {request.result}, ResponseCode: {request.responseCode}");
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                try
-                {
-                    var json = request.downloadHandler.text;
-                    Debug.Log($"[RankingManager] 서버 응답 JSON: {json}");
-                    
-                    var response = JsonConvert.DeserializeObject<RankingResponseDto>(json);
-                    
-                    // MaxValue 데이터 필터링 (초기화 값은 제외)
-                    if (response?.TopEntries != null)
-                    {
-                        for (int i = response.TopEntries.Count - 1; i >= 0; i--)
-                        {
-                            var entry = response.TopEntries[i];
-                            if (entry.ClearTime >= float.MaxValue || entry.DeathCount >= int.MaxValue)
-                            {
-                                Debug.Log($"[RankingManager] MaxValue 데이터 제거: Rank={entry.Rank}, ClearTime={entry.ClearTime}, DeathCount={entry.DeathCount}");
-                                response.TopEntries.RemoveAt(i);
-                            }
-                        }
-                        
-                        // 순위 재정렬 (제거 후)
-                        for (int i = 0; i < response.TopEntries.Count; i++)
-                        {
-                            response.TopEntries[i].Rank = i + 1;
-                        }
-                    }
-                    
-                    // MyEntry도 MaxValue 체크
-                    if (response?.MyEntry != null && 
-                        (response.MyEntry.ClearTime >= float.MaxValue || response.MyEntry.DeathCount >= int.MaxValue))
-                    {
-                        Debug.Log($"[RankingManager] MyEntry MaxValue 데이터 제거");
-                        response.MyEntry = null;
-                    }
-
-                    if (response != null)
-                    {
-                        Debug.Log($"[RankingManager] 파싱 성공 - TopEntries: {response.TopEntries.Count}, MyEntry: {(response.MyEntry != null ? "있음" : "없음")}");
-                        
-                        // TopEntries의 각 항목 상세 정보 로그
-                        for (int i = 0; i < response.TopEntries.Count; i++)
-                        {
-                            var entry = response.TopEntries[i];
-                            Debug.Log($"[RankingManager] TopEntry[{i}]: Rank={entry.Rank}, UserId={entry.UserId}, DisplayName={entry.DisplayName}, IsMyRecord={entry.IsMyRecord}");
-                        }
-                        
-                        // MyEntry 정보 로그
-                        if (response.MyEntry != null)
-                        {
-                            Debug.Log($"[RankingManager] MyEntry: Rank={response.MyEntry.Rank}, UserId={response.MyEntry.UserId}, DisplayName={response.MyEntry.DisplayName}, IsMyRecord={response.MyEntry.IsMyRecord}");
-                        }
-                        
-                        // 캐시에 저장
-                        if (!_cachedRankings.TryGetValue(stageNum, out var stageDictionary))
-                        {
-                            stageDictionary = new Dictionary<RankingSortType, RankingResponseDto>();
-                            _cachedRankings[stageNum] = stageDictionary;
-                        }
-
-                        stageDictionary[sortType] = response;
-
-                        // UI 구독자에게 알림
-                        Debug.Log($"[RankingManager] OnRankingUpdated 이벤트 발생 - Stage: {stageNum}, SortType: {sortType}");
-                        OnRankingUpdated?.Invoke(stageNum, sortType);
-
-                        Debug.Log($"[RankingManager] 랭킹 로드 성공: Stage {stageNum}, SortType {sortType}, Count {response.TopEntries.Count}");
-                    }
-                    else
-                    {
-                        Debug.LogError("[RankingManager] 파싱된 응답이 null입니다.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.LogError($"[RankingManager] 랭킹 데이터 파싱 실패: {ex.Message}");
-                    Debug.LogError($"[RankingManager] 원본 JSON: {request.downloadHandler.text}");
-                }
-            }
-            else
-            {
-                Debug.LogError($"[RankingManager] 랭킹 로드 실패: {request.error}");
-                Debug.LogError($"[RankingManager] 응답 내용: {request.downloadHandler.text}");
-            }
+            // DataManager의 캡슐화된 랭킹 API 사용
+            _dataManager.GetRanking<RankingResponseDto>(
+                stageNum, sortTypeInt, 1, 20,
+                onSuccess: (response) => {
+                    ProcessRankingResponse(response, stageNum, sortType);
+                    requestCompleted = true;
+                },
+                onError: (error) => {
+                    Debug.LogError($"[RankingManager] 랭킹 로드 실패: {error}");
+                    requestCompleted = true;
+                },
+                defaultValue: new RankingResponseDto()
+            );
+            
+            // 요청 완료 대기
+            yield return new WaitUntil(() => requestCompleted);
         }
 
         /// <summary>
-        /// 서버에 사용자 기록 업데이트 (코루틴 버전)
+        /// 랭킹 응답 데이터 처리 헬퍼 메서드
+        /// </summary>
+        private void ProcessRankingResponse(RankingResponseDto response, int stageNum, RankingSortType sortType)
+        {
+            if (response == null)
+            {
+                Debug.LogError("[RankingManager] 응답이 null입니다.");
+                return;
+            }
+
+            // MaxValue 데이터 필터링 (초기화 값은 제외)
+            if (response.TopEntries != null)
+            {
+                for (int i = response.TopEntries.Count - 1; i >= 0; i--)
+                {
+                    var entry = response.TopEntries[i];
+                    if (entry.ClearTime >= float.MaxValue || entry.DeathCount >= int.MaxValue)
+                    {
+                        Debug.Log($"[RankingManager] MaxValue 데이터 제거: Rank={entry.Rank}, ClearTime={entry.ClearTime}, DeathCount={entry.DeathCount}");
+                        response.TopEntries.RemoveAt(i);
+                    }
+                }
+                
+                // 순위 재정렬 (제거 후)
+                for (int i = 0; i < response.TopEntries.Count; i++)
+                {
+                    response.TopEntries[i].Rank = i + 1;
+                }
+            }
+            
+            // MyEntry도 MaxValue 체크
+            if (response.MyEntry != null && 
+                (response.MyEntry.ClearTime >= float.MaxValue || response.MyEntry.DeathCount >= int.MaxValue))
+            {
+                Debug.Log($"[RankingManager] MyEntry MaxValue 데이터 제거");
+                response.MyEntry = null;
+            }
+            
+            Debug.Log($"[RankingManager] 파싱 성공 - TopEntries: {response.TopEntries?.Count ?? 0}, MyEntry: {(response.MyEntry != null ? "있음" : "없음")}");
+            
+            // 캐시에 저장
+            if (!_cachedRankings.TryGetValue(stageNum, out var stageDictionary))
+            {
+                stageDictionary = new Dictionary<RankingSortType, RankingResponseDto>();
+                _cachedRankings[stageNum] = stageDictionary;
+            }
+
+            stageDictionary[sortType] = response;
+
+            // UI 구독자에게 알림
+            Debug.Log($"[RankingManager] OnRankingUpdated 이벤트 발생 - Stage: {stageNum}, SortType: {sortType}");
+            OnRankingUpdated?.Invoke(stageNum, sortType);
+
+            Debug.Log($"[RankingManager] 랭킹 로드 성공: Stage {stageNum}, SortType {sortType}, Count {response.TopEntries?.Count ?? 0}");
+        }
+
+        /// <summary>
+        /// 서버에 사용자 기록 업데이트 (✅ DataManager 캡슐화 API 사용)
         /// </summary>
         private IEnumerator UpdateUserRecordCoroutine(UpdateRecordRequestDto requestDto)
         {
@@ -415,6 +396,7 @@ namespace JustClimb.Manager
             if (requestDto.ClearTime <= 0 || requestDto.ClearTime >= float.MaxValue)
             {
                 Debug.LogError($"[RankingManager] 무효한 클리어 타임으로 업데이트 건너뛰기: {requestDto.ClearTime}");
+                _pendingUpdates.Remove(requestDto.StageNumber);
                 yield break;
             }
 
@@ -429,39 +411,34 @@ namespace JustClimb.Manager
                 requestDto.DisplayName = "Player";
             }
 
-            var url = $"{_baseUrl}/{_userId}/record";
-            var json = JsonConvert.SerializeObject(requestDto);
-            
-            Debug.Log($"[RankingManager] 서버 요청 URL: {url}");
-            Debug.Log($"[RankingManager] 서버 요청 데이터: {json}");
+            Debug.Log($"[RankingManager] 기록 업데이트 요청 - Stage: {requestDto.StageNumber}, Time: {requestDto.ClearTime}, Deaths: {requestDto.DeathCount}");
             Debug.Log($"[RankingManager] UserId: {_userId}");
             
-            using var request = new UnityWebRequest(url, "POST");
-            byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
-            request.uploadHandler = new UploadHandlerRaw(bodyRaw);
-            request.downloadHandler = new DownloadHandlerBuffer();
-            request.SetRequestHeader("Content-Type", "application/json");
+            bool requestCompleted = false;
             
-            // JWT 토큰 헤더 추가
-            AddAuthorizationHeader(request);
-
-            yield return request.SendWebRequest();
-
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                Debug.Log($"[RankingManager] 기록 업데이트 성공: Stage {requestDto.StageNumber}");
-                
-                // 해당 스테이지의 캐시 무효화하여 다음 조회 시 최신 데이터 로드
-                if (_cachedRankings.ContainsKey(requestDto.StageNumber))
-                {
-                    _cachedRankings[requestDto.StageNumber].Clear();
-                }
-            }
-            else
-            {
-                Debug.LogError($"[RankingManager] 기록 업데이트 실패: {request.error}");
-                Debug.LogError($"[RankingManager] 서버 응답: {request.downloadHandler.text}");
-            }
+            // ✅ DataManager의 캡슐화된 기록 업데이트 API 사용
+            _dataManager.UpdateUserRecord<object>(
+                requestDto,
+                onSuccess: (response) => {
+                    Debug.Log($"[RankingManager] 기록 업데이트 성공: Stage {requestDto.StageNumber}");
+                    
+                    // 해당 스테이지의 캐시 무효화하여 다음 조회 시 최신 데이터 로드
+                    if (_cachedRankings.ContainsKey(requestDto.StageNumber))
+                    {
+                        _cachedRankings[requestDto.StageNumber].Clear();
+                    }
+                    
+                    requestCompleted = true;
+                },
+                onError: (error) => {
+                    Debug.LogError($"[RankingManager] 기록 업데이트 실패: {error}");
+                    requestCompleted = true;
+                },
+                defaultValue: new { }
+            );
+            
+            // 요청 완료 대기
+            yield return new WaitUntil(() => requestCompleted);
             
             // 🔧 중복 방지: 처리 완료 후 대기 목록에서 제거
             _pendingUpdates.Remove(requestDto.StageNumber);
