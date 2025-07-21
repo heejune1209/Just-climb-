@@ -341,8 +341,9 @@ public class DataManager : IDataManager, IInitializable
         }
         
         // AchievementProgressDto의 리스트들도 null 체크
-        data.achievementProgress.unlockedCharacters ??= new List<string>();
+        data.achievementProgress.unlockedCharacters ??= new List<int>();
         data.achievementProgress.itemTypesUsed ??= new List<string>();
+        data.achievementProgress.chapter1PerfectStages ??= new List<int>();
 
         Debug.Log($"[DataManager] 서버 데이터 정리 완료 - stageFlagPositions: {data.stageFlagPositions.Count}개");
     }

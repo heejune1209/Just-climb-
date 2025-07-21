@@ -111,6 +111,10 @@ namespace Server.Models
         public int DeathsInCurrentStage { get; set; } = 0;
         public bool UsedItemInCurrentStage { get; set; } = false;
 
+        // 누적 통계 데이터
+        public int TotalDeaths { get; set; } = 0;
+        public int TotalGemsCollected { get; set; } = 0;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
@@ -288,6 +292,8 @@ namespace Server.Database
                 entity.Property(p => p.ItemTypesUsedJson).HasColumnName("item_types_used_json");
                 entity.Property(p => p.DeathsInCurrentStage).HasColumnName("deaths_in_current_stage");
                 entity.Property(p => p.UsedItemInCurrentStage).HasColumnName("used_item_in_current_stage");
+                entity.Property(p => p.TotalDeaths).HasColumnName("total_deaths");
+                entity.Property(p => p.TotalGemsCollected).HasColumnName("total_gems_collected");
                 entity.Property(p => p.CreatedAt).HasColumnName("created_at");
                 entity.Property(p => p.UpdatedAt).HasColumnName("updated_at");
                 

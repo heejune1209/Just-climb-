@@ -21,5 +21,20 @@ namespace Server.Services
         /// 캐시먼저 조회하며, 없으면 DB에서 로드 후 캐시에 저장합니다.
         /// </summary>
         Task<SaveData> LoadStateAsync(string userId);
+
+        /// <summary>
+        /// 사용자 상태를 저장합니다.
+        /// </summary>
+        Task<bool> SaveStateAsync(string userId, SaveData saveData);
+
+        /// <summary>
+        /// 사용자 존재 여부를 확인합니다.
+        /// </summary>
+        Task<bool> UserExistsAsync(string userId);
+
+        /// <summary>
+        /// 사용자 데이터를 완전히 삭제합니다 (GDPR 준수).
+        /// </summary>
+        Task<bool> DeleteUserAsync(string userId);
     }
 }

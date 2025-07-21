@@ -27,7 +27,7 @@ namespace JustClimb.Data
         public bool usedItemInCurrentStage = false;
         
         [JsonProperty("unlockedCharacters")]
-        public List<string> unlockedCharacters = new List<string>();
+        public List<int> unlockedCharacters = new List<int>();
         
         [JsonProperty("itemsPurchased")]
         public int itemsPurchased = 0;
@@ -36,7 +36,13 @@ namespace JustClimb.Data
         public List<string> itemTypesUsed = new List<string>();
         
         [JsonProperty("chapter1PerfectStages")]
-        public int chapter1PerfectStages = 0;
+        public List<int> chapter1PerfectStages = new List<int>();
+        
+        [JsonProperty("totalDeaths")]
+        public int totalDeaths = 0;
+        
+        [JsonProperty("totalGemsCollected")]
+        public int totalGemsCollected = 0;
     }
 
     /// <summary>

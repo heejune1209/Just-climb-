@@ -409,8 +409,8 @@ public class UI_Achievement : UI_Popup
                 break;
                 
             case AchievementIDs.UNTOUCHABLE:
-                progressText = $"Chapter 1 Perfect Clears: {Math.Min(progress.chapter1PerfectStages, 10)}/10";
-                currentProgress = Math.Min(progress.chapter1PerfectStages, 10);
+                progressText = $"Chapter 1 Perfect Clears: {Math.Min(progress.chapter1PerfectStages.Count, 10)}/10";
+                currentProgress = Math.Min(progress.chapter1PerfectStages.Count, 10);
                 maxProgress = 10f;
                 break;
                 

@@ -10,5 +10,10 @@
         /// 델타 캐시 보관 시간(단위: 시간)
         /// </summary>
         public int CacheDurationHours { get; set; }
+        
+        /// <summary>
+        /// 슬라이딩 만료 시간(단위: 분)
+        /// </summary>
+        public int SlidingExpirationMinutes { get; set; } = 30;
     }
 }

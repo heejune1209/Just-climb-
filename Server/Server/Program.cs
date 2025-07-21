@@ -108,6 +108,13 @@ namespace Server
             builder.Services.AddScoped<IAchievementService, AchievementService>();
             builder.Services.AddSingleton<ConflictResolver>();
             
+            // 새로운 리팩토링된 서비스들
+            builder.Services.AddScoped<DeltaProcessor>();
+            builder.Services.AddScoped<UserStateSaver>();
+            builder.Services.AddScoped<UserStateCacheManager>();
+            builder.Services.AddScoped<UserStateLoader>();
+            builder.Services.AddScoped<UserStateMapper>();
+            
             // HttpClient 등록 (Steam Web API 호출용)
             builder.Services.AddHttpClient();
             

@@ -94,5 +94,11 @@ namespace Server.Models
         
         [JsonProperty("usedItemInCurrentStage")]
         public bool usedItemInCurrentStage { get; set; } = false;
+        
+        [JsonProperty("totalDeaths")]
+        public int totalDeaths { get; set; } = 0;
+        
+        [JsonProperty("totalGemsCollected")]
+        public int totalGemsCollected { get; set; } = 0;
     }
 }

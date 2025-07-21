@@ -1,5 +1,6 @@
 using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace JustClimb.Items
 {
@@ -11,7 +12,7 @@ namespace JustClimb.Items
     public class InventoryItem
     {
         // 아이템 고유 ID (enum-string 자동 변환)
-        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        [JsonConverter(typeof(StringEnumConverter))]
         public ItemType itemId;
 
         // 보유 개수

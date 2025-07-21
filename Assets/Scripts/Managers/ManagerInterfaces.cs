@@ -273,24 +273,14 @@ public interface IAchievementManager
     /// <summary>
     /// 캐릭터 해제 시 호출
     /// </summary>
-    void OnCharacterUnlocked(string characterName);
+    void OnCharacterUnlocked(int characterId);
     
     /// <summary>
     /// 업적 달성 여부 확인
     /// </summary>
     bool IsAchievementUnlocked(string achievementId);
     
-    /// <summary>
-    /// 현재 진행률 출력 (디버그용)
-    /// </summary>
-    void PrintProgress();
 
-    void TestUnlockAchievement();
-
-    /// <summary>
-    /// 모든 업적 리셋 (테스트용)
-    /// </summary>
-    void ResetAllAchievements();
     
     /// <summary>
     /// 업적 보상 수령 상태 확인

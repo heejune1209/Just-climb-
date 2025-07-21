@@ -98,12 +98,12 @@ public static class AchievementIntegration
     /// 캐릭터 해제 시 호출
     /// CharacterManager나 Shop에서 호출
     /// </summary>
-    public static void OnCharacterUnlocked(string characterName)
+    public static void OnCharacterUnlocked(int characterId)
     {
         if (_achievementManager == null) return;
         
-        _achievementManager.OnCharacterUnlocked(characterName);
-        Debug.Log($"Achievement: Character unlocked - {characterName}");
+        _achievementManager.OnCharacterUnlocked(characterId);
+        Debug.Log($"Achievement: Character unlocked - ID: {characterId}");
     }
 
     #endregion
@@ -149,7 +149,7 @@ public static class AchievementIntegration
             return;
         }
         
-        _achievementManager.PrintProgress();
+        Debug.Log("PrintProgress 메서드는 리팩토링으로 제거되었습니다.");
     }
 
     /// <summary>
@@ -159,7 +159,7 @@ public static class AchievementIntegration
     {
         if (_achievementManager == null) return;
         
-        _achievementManager.TestUnlockAchievement();
+        Debug.Log("TestUnlockAchievement 메서드는 리팩토링으로 제거되었습니다. 개별 업적 테스트가 필요하면 AchievementManager의 새로운 구조를 사용하세요.");
     }
 
     #endregion
