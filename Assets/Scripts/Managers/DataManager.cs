@@ -77,7 +77,7 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
                 string txt = File.ReadAllText(_filePath);
                 local = JsonHelper.DeserializeObject<SaveData>(txt, new SaveData());
                 
-                // 🔧 로컬 데이터도 정리 (null 값들을 기본값으로 대체)
+                // 로컬 데이터도 정리 (null 값들을 기본값으로 대체)
                 CleanupServerData(local);
                 Debug.Log("[DataManager] 로컬 파일에서 데이터 로드 성공");
             }
@@ -99,11 +99,11 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
             
             bool serverLoadCompleted = false;
             
-            // ✅ DataSyncManager를 통한 통합 네트워크 통신
+            // DataSyncManager를 통한 통합 네트워크 통신
             yield return _syncMgr.StartNetworkCoroutine(_syncMgr.GetRequest<SaveData>(
                 url,
                 onSuccess: (serverData) => {
-                    // 🔧 서버 데이터 정리 (null 값들을 기본값으로 대체)
+                    // 서버 데이터 정리 (null 값들을 기본값으로 대체)
                     CleanupServerData(serverData);
                     
                     // 덮어쓰기 + 로컬 저장

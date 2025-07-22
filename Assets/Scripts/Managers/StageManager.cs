@@ -167,7 +167,7 @@ namespace JustClimb.Manager
                 Debug.LogError($"[StageManager] 업적 시스템 알림 실패: {e.Message}");
             }
 
-            // 🔧 스테이지 클리어 시 current 값들 초기화 (재도전 준비)
+            // 스테이지 클리어 시 current 값들 초기화 (재도전 준비)
             while (sd.currentPlayTimes.Count <= idx) sd.currentPlayTimes.Add(0f);
             sd.currentPlayTimes[idx] = 0f;
             
@@ -202,7 +202,7 @@ namespace JustClimb.Manager
             // 깃발 위치 초기화 델타
             _dataManager.GenerateDelta($"stageFlagPositions_{stageNum}", sd.stageFlagPositions[idx]);
             
-            // 🔧 current 값들 초기화 델타 전송 (서버 동기화)
+            // current 값들 초기화 델타 전송 (서버 동기화)
             _dataManager.GenerateDelta($"currentPlayTimes_{stageNum}", sd.currentPlayTimes[idx]);
             _dataManager.GenerateDelta($"currentDeathCounts_{stageNum}", sd.currentDeathCounts[idx]);
             
@@ -224,7 +224,7 @@ namespace JustClimb.Manager
                 
                 if (sd.stageClears[i]) OnStageUnlocked?.Invoke(stageNum);
                 
-                // 🔧 유효한 값만 이벤트 발행 (MaxValue는 초기값이므로 제외)
+                // 유효한 값만 이벤트 발행 (MaxValue는 초기값이므로 제외)
                 if (i < sd.bestGemRewards.Count) 
                     OnBestRewardUpdated?.Invoke(stageNum, sd.bestGemRewards[i]);
                 

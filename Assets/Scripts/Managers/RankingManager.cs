@@ -33,7 +33,7 @@ namespace JustClimb.Manager
         private Dictionary<int, Dictionary<RankingSortType, RankingResponseDto>> _cachedRankings
             = new Dictionary<int, Dictionary<RankingSortType, RankingResponseDto>>();
 
-        // 🔧 중복 요청 방지용 (현재 처리 중인 스테이지들)
+        // 중복 요청 방지용 (현재 처리 중인 스테이지들)
         private HashSet<int> _pendingUpdates = new HashSet<int>();
 
         // 서버 설정
@@ -167,7 +167,7 @@ namespace JustClimb.Manager
         {
             var deathCount = _stageManager.GetBestDeath(stageNum);
 
-            // 🔧 중복 방지: 짧은 시간 내 동일 스테이지 요청 건너뛰기
+            // 중복 방지: 짧은 시간 내 동일 스테이지 요청 건너뛰기
             if (_pendingUpdates.Contains(stageNum))
             {
                 Debug.Log($"[RankingManager] 이미 처리 중인 스테이지 건너뛰기: Stage {stageNum}");
@@ -196,7 +196,7 @@ namespace JustClimb.Manager
 
                 Debug.Log($"[RankingManager] 기록 업데이트 요청: Stage {stageNum}, Time={clearTime:F2}s, Deaths={deathCount}");
 
-                // 🔧 중복 방지: 처리 중 상태로 마킹
+                // 중복 방지: 처리 중 상태로 마킹
                 _pendingUpdates.Add(stageNum);
 
                 // 메인 스레드에서 코루틴으로 업데이트
@@ -440,7 +440,7 @@ namespace JustClimb.Manager
             // 요청 완료 대기
             yield return new WaitUntil(() => requestCompleted);
             
-            // 🔧 중복 방지: 처리 완료 후 대기 목록에서 제거
+            // 중복 방지: 처리 완료 후 대기 목록에서 제거
             _pendingUpdates.Remove(requestDto.StageNumber);
         }
 

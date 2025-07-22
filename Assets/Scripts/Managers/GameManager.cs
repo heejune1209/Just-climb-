@@ -72,12 +72,12 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
     // "Stage1" 씬이 이미 로드되어 있어도 바로 OnSceneLoaded가 실행되면서
     // SubscribePlayerDeath() → Health.OnDead 구독까지 단번에 처리되기 때문에
     // 3초 후 리스폰 로직이 정상적으로 동작
-    // 🔧 람다 표현식 대신 명시적 메서드로 이벤트 구독/해제 (메모리 누수 방지)
+    // 람다 표현식 대신 명시적 메서드로 이벤트 구독/해제 (메모리 누수 방지)
     private void HandleDataLoaded(SaveData data)
     {
         try
         {
-            // 🔧 null 체크 추가 (GameManager 파괴 후 호출 방지)
+            // null 체크 추가 (GameManager 파괴 후 호출 방지)
             if (data == null || _dataManager == null)
             {
                 Debug.LogWarning("[GameManager] HandleDataLoaded - 데이터 또는 매니저가 null입니다.");
@@ -120,7 +120,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
             Debug.LogError($"[GameManager] 업적 시스템 초기화 실패: {e.Message}\n{e.StackTrace}");
         }
 
-        // 🔧 명시적 메서드로 이벤트 구독 (해제 가능하도록)
+        // 명시적 메서드로 이벤트 구독 (해제 가능하도록)
         _dataManager.OnLoaded += HandleDataLoaded;
     }
 
@@ -148,21 +148,21 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
         // 코루틴 정리
         StopAllCoroutines();
         
-        // 🔧 Scene 이벤트 해제
+        // Scene 이벤트 해제
         SceneManager.sceneLoaded -= OnSceneLoaded;
         SceneManager.sceneUnloaded -= OnSceneUnloaded;
         
-        // 🔧 DataManager 이벤트 해제 (명시적 메서드로 정확히 해제)
+        // DataManager 이벤트 해제 (명시적 메서드로 정확히 해제)
         if (_dataManager != null)
         {
             _dataManager.OnLoaded -= HandleDataLoaded;
         }
         
-        // 🔧 외부 구독자들이 남아있을 수 있으니 이벤트 초기화
+        // 외부 구독자들이 남아있을 수 있으니 이벤트 초기화
         OnTimerUpdated = null;
         OnDeathCountChanged = null;
         
-        // 🔧 매니저 참조 해제는 제거 (Zenject가 관리하므로 불필요)
+        // 매니저 참조 해제는 제거 (Zenject가 관리하므로 불필요)
         // _dataManager = null;
         // _sceneManager = null;
         
@@ -172,7 +172,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
     // 플레이어 사망 시 호출.   
     public void OnPlayerDead()
     {
-        // 🔧 null 체크 추가
+        // null 체크 추가
         if (_dataManager == null)
         {
             Debug.LogWarning("[GameManager] DataManager가 null입니다. OnPlayerDead 처리를 건너뜁니다.");
@@ -194,7 +194,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
             deaths[idx] = PlayerDeathCount;
             _dataManager.SaveLocal(); // 로컬 저장
 
-            // 🔧 유효한 사망 수만 델타 전송 (MaxValue 제외)
+            // 유효한 사망 수만 델타 전송 (MaxValue 제외)
             if (PlayerDeathCount >= 0 && PlayerDeathCount < int.MaxValue)
             {
                 _dataManager.GenerateDelta($"currentDeathCounts_{idx + 1}", deaths[idx]);
@@ -221,7 +221,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
         StartCoroutine(RespawnAfterDelay(3f));
     }
 
-    // 🔧 스테이지 클리어 후 재도전 준비 플래그 설정
+    // 스테이지 클리어 후 재도전 준비 플래그 설정
     public void OnStageCleared()
     {
         _needsStageReset = true;
@@ -234,7 +234,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
     {
         yield return new WaitForSeconds(delay);
 
-        // 🔧 null 체크 추가
+        // null 체크 추가
         if (_sceneManager == null)
         {
             Debug.LogWarning("[GameManager] SceneManager가 null입니다. 기본 씬 로드를 시도합니다.");
@@ -265,7 +265,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
     /// </summary>
     public void SaveFlagPosition(Vector3 pos)
     {
-        // 🔧 null 체크 추가
+        // null 체크 추가
         if (_dataManager == null)
         {
             Debug.LogWarning("[GameManager] DataManager가 null입니다. SaveFlagPosition 처리를 건너뜁니다.");
@@ -278,13 +278,13 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
         if (data != null)
         {
         var flags = data.stageFlagPositions;
-            // 🔧 리스트 크기 보장 (null 대신 기본값 사용)
+            // 리스트 크기 보장 (null 대신 기본값 사용)
             while (flags.Count <= idx) flags.Add(new SerializableVector3Dto());
             flags[idx] = new SerializableVector3Dto(pos.x, pos.y, pos.z);
 
         _dataManager.SaveLocal();
 
-        // 🔧 유효한 깃발 위치만 델타 전송 (Vector3.zero가 아닌 실제 위치)
+        // 유효한 깃발 위치만 델타 전송 (Vector3.zero가 아닌 실제 위치)
         if (pos != Vector3.zero && !float.IsNaN(pos.x) && !float.IsNaN(pos.y) && !float.IsNaN(pos.z))
         {
             _dataManager.GenerateDelta($"stageFlagPositions_{idx + 1}", flags[idx]);
@@ -309,7 +309,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
         {
             Debug.Log($"[GameManager] OnSceneLoaded 호출 - Scene: {scene.name}, Mode: {mode}");
             
-            // 🔧 null 체크 추가 (GameManager 파괴 후 호출 방지)
+            // null 체크 추가 (GameManager 파괴 후 호출 방지)
             if (_dataManager == null)
             {
                 Debug.LogWarning("[GameManager] DataManager가 null입니다. 이벤트 처리를 건너뜁니다.");
@@ -327,7 +327,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
         var stageScene = FindObjectOfType<StageScene>();
         var sd = _dataManager.Current;
         
-        // 🔧 SaveData null 체크 추가
+        // SaveData null 체크 추가
         if (sd == null)
         {
             Debug.LogWarning("[GameManager] SaveData가 null입니다. 기본 설정으로 진행합니다.");
@@ -435,7 +435,7 @@ public class GameManager : MonoBehaviour, IGameManager, IInitializable
         {
             Debug.LogError($"[GameManager] OnSceneLoaded에서 예외 발생 - Scene: {scene.name}, Error: {e.Message}\n{e.StackTrace}");
             
-            // 🔧 예외 발생 시에도 기본 설정은 유지
+            // 예외 발생 시에도 기본 설정은 유지
             IsTimerPaused = false;
         }
     }
