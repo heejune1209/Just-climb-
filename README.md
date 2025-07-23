@@ -925,13 +925,13 @@ graph TB
 ### 랭킹 시스템 구조
 
 - **클라이언트 측**
-  - `RankingManager`: 서버 통신 및 캐싱 관리
-  - `UI_Ranking`: 랭킹 UI 표시 및 정렬 옵션 제공
-  - `StageManager` 이벤트 구독을 통한 자동 기록 업데이트
+  - [`RankingManager`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/RankingManager.cs): 서버 통신 및 캐싱 관리
+  - [`UI_Ranking`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Ranking.cs): 랭킹 UI 표시 및 정렬 옵션 제공
+  - [`StageManager`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/StageManager.cs) 이벤트 구독을 통한 자동 기록 업데이트
 
 - **서버 측**
-  - `RankingController`: REST API 엔드포인트
-  - `RankingService`: 비즈니스 로직 및 데이터 처리
+  - [`RankingController`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs): REST API 엔드포인트
+  - [`RankingService`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/RankingService.cs): 비즈니스 로직 및 데이터 처리
   - **Entity Framework Core**: 데이터베이스 ORM
 
 - **주요 기능**
@@ -945,14 +945,14 @@ graph TB
 ### 업적 시스템 구조
 
 - **클라이언트 측**
-  - `AchievementIntegration`: 정적 Facade 클래스로 모든 게임 시스템과 업적 시스템 간 인터페이스 제공
-  - `AchievementManager`: Steam API 연동 및 업적 조건 체크
-  - `UI_Achievement`: 업적 목록 표시 및 보상 수령 UI
+  - [`AchievementIntegration`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Utils/AchievementIntegration.cs): 정적 Facade 클래스로 모든 게임 시스템과 업적 시스템 간 인터페이스 제공
+  - [`AchievementManager`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/AchievementManager.cs): Steam API 연동 및 업적 조건 체크
+  - [`UI_Achievement`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/UI/Popup/UI_Achievement.cs): 업적 목록 표시 및 보상 수령 UI
   - **Steam API Integration**: Steamworks.NET을 통한 실시간 업적 해제
 
 - **서버 측**
-  - `AchievementController`: JWT 인증 기반 REST API
-  - `AchievementService`: 업적 상태 관리 및 보상 처리
+  - [`AchievementController`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/AchievementController.cs): JWT 인증 기반 REST API
+  - [`AchievementService`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/AchievementService.cs): 업적 상태 관리 및 보상 처리
   - **Database**: 사용자별 업적 진행도 및 보상 상태 저장
 
 - **주요 기능**
@@ -975,9 +975,9 @@ Steam 플랫폼과의 완전한 통합을 위한 3단계 인증 시스템:
    - `AchievementManager`: Steam 업적과 게임 내 업적 동시 처리
 
 2. **서버 (ASP.NET Core)**
-   - `AuthController`: Steam Web API로 티켓 검증 후 JWT 발급
+   - [`AuthController`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/AuthController.cs): Steam Web API로 티켓 검증 후 JWT 발급
    - `AchievementController`: 업적 달성 로직 및 Steam 업적 동기화
-   - `UserService`: Steam 프로필 정보 동기화 및 사용자 관리
+   - [`UserService`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/UserService.cs): Steam 프로필 정보 동기화 및 사용자 관리
 
 3. **Steam Web API**
    - `AuthenticateUserTicket`: 인증 티켓 유효성 검증
