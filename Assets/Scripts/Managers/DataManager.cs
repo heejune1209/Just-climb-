@@ -35,7 +35,7 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
         _userId = userId;
         _filePath = Path.Combine(Application.persistentDataPath, "save.json");
 
-        // ✅ ConfigHelper 사용 (중복 제거)
+        // ConfigHelper 사용 (중복 제거)
         _serverConfig = ConfigHelper.GetServerConfig();
     }
 
@@ -57,13 +57,13 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
         StartCoroutine(LoadCoroutine());
     }
 
-    // ✅ JWT 토큰 헤더 추가는 DataSyncManager에서 자동으로 처리됨
+    // JWT 토큰 헤더 추가는 DataSyncManager에서 자동으로 처리됨
 
     /// <summary>
     /// 리팩토링된 LoadCoroutine:
     /// 1) 로컬에서 JSON 로드 → OnLoaded
     /// 2) 온라인이면 서버에서 최신 JSON GET → 덮어쓰기 + OnLoaded 재발행
-    /// ✅ DataSyncManager를 통한 통합 네트워크 통신 사용
+    /// DataSyncManager를 통한 통합 네트워크 통신 사용
     /// </summary>
     private IEnumerator LoadCoroutine()
     {
@@ -140,7 +140,7 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
     {
         try
         {
-            // ✅ JsonHelper 사용 (통합된 오류 처리)
+            //  JsonHelper 사용 (통합된 오류 처리)
             var json = JsonHelper.SerializeSaveData(Current);
             
             File.WriteAllText(_filePath, json);
@@ -168,7 +168,7 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
     /// <summary>전체 상태 덤프 델타만 발생</summary>
     public void GenerateFullDelta()
     {
-        // ✅ JsonHelper 사용 (통합된 오류 처리)
+        // JsonHelper 사용 (통합된 오류 처리)
         var json = JsonHelper.SerializeObject(Current);
         Debug.Log($"[DataManager] 풀 델타 생성 - 크기: {json.Length} bytes");
         SyncDelta(new DeltaEvent("json:full", json));
@@ -181,7 +181,7 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
     /// </summary>
     public void GenerateDelta(string key, object val)
     {
-        // ✅ JsonHelper 사용 (타입 구분 로직 통합)
+        // JsonHelper 사용 (타입 구분 로직 통합)
         string json = JsonHelper.SerializeDeltaValue(val);
         
         Debug.Log($"[DataManager] 델타 생성 - Key: {key}, Value: {val}, JSON: {json}");

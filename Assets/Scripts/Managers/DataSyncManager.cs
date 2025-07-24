@@ -42,7 +42,7 @@ namespace JustClimb.Manager
         /// </summary>
         public void Initialize()
         {
-            // ✅ ConfigHelper 사용 (중복 제거)
+            // ConfigHelper 사용 (중복 제거)
             _serverConfig = ConfigHelper.GetServerConfig();
             _endpointFormat = ConfigHelper.GetDeltaApiUrlFormat();
 
@@ -122,7 +122,7 @@ namespace JustClimb.Manager
             string url = string.Format(_endpointFormat, _userId);
             Debug.Log($"[DataSyncManager] 델타 전송 시도: {url}");
             
-            // ✅ NetworkHelper 사용 (통합된 네트워크 처리)
+            // NetworkHelper 사용 (통합된 네트워크 처리)
             using var request = NetworkHelper.CreatePostRequest(url, wrapper, _steamAuthManager);
             
             yield return request.SendWebRequest();
@@ -162,7 +162,7 @@ namespace JustClimb.Manager
             var url = string.Format(_endpointFormat, _userId);
             Debug.Log($"[DataSyncManager] FlushNow 시도: {url}");
             
-            // ✅ NetworkHelper 사용
+            // NetworkHelper 사용
             using var req = NetworkHelper.CreatePostRequest(url, wrapper, _steamAuthManager);
 
             // SendWebRequest를 블록킹 호출

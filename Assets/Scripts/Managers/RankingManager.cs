@@ -300,7 +300,7 @@ namespace JustClimb.Manager
         }
 
         /// <summary>
-        /// 서버에서 랭킹 데이터 로드 (✅ DataManager 캡슐화 API 사용)
+        /// 서버에서 랭킹 데이터 로드 (DataManager 캡슐화 API 사용)
         /// </summary>
         private IEnumerator LoadRankingCoroutine(int stageNum, RankingSortType sortType)
         {
@@ -388,7 +388,7 @@ namespace JustClimb.Manager
         }
 
         /// <summary>
-        /// 서버에 사용자 기록 업데이트 (✅ DataManager 캡슐화 API 사용)
+        /// 서버에 사용자 기록 업데이트 (DataManager 캡슐화 API 사용)
         /// </summary>
         private IEnumerator UpdateUserRecordCoroutine(UpdateRecordRequestDto requestDto)
         {
@@ -416,7 +416,7 @@ namespace JustClimb.Manager
             
             bool requestCompleted = false;
             
-            // ✅ DataManager의 캡슐화된 기록 업데이트 API 사용
+            // DataManager의 캡슐화된 기록 업데이트 API 사용
             _dataManager.UpdateUserRecord<object>(
                 requestDto,
                 onSuccess: (response) => {
