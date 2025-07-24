@@ -10,7 +10,7 @@ namespace JustClimb.Manager
     // JSON 로드 직후와 SetCleared 호출 후에 DispatchAll을 통해 초기/갱신된 상태를 이벤트로 발행.
     public class StageManager : IStageManager, IInitializable
     {
-        // ✅ 유지되는 이벤트들 (best 기록만)
+        // 유지되는 이벤트들 (best 기록만)
         public event Action<int, int> OnBestRewardUpdated;
         public event Action<int, float> OnBestTimeUpdated;
         public event Action<int, int> OnBestDeathUpdated;
