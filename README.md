@@ -942,13 +942,13 @@ graph TB
   - **`DatabaseRankingService`**: ** 영구 저장** - Entity Framework Core 기반 데이터 보장
 
 - **주요 기능**
-  - ** 실시간 성능**: Redis Sorted Set으로 밀리초 단위 랭킹 조회/업데이트
-  - ** 데이터 안정성**: 모든 기록이 SQL Database에 영구 저장
-  - ** 자동 마이그레이션**: 서버 시작 시 DB → Redis 전체 데이터 마이그레이션  
-  - ** 런타임 캐싱**: Redis에 데이터가 없으면 DB 조회 후 즉시 Redis 캐시
-  - ** 헬스체크**: `/api/v1/health/ranking` 엔드포인트로 시스템 상태 모니터링
-  - ** API 호환성**: 기존 클라이언트 코드 변경 없이 성능 향상
-  - ** 장애 복구**: Redis 장애 시 DB 폴백, 복구 시 자동 재마이그레이션
+  - **실시간 성능**: Redis Sorted Set으로 밀리초 단위 랭킹 조회/업데이트
+  - **데이터 안정성**: 모든 기록이 SQL Database에 영구 저장
+  - **자동 마이그레이션**: 서버 시작 시 DB → Redis 전체 데이터 마이그레이션  
+  - **런타임 캐싱**: Redis에 데이터가 없으면 DB 조회 후 즉시 Redis 캐시
+  - **헬스체크**: `/api/v1/health/ranking` 엔드포인트로 시스템 상태 모니터링
+  - **API 호환성**: 기존 클라이언트 코드 변경 없이 성능 향상
+  - **장애 복구**: Redis 장애 시 DB 폴백, 복구 시 자동 재마이그레이션
 
 [랭킹·업적 시스템 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/%EB%9E%AD%ED%82%B9%C2%B7%EC%97%85%EC%A0%81%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
