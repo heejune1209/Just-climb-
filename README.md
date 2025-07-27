@@ -922,7 +922,7 @@ graph TB
 
 ---
 
-### 🚀 **Redis 기반 하이브리드 랭킹 시스템 구조**
+###  **Redis 기반 하이브리드 랭킹 시스템 구조**
 
 - **클라이언트 측**
   - [`RankingManager`](https://github.com/heejune1209/Just-climb-/blob/main/Assets/Scripts/Managers/RankingManager.cs): 서버 통신 및 캐싱 관리 (API 호환성 유지)
@@ -931,24 +931,24 @@ graph TB
 
 - **서버 측 - 하이브리드 아키텍처**
   - [`RankingController`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs): REST API 엔드포인트 (기존 호환성 유지)
-  - **`HybridRankingService`**: **🔀 Facade Pattern** - Redis + Database 통합 관리
+  - **`HybridRankingService`**: ** Facade Pattern** - Redis + Database 통합 관리
     - **Redis 우선**: 실시간 성능을 위해 Redis Sorted Set 먼저 처리
     - **DB 백그라운드**: 데이터 안정성을 위해 DB 백그라운드 저장
     - **자동 폴백**: Redis 실패 시 DB로 즉시 폴백
-  - **`RedisRankingService`**: **⚡ O(log n) 성능** - Redis Sorted Set 기반 초고속 랭킹
+  - **`RedisRankingService`**: ** O(log n) 성능** - Redis Sorted Set 기반 초고속 랭킹
     - `ZADD stage_{num}_cleartime`: 클리어 타임 기준 랭킹
     - `ZADD stage_{num}_deathcount`: 사망 횟수 기준 랭킹  
     - `HMSET userdata:stage:{num}:user:{userId}`: 사용자 메타데이터
-  - **`DatabaseRankingService`**: **🗄️ 영구 저장** - Entity Framework Core 기반 데이터 보장
+  - **`DatabaseRankingService`**: ** 영구 저장** - Entity Framework Core 기반 데이터 보장
 
 - **주요 기능**
-  - **🚀 실시간 성능**: Redis Sorted Set으로 밀리초 단위 랭킹 조회/업데이트
-  - **🗄️ 데이터 안정성**: 모든 기록이 SQL Database에 영구 저장
-  - **🔄 자동 마이그레이션**: 서버 시작 시 DB → Redis 전체 데이터 마이그레이션  
-  - **⚡ 런타임 캐싱**: Redis에 데이터가 없으면 DB 조회 후 즉시 Redis 캐시
-  - **📊 헬스체크**: `/api/v1/health/ranking` 엔드포인트로 시스템 상태 모니터링
-  - **🎮 API 호환성**: 기존 클라이언트 코드 변경 없이 성능 향상
-  - **🔒 장애 복구**: Redis 장애 시 DB 폴백, 복구 시 자동 재마이그레이션
+  - ** 실시간 성능**: Redis Sorted Set으로 밀리초 단위 랭킹 조회/업데이트
+  - ** 데이터 안정성**: 모든 기록이 SQL Database에 영구 저장
+  - ** 자동 마이그레이션**: 서버 시작 시 DB → Redis 전체 데이터 마이그레이션  
+  - ** 런타임 캐싱**: Redis에 데이터가 없으면 DB 조회 후 즉시 Redis 캐시
+  - ** 헬스체크**: `/api/v1/health/ranking` 엔드포인트로 시스템 상태 모니터링
+  - ** API 호환성**: 기존 클라이언트 코드 변경 없이 성능 향상
+  - ** 장애 복구**: Redis 장애 시 DB 폴백, 복구 시 자동 재마이그레이션
 
 [랭킹·업적 시스템 시퀀스 다이어그램](https://github.com/heejune1209/Just-climb-/blob/main/%EB%9E%AD%ED%82%B9%C2%B7%EC%97%85%EC%A0%81%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%8B%9C%ED%80%80%EC%8A%A4%20%EB%8B%A4%EC%9D%B4%EC%96%B4%EA%B7%B8%EB%9E%A8.md)
 
