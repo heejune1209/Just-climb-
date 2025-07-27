@@ -18,8 +18,8 @@ namespace JustClimb.Installers
             Container.Bind<UserIdProvider>().AsSingle().NonLazy();
             Container.Bind<string>().WithId("UserId").FromMethod(GetUserId).AsSingle();
             
-            // Persistence Layer - 가장 먼저 초기화
-            Container.BindInterfacesAndSelfTo<DataManager>().AsSingle().NonLazy();
+            // Persistence Layer - 가장 먼저 초기화 (MonoBehaviour이므로 FromNewComponentOnNewGameObject 사용)
+            Container.BindInterfacesAndSelfTo<DataManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();
             
             // Infrastructure Layer - 다른 매니저들이 의존하는 기본 서비스들
             Container.BindInterfacesAndSelfTo<PoolManager>().FromNewComponentOnNewGameObject().AsSingle().NonLazy();

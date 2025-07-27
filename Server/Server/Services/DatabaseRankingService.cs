@@ -5,28 +5,29 @@ using Server.Models;
 namespace Server.Services
 {
     /// <summary>
-    /// 랭킹 시스템 서비스 구현
-    /// 서버에서 정렬된 랭킹 데이터를 제공합니다.
+    /// 데이터베이스 기반 랭킹 시스템 서비스 (영구 저장 및 백업 용도)
+    /// HybridRankingService에서 백엔드 저장소로 사용됩니다.
+    /// Transient로 등록되어 각 요청마다 새로운 인스턴스가 생성됩니다.
     /// </summary>
-    public class RankingService : IRankingService
+    public class DatabaseRankingService : IRankingService
     {
         private readonly JustClimbDbContext _context;
-        private readonly ILogger<RankingService> _logger;
+        private readonly ILogger<DatabaseRankingService> _logger;
 
-        public RankingService(JustClimbDbContext context, ILogger<RankingService> logger)
+        public DatabaseRankingService(JustClimbDbContext context, ILogger<DatabaseRankingService> logger)
         {
             _context = context;
             _logger = logger;
         }
 
         /// <summary>
-        /// 사용자 기록 업데이트 또는 생성 (UPSERT)
+        /// 사용자 기록 업데이트 또는 생성 (UPSERT) - DB 영구 저장
         /// </summary>
         public async Task<bool> UpdateUserRecordAsync(string userId, UpdateRecordRequestDto request)
         {
             try
             {
-                _logger.LogInformation("UpdateUserRecordAsync 시작: UserId={UserId}, Stage={Stage}, Time={Time}, Deaths={Deaths}", 
+                _logger.LogInformation("💾 DB 랭킹 업데이트 시작: UserId={UserId}, Stage={Stage}, Time={Time}, Deaths={Deaths}", 
                     userId, request.StageNumber, request.ClearTime, request.DeathCount);
 
                 // 추가 데이터 검증
@@ -155,7 +156,7 @@ namespace Server.Services
                 _logger.LogInformation("데이터베이스 저장 시도: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
                 await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
-                _logger.LogInformation("데이터베이스 저장 성공: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
+                _logger.LogInformation("💾 DB 랭킹 저장 성공: UserId={UserId}, Stage={Stage}", userId, request.StageNumber);
                 return true;
                 }
                 catch (Exception innerEx)
@@ -167,7 +168,7 @@ namespace Server.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "🚨 기록 업데이트 실패 - UserId: {UserId}, Stage: {Stage}, ClearTime: {ClearTime}, DeathCount: {DeathCount}, DisplayName: {DisplayName}\n" +
+                _logger.LogError(ex, "🚨 DB 랭킹 업데이트 실패 - UserId: {UserId}, Stage: {Stage}, ClearTime: {ClearTime}, DeathCount: {DeathCount}, DisplayName: {DisplayName}\n" +
                     "Exception: {Exception}\n" +
                     "InnerException: {InnerException}\n" +
                     "StackTrace: {StackTrace}", 
@@ -178,7 +179,7 @@ namespace Server.Services
         }
 
         /// <summary>
-        /// 스테이지별 랭킹 조회 (서버에서 정렬됨)
+        /// 스테이지별 랭킹 조회 (데이터베이스에서 정렬됨)
         /// </summary>
         public async Task<RankingResponseDto> GetRankingAsync(string? currentUserId, RankingRequestDto request)
         {
@@ -277,7 +278,7 @@ namespace Server.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "스테이지 {Stage} 랭킹 조회 실패", request.StageNumber);
+                _logger.LogError(ex, "스테이지 {Stage} DB 랭킹 조회 실패", request.StageNumber);
                 return new RankingResponseDto
                 {
                     StageNumber = request.StageNumber,

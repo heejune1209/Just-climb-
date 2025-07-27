@@ -67,32 +67,25 @@ namespace Server.Services
 
         /// <summary>
         /// 데이터베이스에서 정규화된 데이터를 조회하고 SaveData로 변환
+        /// DbContext 동시성 문제 해결을 위해 순차적으로 실행합니다.
         /// </summary>
         private async Task<SaveData> LoadFromDatabaseAsync(string userId)
         {
-            // 병렬로 모든 데이터 조회
-            var userTask = _dbContext.Users
+            // 🔧 DbContext 동시성 문제 해결: 순차적으로 데이터 조회
+            var user = await _dbContext.Users
                 .Include(u => u.Items)
                 .FirstOrDefaultAsync(u => u.Id == userId);
 
-            var stageRecordsTask = _dbContext.UserStageRecords
+            var stageRecords = await _dbContext.UserStageRecords
                 .Where(r => r.UserId == userId)
                 .ToListAsync();
 
-            var progressRecordTask = _dbContext.UserAchievementProgress
+            var progressRecord = await _dbContext.UserAchievementProgress
                 .FirstOrDefaultAsync(p => p.UserId == userId);
 
-            var achievementUnlockedTask = _achievementService.GetUserAchievementUnlockedMapAsync(userId);
-            var achievementRewardsTask = _achievementService.GetUserAchievementRewardMapAsync(userId);
-
-            // 모든 비동기 작업 완료 대기
-            await Task.WhenAll(userTask, stageRecordsTask, progressRecordTask, achievementUnlockedTask, achievementRewardsTask);
-
-            var user = await userTask;
-            var stageRecords = await stageRecordsTask;
-            var progressRecord = await progressRecordTask;
-            var achievementUnlocked = await achievementUnlockedTask;
-            var achievementRewards = await achievementRewardsTask;
+            // AchievementService 호출 (내부에서 새로운 DbContext 사용)
+            var achievementUnlocked = await _achievementService.GetUserAchievementUnlockedMapAsync(userId);
+            var achievementRewards = await _achievementService.GetUserAchievementRewardMapAsync(userId);
 
             // 신규 사용자인 경우 기본값 반환
             if (user == null)

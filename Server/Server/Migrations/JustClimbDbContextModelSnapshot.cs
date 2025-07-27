@@ -17,7 +17,7 @@ namespace Server.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.6")
+                .HasAnnotation("ProductVersion", "9.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -219,6 +219,14 @@ namespace Server.Migrations
                     b.Property<int>("StagesCompleted")
                         .HasColumnType("int")
                         .HasColumnName("stages_completed");
+
+                    b.Property<int>("TotalDeaths")
+                        .HasColumnType("int")
+                        .HasColumnName("total_deaths");
+
+                    b.Property<int>("TotalGemsCollected")
+                        .HasColumnType("int")
+                        .HasColumnName("total_gems_collected");
 
                     b.Property<string>("UnlockedCharactersJson")
                         .IsRequired()

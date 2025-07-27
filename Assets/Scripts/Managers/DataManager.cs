@@ -14,7 +14,7 @@ using Zenject;
 public class DataManager : MonoBehaviour, IDataManager, IInitializable
 {
     // 실제 게임 플레이 중 read/write 하는 유저 저장 파일
-    private readonly string _filePath;
+    private string _filePath;
 
     // 메모리 상에 올려둔 JSON 역직렬화 결과
     public SaveData Current { get; private set; }
@@ -24,15 +24,13 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
     public event Action<SaveData> OnSaved;
     public event Action<DeltaEvent> OnDeltaGenerated;  // 델타가 생성될 때마다 발생
     // 서버 통신용 DataSyncManager (통합된 네트워크 레이어)
-    readonly IDataSyncManager _syncMgr;
-    readonly string _userId;        // 스팀ID나 자체 유저ID
-    readonly ServerConfig _serverConfig;
+    [Inject] private IDataSyncManager _syncMgr;
+    [Inject(Id = "UserId")] private string _userId;        // 스팀ID나 자체 유저ID
+    private ServerConfig _serverConfig;
 
-    [Inject]
-    public DataManager(IDataSyncManager syncMgr, [Inject(Id = "UserId")] string userId)
+    private void Awake()
     {
-        _syncMgr = syncMgr;
-        _userId = userId;
+        // 파일 경로 초기화
         _filePath = Path.Combine(Application.persistentDataPath, "save.json");
 
         // ConfigHelper 사용 (중복 제거)
@@ -290,10 +288,10 @@ public class DataManager : MonoBehaviour, IDataManager, IInitializable
             data.achievementProgress = new AchievementProgressDto();
         }
         
-        // AchievementProgressDto의 리스트들도 null 체크
-        data.achievementProgress.unlockedCharacters ??= new List<int>();
+        // AchievementProgressDto의 리스트들도 null 체크 (서버 모델에 맞춰 수정)
+        data.achievementProgress.unlockedCharacters ??= new List<string>();  // 🔧 List<string>으로 수정
         data.achievementProgress.itemTypesUsed ??= new List<string>();
-        data.achievementProgress.chapter1PerfectStages ??= new List<int>();
+        // chapter1PerfectStages는 이제 int 타입이므로 null 체크 불필요 (값 타입)
 
         Debug.Log($"[DataManager] 서버 데이터 정리 완료 - stageFlagPositions: {data.stageFlagPositions.Count}개");
     }

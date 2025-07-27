@@ -10,7 +10,7 @@ namespace JustClimb.Data
     {
         [Header("서버 URL 설정")]
         [Tooltip("개발 환경에서 사용할 서버 URL")]
-        public string developmentServerUrl = "http://localhost:5259";  // 로컬 개발용 (HTTP)
+        public string developmentServerUrl = "http://localhost:5259";  // 로컬 개발용 (HTTP) - SSL 문제 방지
         
         [Tooltip("운영 환경에서 사용할 서버 URL - AWS EC2 게임서버")]
         public string productionServerUrl = "http://54.180.97.179:5000";
@@ -34,17 +34,14 @@ namespace JustClimb.Data
         /// </summary>
         public string GetBaseUrl()
         {
-            // 🧪 AWS 서버 테스트용 - 임시로 Production URL 사용
-            return productionServerUrl;
-            
-            // 원래 코드 (테스트 완료 후 복구)
-            /*
+            // 환경별 자동 URL 선택
             #if UNITY_EDITOR || DEVELOPMENT_BUILD
-                return developmentServerUrl;
+                Debug.Log($"[ServerConfig] 개발 환경 - 로컬 서버 사용: {developmentServerUrl}");
+                return developmentServerUrl;  // 로컬 개발용
             #else
-                return productionServerUrl;
+                Debug.Log($"[ServerConfig] 운영 환경 - AWS 서버 사용: {productionServerUrl}");
+                return productionServerUrl;   // AWS 운영용
             #endif
-            */
         }
         
         /// <summary>

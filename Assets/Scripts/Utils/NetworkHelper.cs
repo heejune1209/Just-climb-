@@ -15,6 +15,20 @@ namespace JustClimb.Utils
     public static class NetworkHelper
     {
         /// <summary>
+        /// 정적 생성자: HTTP 연결 허용 설정
+        /// </summary>
+        static NetworkHelper()
+        {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // 개발 환경에서 HTTP 연결 강제 허용
+            System.Net.ServicePointManager.ServerCertificateValidationCallback = 
+                (sender, certificate, chain, sslPolicyErrors) => true;
+            
+            Debug.Log("[NetworkHelper] 개발 환경에서 HTTP 연결 및 SSL 검증 우회 설정 완료");
+#endif
+        }
+
+        /// <summary>
         /// UnityWebRequest에 JWT 토큰 헤더 추가
         /// </summary>
         public static void AddAuthorizationHeader(UnityWebRequest request, SteamAuthManager steamAuthManager)
@@ -144,12 +158,16 @@ namespace JustClimb.Utils
         }
 
         /// <summary>
-        /// 개발 환경에서 SSL 인증서 검증 우회 설정
+        /// 개발 환경에서 SSL 인증서 검증 우회 설정 및 HTTP 허용
         /// </summary>
         public static void SetupDevelopmentSSL(UnityWebRequest request)
         {
-#if UNITY_EDITOR
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            // SSL 인증서 검증 우회
             request.certificateHandler = new AcceptAllCertificatesHandler();
+            
+            // HTTP 연결 강제 허용 (개발 환경)
+            request.disposeCertificateHandlerOnDispose = true;
 #endif
         }
 

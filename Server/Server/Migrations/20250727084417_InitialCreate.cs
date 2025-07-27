@@ -68,6 +68,8 @@ namespace Server.Migrations
                     item_types_used_json = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     deaths_in_current_stage = table.Column<int>(type: "int", nullable: false),
                     used_item_in_current_stage = table.Column<bool>(type: "bit", nullable: false),
+                    total_deaths = table.Column<int>(type: "int", nullable: false),
+                    total_gems_collected = table.Column<int>(type: "int", nullable: false),
                     created_at = table.Column<DateTime>(type: "datetime2", nullable: false),
                     updated_at = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },

@@ -7,6 +7,7 @@ using Server.Config;
 using Server.Database;
 using Server.Services;
 using Server.Utils;
+using StackExchange.Redis;
 
 namespace Server
 {
@@ -83,6 +84,7 @@ namespace Server
             });
 
             // 데이터베이스 컨텍스트 설정 (PostgreSQL/SQL Server 지원)
+            // 동시성 문제 해결을 위해 Transient로 설정
             builder.Services.AddDbContext<JustClimbDbContext>(opts =>
             {
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -98,14 +100,32 @@ namespace Server
                     // SQL Server 사용 (기본값)
                     opts.UseSqlServer(connectionString);
                 }
-            });
+            }, ServiceLifetime.Transient); // 🔧 각 요청마다 새로운 DbContext 인스턴스 생성
             builder.Services.AddStackExchangeRedisCache(opts =>
                 opts.Configuration = builder.Configuration.GetValue<string>("Redis:ConnectionString"));
 
+            // Redis 연결 설정 (랭킹 시스템용)
+            builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
+            {
+                var connectionString = builder.Configuration.GetValue<string>("Redis:ConnectionString");
+                return ConnectionMultiplexer.Connect(connectionString);
+            });
+
+            // 🔧 UserState 관련 서비스들을 Transient로 등록 (동시성 문제 해결)
+            builder.Services.AddTransient<UserStateLoader>();
+            builder.Services.AddTransient<UserStateCacheManager>();
+            builder.Services.AddTransient<DeltaProcessor>();
+            builder.Services.AddTransient<UserStateSaver>();
+            builder.Services.AddTransient<UserStateMapper>();
             builder.Services.AddScoped<IUserStateService, UserStateService>();
-            builder.Services.AddScoped<IRankingService, RankingService>();
+            
+            // 🚀 새로운 Redis 기반 하이브리드 랭킹 시스템
+            builder.Services.AddTransient<DatabaseRankingService>(); // DB 전용 서비스 (Transient로 동시성 해결)
+            builder.Services.AddScoped<IRedisRankingService, RedisRankingService>(); // Redis 전용 서비스
+            builder.Services.AddScoped<IRankingService, HybridRankingService>(); // 하이브리드 서비스 (메인)
+            
             builder.Services.AddScoped<IUserService, UserService>();
-            builder.Services.AddScoped<IAchievementService, AchievementService>();
+            builder.Services.AddTransient<IAchievementService, AchievementService>(); // Transient로 동시성 해결
             builder.Services.AddSingleton<ConflictResolver>();
             
             // 새로운 리팩토링된 서비스들
@@ -187,6 +207,36 @@ namespace Server
                 environment = app.Environment.EnvironmentName
             });
 
+            // Redis 랭킹 시스템 헬스 체크 엔드포인트
+            app.MapGet("/api/v1/health/ranking", async (IServiceProvider services) =>
+            {
+                try
+                {
+                    using var scope = services.CreateScope();
+                    var hybridService = scope.ServiceProvider.GetRequiredService<IRankingService>() as HybridRankingService;
+                    
+                    if (hybridService != null)
+                    {
+                        var healthResult = await hybridService.CheckRedisHealthAsync();
+                        return Results.Ok(new
+                        {
+                            service = "RankingSystem",
+                            redis = new { 
+                                healthy = healthResult.IsHealthy,
+                                message = healthResult.Message
+                            },
+                            timestamp = DateTime.UtcNow
+                        });
+                    }
+                    
+                    return Results.Ok(new { service = "RankingSystem", status = "DB Mode", timestamp = DateTime.UtcNow });
+                }
+                catch (Exception ex)
+                {
+                    return Results.Problem($"랭킹 시스템 상태 체크 실패: {ex.Message}");
+                }
+            });
+
             // 데이터베이스 마이그레이션 및 업적 시드
             using (var scope = app.Services.CreateScope())
             {
@@ -205,6 +255,49 @@ namespace Server
                 {
                     logger.LogError(ex, "데이터베이스 초기화 중 오류 발생");
                     throw;
+                }
+            }
+
+            // Redis 랭킹 시스템 초기화 및 DB → Redis 마이그레이션
+            using (var scope = app.Services.CreateScope())
+            {
+                var hybridRankingService = scope.ServiceProvider.GetRequiredService<IRankingService>() as HybridRankingService;
+                var redisRankingService = scope.ServiceProvider.GetRequiredService<IRedisRankingService>();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                
+                try
+                {
+                    // Redis 연결 테스트 및 초기화
+                    await redisRankingService.InitializeAsync();
+                    logger.LogInformation("Redis 랭킹 시스템 초기화 완료");
+                    
+                    // DB → Redis 전체 마이그레이션 (백그라운드 - 새로운 scope 사용)
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            // 백그라운드 태스크에서 새로운 scope 생성
+                            using var backgroundScope = app.Services.CreateScope();
+                            var backgroundHybridService = backgroundScope.ServiceProvider.GetRequiredService<IRankingService>() as HybridRankingService;
+                            var backgroundLogger = backgroundScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                            
+                            if (backgroundHybridService != null)
+                            {
+                                await backgroundHybridService.InitializeRedisFromDatabaseAsync();
+                                backgroundLogger.LogInformation("DB → Redis 전체 마이그레이션 완료");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            var backgroundLogger = app.Services.CreateScope().ServiceProvider.GetRequiredService<ILogger<Program>>();
+                            backgroundLogger.LogWarning(ex, "DB → Redis 마이그레이션 부분 실패 (서비스는 정상 작동)");
+                        }
+                    });
+                }
+                catch (Exception ex)
+                {
+                    logger.LogWarning(ex, "Redis 초기화 실패, DB 폴백 모드로 동작");
+                    // Redis 실패해도 서버는 계속 실행 (DB 폴백)
                 }
             }
 

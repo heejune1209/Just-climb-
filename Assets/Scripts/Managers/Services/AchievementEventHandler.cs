@@ -126,23 +126,11 @@ namespace JustClimb.Services
         /// </summary>
         private void CheckChapter1Achievements(AchievementProgressDto progress)
         {
-            // Chapter 1의 모든 스테이지를 Perfect로 클리어했는지 확인 (1, 2, 3, 4)
-            if (progress.chapter1PerfectStages.Count >= 4)
+            // Chapter 1의 모든 스테이지를 Perfect로 클리어했는지 확인 (4개 스테이지)
+            // chapter1PerfectStages는 이제 int 타입으로 Perfect 클리어한 스테이지 개수를 저장
+            if (progress.chapter1PerfectStages >= 4)
             {
-                bool hasAllChapter1Stages = true;
-                for (int i = 1; i <= 4; i++)
-                {
-                    if (!progress.chapter1PerfectStages.Contains(i))
-                    {
-                        hasAllChapter1Stages = false;
-                        break;
-                    }
-                }
-
-                if (hasAllChapter1Stages)
-                {
-                    TriggerAchievement(AchievementIDs.CHAPTER_1_MASTER);
-                }
+                TriggerAchievement(AchievementIDs.CHAPTER_1_MASTER);
             }
         }
 

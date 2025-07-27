@@ -142,13 +142,11 @@ namespace JustClimb.Services
                 {
                     progress.perfectClears++;
                     
-                    // Chapter 1 Perfect 스테이지 추적
+                    // Chapter 1 Perfect 스테이지 추적 (스테이지 1~4)
                     if (stageIndex >= 1 && stageIndex <= 4)
                     {
-                        if (!progress.chapter1PerfectStages.Contains(stageIndex))
-                        {
-                            progress.chapter1PerfectStages.Add(stageIndex);
-                        }
+                        // chapter1PerfectStages는 이제 int 타입으로 개수만 저장
+                        progress.chapter1PerfectStages++;
                     }
                 }
 
@@ -213,9 +211,10 @@ namespace JustClimb.Services
         {
             UpdateProgress(progress =>
             {
-                if (!progress.unlockedCharacters.Contains(characterId))
+                string characterIdStr = characterId.ToString();
+                if (!progress.unlockedCharacters.Contains(characterIdStr))
                 {
-                    progress.unlockedCharacters.Add(characterId);
+                    progress.unlockedCharacters.Add(characterIdStr);
                 }
             });
         }
