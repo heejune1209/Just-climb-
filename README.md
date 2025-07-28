@@ -931,15 +931,15 @@ graph TB
 
 - **서버 측 - 하이브리드 아키텍처**
   - [`RankingController`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Controllers/RankingController.cs): REST API 엔드포인트 (기존 호환성 유지)
-  - **`HybridRankingService`**: ** Facade Pattern** - Redis + Database 통합 관리
+  - **[`HybridRankingService`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/HybridRankingService.cs)**: ** Facade Pattern** - Redis + Database 통합 관리
     - **Redis 우선**: 실시간 성능을 위해 Redis Sorted Set 먼저 처리
     - **DB 백그라운드**: 데이터 안정성을 위해 DB 백그라운드 저장
     - **자동 폴백**: Redis 실패 시 DB로 즉시 폴백
-  - **`RedisRankingService`**: ** O(log n) 성능** - Redis Sorted Set 기반 초고속 랭킹
+  - **[`RedisRankingService`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/RedisRankingService.cs)**: ** O(log n) 성능** - Redis Sorted Set 기반 초고속 랭킹
     - `ZADD stage_{num}_cleartime`: 클리어 타임 기준 랭킹
     - `ZADD stage_{num}_deathcount`: 사망 횟수 기준 랭킹  
     - `HMSET userdata:stage:{num}:user:{userId}`: 사용자 메타데이터
-  - **`DatabaseRankingService`**: ** 영구 저장** - Entity Framework Core 기반 데이터 보장
+  - **[`DatabaseRankingService`](https://github.com/heejune1209/Just-climb-/blob/main/Server/Server/Services/DatabaseRankingService.cs)**: ** 영구 저장** - Entity Framework Core 기반 데이터 보장
 
 - **주요 기능**
   - **실시간 성능**: Redis Sorted Set으로 밀리초 단위 랭킹 조회/업데이트
