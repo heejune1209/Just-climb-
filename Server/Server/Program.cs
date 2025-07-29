@@ -128,13 +128,6 @@ namespace Server
             builder.Services.AddTransient<IAchievementService, AchievementService>(); // Transient로 동시성 해결
             builder.Services.AddSingleton<ConflictResolver>();
             
-            // 새로운 리팩토링된 서비스들
-            builder.Services.AddScoped<DeltaProcessor>();
-            builder.Services.AddScoped<UserStateSaver>();
-            builder.Services.AddScoped<UserStateCacheManager>();
-            builder.Services.AddScoped<UserStateLoader>();
-            builder.Services.AddScoped<UserStateMapper>();
-            
             // 공통 유틸리티 & Repository 패턴
             builder.Services.AddScoped<UserRepository>();
             
